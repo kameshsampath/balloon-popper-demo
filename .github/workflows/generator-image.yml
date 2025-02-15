@@ -27,7 +27,7 @@ jobs:
         run: |
           # Convert repository to lowercase
           REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-          echo "IMAGE_NAME=${REPO_LOWER}" >> $GITHUB_ENV
+          echo "IMAGE_NAME=${REPO_LOWER}/balloon-pop-generator" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3

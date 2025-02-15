@@ -3,3 +3,12 @@ kind: Kustomization
 
 resources:
   - deployment.yaml
+
+configMapGenerator:
+  - name: generator-config
+    literals:
+      - KAFKA_BOOTSTRAP_SERVERS=my-cluster-kafka-bootstrap.kafka:9092
+      - KAFKA_TOPIC=balloon-game
+      - BONUS_PROBABILITY=0.15
+      - APP_LOG_LEVEL=INFO
+      - DELAY=1.0
