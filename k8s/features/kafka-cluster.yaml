@@ -1,7 +1,3 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: kafka
 ---
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
@@ -31,13 +27,18 @@ spec:
         port: 9093
         tls: true
         type: internal
-      - configuration:
-          bootstrap:
-            nodePort: 31905
-        name: extplain
+      - name: extplain
         port: 9094
-        tls: false
         type: nodeport
+        tls: false
+        configuration:
+          bootstrap:
+            nodePort: 31905 # to connect from host
+          brokers:
+            - broker: 0
+              nodePort: 31906
+              advertisedHost: 127.0.0.1 # to connect from host
+              advertisedPort: 19095 # this port is where it is exposed on the host
     metadataVersion: 3.9-IV0
     version: 3.9.0
 ---

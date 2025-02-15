@@ -10,6 +10,10 @@ ports:
   - port: 19094:31905
     nodeFilters:
       - loadbalancer
+  # Kafka External 31906 broker address which is accessible using 19095 form host
+  - port: 19095:31906
+    nodeFilters:
+      - loadbalancer
   # RisingWave SQL - 4567 set to nodeport 31910 and it will be accessible from host using 14566
   - port: 14567:31910
     nodeFilters:
