@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: balloon-game-data-generator
+spec:
+  selector:
+    matchLabels:
+      app: balloon-game-data-generator
+  template:
+    metadata:
+      labels:
+        app: balloon-game-data-generator
+    spec:
+      containers:
+        - name: generator
+          image: registry.localhost:5000/balloon-pop-generator:latest
+          imagePullPolicy: Always
+          replicas: 0
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          envFrom:
+            - configMapRef:
+              name: generator-config

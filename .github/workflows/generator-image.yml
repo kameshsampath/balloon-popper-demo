@@ -1,0 +1,59 @@
+name: Build and Push Balloon Game Data Generator
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*.*.*"]
+    paths:
+      - "generator/**"
+      - ".github/workflows/generator-image.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "generator/**"
+      - ".github/workflows/generator-image.yml"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare image metadata
+        id: prep
+        run: |
+          # Convert repository to lowercase
+          REPO_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=${REPO_LOWER}" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./generator
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          no-cache: true
