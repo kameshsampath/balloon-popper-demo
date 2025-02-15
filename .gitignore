@@ -23,4 +23,5 @@ work/**
 .ansible
 **/persistence.xml
 **/postgresql.yaml
+**/risingwave.yaml
 **/polaris.env

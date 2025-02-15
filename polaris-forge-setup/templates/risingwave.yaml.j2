@@ -1,0 +1,43 @@
+---
+# https://docs.risingwave.com/deploy/risingwave-k8s-helm
+# https://github.com/risingwavelabs/helm-charts/blob/main/charts/risingwave/values.yaml
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: risingwave
+  namespace: kube-system
+spec:
+  repo: https://risingwavelabs.github.io/helm-charts
+  chart: risingwave
+  createNamespace: true
+  targetNamespace: risingwave
+  valuesContent: |-
+    tags:
+      bundle: true
+    service:
+      type: NodePort
+      nodePort: 31910
+    postgresql:
+      auth:
+        postgresPassword: "{{ risingwave_pg_password }}"
+        database: "risingwave"
+    minio:
+      auth:
+        rootUser: admin
+        rootPassword: password
+    metaStore:
+      postgresql:
+        enabled: true
+        host: "postgresql"
+        database: "risingwave"
+        authentication:
+          username: "postgres"
+          password: "{{ risingwave_pg_password }}"
+    stateStore:
+      minio:
+        enabled: true
+        authentication:
+          username: "admin"
+          password: "{{ risingwave_minio_password }}"
+        bucket: "risingwave"
+        endpoint: "http://minio:9000"

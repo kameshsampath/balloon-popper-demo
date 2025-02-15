@@ -1,0 +1,15 @@
+---
+# https://strimzi.io/docs/operators/latest/deploying#deploying-cluster-operator-helm-chart-str
+# https://github.com/strimzi/strimzi-kafka-operator/blob/main/helm-charts/helm3/strimzi-kafka-operator/values.yaml
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: strimzi-cluster-operator
+  namespace: kube-system
+spec:
+  chart: oci://quay.io/strimzi-helm/strimzi-kafka-operator
+  createNamespace: true
+  targetNamespace: kafka
+  valuesContent: |-
+    installCRDs: true
+    version: 0.45.0

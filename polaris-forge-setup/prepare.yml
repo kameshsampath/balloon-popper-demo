@@ -100,6 +100,8 @@
         bootstrap_client_id: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=8) }}"
         bootstrap_client_secret: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=12) }}"
         plf_jdbc_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=12) }}"
+        risingwave_pg_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=12) }}"
+        risingwave_minio_password: "{{ lookup('ansible.builtin.password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=12) }}"
       tags:
         - bootstrap
         - k8s
@@ -163,6 +165,24 @@
         dest: "{{ plf_k8s_dir }}/polaris/.polaris.env"
         mode: "0600"
       when: not polaris_env_file.stat.exists
+      tags:
+        - bootstrap
+        - k8s
+
+    - name: Check of Risingwave helm.cattle.io/HelmChart exists
+      ansible.builtin.stat:
+        path: "{{ plf_k8s_dir }}/features/risingwave.yaml"
+      register: risingwave_file
+      tags:
+        - bootstrap
+        - k8s
+
+    - name: Generate Risingwave helm.cattle.io/HelmChart
+      ansible.builtin.template:
+        src: templates/risingwave.yaml.j2
+        dest: "{{ plf_k8s_dir }}/features/risingwave.yaml"
+        mode: "0600"
+      when: not risingwave_file.stat.exists
       tags:
         - bootstrap
         - k8s

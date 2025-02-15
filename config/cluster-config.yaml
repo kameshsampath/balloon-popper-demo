@@ -6,6 +6,14 @@ servers: 1
 agents: 1
 image: "rancher/k3s:${K3S_VERSION}"
 ports:
+  # Kafka External 9094(external) set to nodeport 31905 and it will be accessible from host using 19094
+  - port: 19094:31905
+    nodeFilters:
+      - loadbalancer
+  # RisingWave SQL - 4567 set to nodeport 31910 and it will be accessible from host using 14566
+  - port: 14567:31910
+    nodeFilters:
+      - loadbalancer
   # Localstack - 4566 set to nodeport 31566 and it will be accessible from host using 4566
   - port: 4566:31566
     nodeFilters:
@@ -26,15 +34,37 @@ registries: # define how registries should be created or used
     hostPort: "5001"
 
 volumes:
-  # Deploy PostgreSQL
-  - volume: ${FEATURES_DIR}/features/postgresql.yaml:/var/lib/rancher/k3s/server/manifests/postgresql.yaml
-    nodeFilters:
-      - server:*
   # Deploy Adminer
   - volume: ${FEATURES_DIR}/features/adminer.yaml:/var/lib/rancher/k3s/server/manifests/adminer.yaml
     nodeFilters:
       - server:*
+
+  # Deploy cert-manager
+  - volume: ${FEATURES_DIR}/features/cert-manager.yaml:/var/lib/rancher/k3s/server/manifests/cert-manager.yaml
+    nodeFilters:
+      - server:*
+
   # Deploy Localstack
   - volume: ${FEATURES_DIR}/features/localstack.yaml:/var/lib/rancher/k3s/server/manifests/localstack.yaml
     nodeFilters:
       - server:*
+
+  # Deploy PostgreSQL
+  - volume: ${FEATURES_DIR}/features/postgresql.yaml:/var/lib/rancher/k3s/server/manifests/postgresql.yaml
+    nodeFilters:
+      - server:*
+
+  # Deploy RisingWave
+  - volume: ${FEATURES_DIR}/features/risingwave.yaml:/var/lib/rancher/k3s/server/manifests/risingwave.yaml
+    nodeFilters:
+      - server:*
+
+  # Deploy Kafka
+  - volume: ${FEATURES_DIR}/features/strimzi-kafka-op.yaml:/var/lib/rancher/k3s/server/manifests/strimzi-kafka-op.yaml
+    nodeFilters:
+      - server:*
+
+files:
+  - description: Deploy Kafka Cluster and related resources - topics, KRraft nodes etc.,
+    source: ../k8s/features/kafka-cluster.yaml
+    destination: /var/lib/rancher/k3s/server/manifests/kafka-cluster.yaml

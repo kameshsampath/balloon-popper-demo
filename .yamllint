@@ -8,3 +8,8 @@ rules:
   line-length:
     max: 160
     level: warning
+
+comments:
+  require-starting-space: true
+  ignore-shebangs: true
+  min-spaces-from-content: 2
