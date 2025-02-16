@@ -22,4 +22,4 @@ spec:
               cpu: "500m"
           envFrom:
             - configMapRef:
-              name: generator-config
+                name: generator-config
