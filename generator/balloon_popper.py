@@ -18,12 +18,12 @@ logger = get_logger("balloon_game_producer")
 
 
 class BalloonGameGenerator:
-    def __init__(self, bonus_probability: float = GAME_CONFIG.bonus_probability):
+    def __init__(self, bonus_probability: float):
         self.bonus_probability = bonus_probability
         self.cartoon_characters = list(GAME_CONFIG.character_favorites.keys())
         self.balloon_colors = list(GAME_CONFIG.colors.keys())
 
-    def generate_pop(self) -> GameEvent:
+    def generate_pop(self, player_name) -> GameEvent:
         player_character = random.choice(self.cartoon_characters)
 
         if random.random() < self.bonus_probability:
@@ -43,7 +43,7 @@ class BalloonGameGenerator:
             score = score * 2
 
         event = GameEvent(
-            player="Generator",
+            player=player_name,
             balloon_color=balloon_color,
             score=score,
             favorite_color_bonus=is_favorite_hit,
@@ -68,17 +68,28 @@ class AsyncBalloonPopProducer:
         )
         self.topic = topic
         self.delay = delay
-        self.generator = BalloonGameGenerator(**generator_config)
+        self.generator = BalloonGameGenerator(generator_config["bonus_probability"])
+        logger.info(f"Generator config {generator_config}")
+        self.player_pool = [
+            self.generate_player_name() for _ in range(generator_config["num_players"])
+        ]
 
     async def send_pop(self, pop_data: GameEvent):
         await self.producer.send_and_wait(self.topic, pop_data)
         logger.info(f"{pop_data}")
 
+    def generate_player_name(self):
+        adjectives = ["Swift", "Bouncy", "Cosmic", "Lucky", "Mighty", "Gentle", "Wild"]
+        nouns = ["Balloon", "Cloud", "Star", "Wind", "Phoenix", "Dragon", "Spirit"]
+
+        return f"{random.choice(adjectives)} {random.choice(nouns)}"
+
     async def run(self):
         await self.producer.start()
         try:
             while True:
-                pop_data = self.generator.generate_pop()
+                player = random.choice(self.player_pool)
+                pop_data = self.generator.generate_pop(player)
                 await self.send_pop(pop_data.model_dump())
                 await asyncio.sleep(self.delay)
         finally:
@@ -94,6 +105,7 @@ CONFIG = {
         "delay": float(os.getenv("DELAY", "1.0")),
     },
     "generator": {
+        "num_players": int(os.getenv("NUM_PLAYERS", "10")),
         "bonus_probability": float(os.getenv("BONUS_PROBABILITY", "0.15")),
     },
     "logging": {
@@ -120,6 +132,12 @@ def parse_args() -> argparse.Namespace:
     # Generator settings
     gen_group = parser.add_argument_group("Generator Settings")
     gen_group.add_argument(
+        "--num-players",
+        type=int,
+        default=CONFIG["generator"]["num_players"],
+        help="Number of players to simulate",
+    )
+    gen_group.add_argument(
         "--bonus-probability",
         type=float,
         default=CONFIG["generator"]["bonus_probability"],
@@ -142,7 +160,10 @@ async def main():
     global logger
     logger.setLevel(args.log_level)
 
-    generator_config = {"bonus_probability": args.bonus_probability}
+    generator_config = {
+        "bonus_probability": args.bonus_probability,
+        "num_players": args.num_players,
+    }
 
     producer = AsyncBalloonPopProducer(
         bootstrap_servers=args.bootstrap_servers,
