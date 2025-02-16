@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: generator
-          image: registry.localhost:5000/balloon-pop-generator:latest
+          image: ghcr.io/kameshsampath/balloon-popper-demo/balloon-pop-generator
           imagePullPolicy: Always
           replicas: 0
           resources:
