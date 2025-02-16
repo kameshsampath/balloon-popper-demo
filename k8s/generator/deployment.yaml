@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: balloon-game-data-generator
 spec:
+  replicas: 0
   selector:
     matchLabels:
       app: balloon-game-data-generator
@@ -11,7 +12,6 @@ spec:
       labels:
         app: balloon-game-data-generator
     spec:
-      replicas: 0
       containers:
         - name: generator
           image: ghcr.io/kameshsampath/balloon-popper-demo/balloon-pop-generator
