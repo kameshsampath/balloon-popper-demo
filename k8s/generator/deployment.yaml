@@ -11,11 +11,11 @@ spec:
       labels:
         app: balloon-game-data-generator
     spec:
+      replicas: 0
       containers:
         - name: generator
           image: ghcr.io/kameshsampath/balloon-popper-demo/balloon-pop-generator
           imagePullPolicy: Always
-          replicas: 0
           resources:
             limits:
               memory: "128Mi"
