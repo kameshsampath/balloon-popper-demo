@@ -39,8 +39,8 @@ try:
     catalog.create_namespace(database_name)
 except NamespaceAlreadyExistsError:
     logger.info(f"Namespace '{database_name}' already exists.Skipping creation.")
-except Exception as e:
-    logger.error(f"Error creating database {database_name},{e} ")
+except Exception as nse:
+    logger.error(f"Error creating database {database_name},{nse} ")
 
 # Set page configuration - MUST BE FIRST ST COMMAND
 st.set_page_config(
@@ -82,25 +82,27 @@ with st.sidebar:
 def load_data():
     """Load and preprocess the color trend data."""
     try:
-        # Load color trend data
-        color_trend = pd.read_csv(
-            "data/game_events.player_color_trend.csv", index_col=False
-        )
-        color_trend = color_trend.drop("Unnamed: 0", axis=1)
-
+        # database
+        namespace = "balloon_pops"
+        tbl_balloon_colored_pops_name = "balloon_colored_pops"
+        # Load balloon colored pops data
+        table_balloon_colored_pops = catalog.load_table(f"{namespace}.{tbl_balloon_colored_pops_name}")
+        balloon_colored_pops = table_balloon_colored_pops.scan().to_pandas()
         # Convert numeric columns to Python native types
-        color_trend = color_trend.astype(
-            {"pop_count": int, "score_in_window": int, "bonus_hits": int}
-        )
+        balloon_colored_pops = balloon_colored_pops.astype({
+            'balloon_pops': int,
+            'points_by_color': int,
+            'bonus_hits': int
+        })
 
-        # Convert time windows to datetime and extract hour
-        color_trend["window_start"] = pd.to_datetime(color_trend["window_start"])
-        color_trend["window_end"] = pd.to_datetime(color_trend["window_end"])
-        color_trend["hour"] = color_trend["window_start"].dt.hour
+        tbl_balloon_colored_stats_name = "balloon_color_stats"
+        # Load balloon colored pops data
+        table_balloon_color_stats = catalog.load_table(f"{namespace}.{tbl_balloon_colored_stats_name}")
+        balloon_color_stats = table_balloon_color_stats.scan().to_pandas()
 
-        return color_trend
-    except Exception as e1:
-        st.error(f"Error loading data: {e1}")
+        return balloon_colored_pops,balloon_color_stats
+    except Exception as e2:
+        st.error(f"Error loading data: {str(e2)}")
         return None
 
 
@@ -115,8 +117,7 @@ def load_leaderboard_data():
         table = catalog.load_table(f"{namespace}.{table_leaderboard}")
         leaderboard = table.scan().to_pandas()
         return (leaderboard.
-                    sort_values(["total_score","bonus_hits"], ascending=False).
-                head(10)
+                    sort_values(["total_score","bonus_hits"], ascending=False)
                 )
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
@@ -134,6 +135,21 @@ def load_realtime_scores_data():
         ## TODO: want to set the max window time to further filter data?
         _realtime_scores_df = tbl_realtime_scores.scan().to_pandas()
         return _realtime_scores_df
+    except Exception as e3:
+        st.error(f"Error loading data: {str(e3)}")
+        return None
+
+@st.cache_data
+def load_color_performance_data():
+    """Load and preprocess the color trend data."""
+    try:
+        # database
+        namespace = "balloon_pops"
+        tbl_color_performance = "color_performance_trends"
+        # Load Realtime scores
+        tbl_color_performance = catalog.load_table(f"{namespace}.{tbl_color_performance}")
+        _color_performance_df = tbl_color_performance.scan().to_pandas()
+        return _color_performance_df
     except Exception as e3:
         st.error(f"Error loading data: {str(e3)}")
         return None
@@ -234,15 +250,15 @@ def show_color_analysis():
     st.title("Color Analysis")
 
     if st.session_state.color_trend_data is not None:
-        color_trend = st.session_state.color_trend_data
-
+        color_trend,color_stats = st.session_state.color_trend_data
+        # st.dataframe( color_trend)
         # Create color distribution from color_trend data
         color_dist = (
-            color_trend.groupby(["player", "balloon_color"])["pop_count"]
+            color_trend.groupby(["player", "balloon_color"])["balloon_pops"]
             .sum()
             .reset_index()
         )
-        color_dist = color_dist.rename(columns={"pop_count": "hits"})
+        color_dist = color_dist.rename(columns={"balloon_pops": "hits"})
 
         # Color Distribution Section
         st.header("Balloon Color Distribution")
@@ -282,72 +298,100 @@ def show_color_analysis():
         # Display the chart
         st.altair_chart(heatmap, use_container_width=True)
 
+        st.header("Color Analysis by Player and Metric")
+        # Player selector
+        players = color_trend['player'].unique()
+        selected_player = st.selectbox('Select Player', players)
+
+        # Metric selector
+        metrics = {
+            'Balloon Pops': 'balloon_pops',
+            'Points by Color': 'points_by_color',
+            'Bonus Hits': 'bonus_hits'
+        }
+        selected_metric = st.selectbox('Select Metric', list(metrics.keys()))
+
+        # Filter data
+        filtered_df = color_trend[color_trend['player'] == selected_player]
+
+        # Create stacked bar chart
+        chart = alt.Chart(filtered_df).mark_bar().encode(
+            x=alt.X('window_start:T', title='Time'),
+            y=alt.Y(f'{metrics[selected_metric]}:Q', title=selected_metric),
+            color=alt.Color('balloon_color:N', title='Balloon Color'),
+            tooltip=['balloon_color', metrics[selected_metric], 'window_start', 'window_end']
+        ).properties(
+            title=f'{selected_metric} by Color Over Time - {selected_player}'
+        )
+
+        st.altair_chart(chart, use_container_width=True)
+
+        st.header("Color Stats by Player")
+
+        # Player selector
+        players = color_stats['player'].unique()
+        selected_player = st.selectbox('Select Player', players)
+
+        # Filter data
+        filtered_df = color_stats[color_stats['player'] == selected_player]
+
+        # Bar chart
+        chart = alt.Chart(filtered_df).mark_bar().encode(
+            x=alt.X('balloon_color:N', title='Balloon Color'),
+            y=alt.Y('points_by_color:Q', title='Points'),
+            color='balloon_color:N',
+            tooltip=['balloon_color', 'balloon_pops', 'points_by_color', 'bonus_hits']
+        ).properties(
+            width=600,
+            height=400,
+            title=f'Performance by Balloon Color - {selected_player}'
+        )
+
+        st.altair_chart(chart, use_container_width=True)
+
 
 def show_performance_trends():
     st.title("Balloon Activity Patterns")
 
-    if st.session_state.color_trend_data is not None:
-        color_trend = st.session_state.color_trend_data
+    if st.session_state.color_performance_data is not None:
+        performance_trends = st.session_state.color_performance_data
+        st.dataframe(performance_trends)
 
-        # Create player heatmap data
-        player_hourly = (
-            color_trend.groupby(["player", "hour"])["pop_count"].sum().reset_index()
+        # Time series with dual metrics
+        base = alt.Chart(performance_trends).encode(
+            x=alt.X('window_start:T', title='Time')
         )
 
-        # Create color heatmap data
-        color_hourly = (
-            color_trend.groupby(["balloon_color", "hour"])["pop_count"]
-            .sum()
-            .reset_index()
+        # Line for average score
+        lines = base.mark_line().encode(
+            y=alt.Y('avg_score_per_pop:Q', title='Avg Score per Pop'),
+            color=alt.Color('balloon_color:N', title='Color')
         )
 
-        # Player Heatmap
-        st.header("Player Activity by Hour")
-
-        player_heatmap = (
-            alt.Chart(player_hourly)
-            .mark_rect()
-            .encode(
-                x=alt.X("hour:O", title="Hour of Day"),
-                y=alt.Y("player:N", title="Player"),
-                color=alt.Color(
-                    "pop_count:Q",
-                    title="Balloon Pops",
-                    scale=alt.Scale(scheme=st.session_state.color_scheme),
-                ),
-                tooltip=["player", "hour", "pop_count"],
-            )
-            .properties(title="Balloon Pops by Player and Hour", height=400)
+        # Circles for pop volume
+        circles = base.mark_circle().encode(
+            y=alt.Y('total_pops:Q', title='Total Pops'),
+            size='total_pops:Q',
+            color=alt.Color('balloon_color:N'),
+            opacity=alt.value(0.6)
         )
 
-        st.altair_chart(player_heatmap, use_container_width=True)
-
-        # Color Heatmap
-        st.header("Balloon Colors by Hour")
-
-        color_heatmap = (
-            alt.Chart(color_hourly)
-            .mark_rect()
-            .encode(
-                x=alt.X("hour:O", title="Hour of Day"),
-                y=alt.Y("balloon_color:N", title="Balloon Color"),
-                color=alt.Color(
-                    "pop_count:Q",
-                    title="Balloon Pops",
-                    scale=alt.Scale(scheme=st.session_state.color_scheme),
-                ),
-                tooltip=["balloon_color", "hour", "pop_count"],
-            )
-            .properties(title="Balloon Pops by Color and Hour", height=300)
+        # Combine charts
+        chart = alt.layer(lines, circles).resolve_scale(
+            y='independent'
+        ).properties(
+            title='Color Performance Trends Over Time'
         )
 
-        st.altair_chart(color_heatmap, use_container_width=True)
+        st.altair_chart(chart, use_container_width=True)
+
 
 
 # Load data once at startup
 st.session_state.leaderboard_data = load_leaderboard_data()
 st.session_state.color_trend_data = load_data()
 st.session_state.realtime_scores_data = load_realtime_scores_data()
+st.session_state.color_performance_data = load_color_performance_data()
 
 # Configure the pages with Material icons
 pg = st.navigation(

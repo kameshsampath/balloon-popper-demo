@@ -99,7 +99,7 @@ class AsyncBalloonPopProducer:
 CONFIG = {
     "kafka": {
         "bootstrap_servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:19094"),
-        "topic": os.getenv("KAFKA_TOPIC", "test"),
+        "topic": os.getenv("KAFKA_TOPIC", "balloon-game"),
         "max_batch_size": 16384,
         "delay": float(os.getenv("DELAY", "1.0")),
     },

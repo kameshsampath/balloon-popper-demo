@@ -48,12 +48,12 @@ tasks:
 
   generator-local:
     silent: true
-    desc: run the data generator dashboard locally
+    desc: run the data generator  locally
     aliases:
       - dashboard
       - streamlit
     cmds:
-      - uv run --package=dashboard dashboard
+      - uv run --package=generator generator
 
   create-test-topic:
     silent: false
