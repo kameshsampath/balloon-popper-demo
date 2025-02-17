@@ -26,3 +26,4 @@ work/**
 **/risingwave.yaml
 **/polaris.env
 scripts/*.sql
+__pycache__

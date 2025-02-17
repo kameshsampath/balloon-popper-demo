@@ -102,68 +102,101 @@ EOF
 
 The project has the following directories and files:
 
-```
+```text
 .
 ├── LICENSE
 ├── README.md
 ├── Taskfile.yml
 ├── bin
-│   ├── cleanup.sh
-│   └── setup.sh
+│   ├── cleanup.sh
+│   └── setup.sh
 ├── config
-│   └── cluster-config.yaml
+│   └── cluster-config.yaml
 ├── docs
-│   ├── catalog_data.png
-│   ├── catalog_metadata.png
-│   ├── catalog_storage.png
-│   └── localstack_view.png
+│   ├── catalog_data.png
+│   ├── catalog_metadata.png
+│   ├── catalog_storage.png
+│   └── localstack_view.png
 ├── k8s
-│   ├── features
-│   │   ├── adminer.yaml
-│   │   ├── cert-manager.yaml
-│   │   ├── kafka-cluster.yaml
-│   │   ├── localstack.yaml
-│   │   └── strimzi-kafka-op.yaml
-│   └── polaris
-│       ├── deployment.yaml
-│       ├── jobs
-│       │   ├── job-bootstrap.yaml
-│       │   ├── job-purge.yaml
-│       │   └── kustomization.yaml
-│       ├── kustomization.yaml
-│       ├── rbac.yaml
-│       ├── sa.yaml
-│       └── service.yaml
+│   ├── features
+│   │   ├── adminer.yaml
+│   │   ├── cert-manager.yaml
+│   │   ├── kafka-cluster.yaml
+│   │   ├── localstack.yaml
+│   │   └── strimzi-kafka-op.yaml
+│   ├── generator
+│   │   ├── deployment.yaml
+│   │   └── kustomization.yaml
+│   └── polaris
+│       ├── deployment.yaml
+│       ├── jobs
+│       │   ├── job-bootstrap.yaml
+│       │   ├── job-purge.yaml
+│       │   └── kustomization.yaml
+│       ├── kustomization.yaml
+│       ├── rbac.yaml
+│       ├── sa.yaml
+│       └── service.yaml
 ├── notebooks
-│   └── verify_setup.ipynb
+│   └── workbook.ipynb
+├── packages
+│   ├── common
+│   │   ├── README.md
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       └── common
+│   │           ├── __init__.py
+│   │           ├── log
+│   │           │   ├── __init__.py
+│   │           │   └── logger.py
+│   │           └── py.typed
+│   ├── dashboard
+│   │   ├── README.md
+│   │   ├── pyproject.toml
+│   │   └── src
+│   │       └── dashboard
+│   │           ├── __init__.py
+│   │           └── streamlit_app.py
+│   └── generator
+│       ├── Dockerfile
+│       ├── README.md
+│       ├── pyproject.toml
+│       └── src
+│           ├── generator
+│           │   └── __init__.py
+│           └── stream
+│               ├── __init__.py
+│               ├── balloon_popper.py
+│               └── models.py
 ├── polaris-forge-setup
-│   ├── ansible.cfg
-│   ├── catalog_cleanup.yml
-│   ├── catalog_setup.yml
-│   ├── cluster_checks.yml
-│   ├── defaults
-│   │   └── main.yml
-│   ├── inventory
-│   │   └── hosts
-│   ├── prepare.yml
-│   ├── tasks
-│   │   ├── drop_tables.yml
-│   │   ├── kafka_checks.yml
-│   │   ├── localstack_checks.yml
-│   │   ├── polaris_checks.yml
-│   │   └── risingwave_checks.yml
-│   └── templates
-│       ├── bootstrap-credentials.env.j2
-│       ├── persistence.xml.j2
-│       ├── polaris.env.j2
-│       ├── postgresql.yml.j2
-│       └── risingwave.yaml.j2
+│   ├── ansible.cfg
+│   ├── catalog_cleanup.yml
+│   ├── catalog_setup.yml
+│   ├── cluster_checks.yml
+│   ├── defaults
+│   │   └── main.yml
+│   ├── generate_source_sinks.yml
+│   ├── inventory
+│   │   └── hosts
+│   ├── prepare.yml
+│   ├── tasks
+│   │   ├── drop_tables.yml
+│   │   ├── kafka_checks.yml
+│   │   ├── localstack_checks.yml
+│   │   ├── polaris_checks.yml
+│   │   └── risingwave_checks.yml
+│   └── templates
+│       ├── bootstrap-credentials.env.j2
+│       ├── persistence.xml.j2
+│       ├── polaris.env.j2
+│       ├── postgresql.yml.j2
+│       ├── risingwave.yaml.j2
+│       ├── sink.sql.j2
+│       └── source.sql.j2
 ├── pyproject.toml
+├── scripts
 ├── uv.lock
 └── work
-
-15 directories, 43 files
-
 ```
 
 To ensure reuse and for security, files with passwords are not added to git. Currently, the following files are ignored or not available out of the box (they will be generated in upcoming steps):
@@ -174,6 +207,7 @@ To ensure reuse and for security, files with passwords are not added to git. Cur
 - k8s/polaris/.bootstrap-credentials
 - k8s/polaris/.polaris.env
 - All RSA KeyPairs
+- scripts/*.sql
 
 ### Prepare for Deployment
 
@@ -269,7 +303,7 @@ service/my-cluster-kafka-extplain-bootstrap   NodePort    10.43.197.175   <none>
 
 Expected output:
 
-### Deploy Polaris
+### Deploy Apache Polaris
 
 #### Container Images
 
@@ -306,45 +340,6 @@ Ensure all deployments and jobs have succeeded:
 $PROJECT_HOME/polaris-forge-setup/cluster_checks.yml --tags polaris
 ```
 
-#### Purge and Bootstrap
-
-Whenever there is a need to clean and do bootstrap again, run the following sequence of commands:
-
-```shell
-kubectl patch job polaris-purge -p '{"spec":{"suspend":false}}'
-```
-
-Wait for purge to complete:
-
-```shell
-kubectl logs -f -n polaris jobs/polaris-purge
-```
-
-Scale down bootstrap and then scale it up:
-
-```shell
-kubectl delete -k k8s/polaris/job
-```
-
-```shell
-kubectl apply -k k8s/polaris/job
-```
-
-Wait for bootstrap to complete successfully:
-
-```shell
-kubectl logs -f -n polaris jobs/polaris-bootstrap
-```
-
-A successful bootstrap will have the following text in the log:
-
-```text
-...
-Realm 'POLARIS' successfully bootstrapped.
-Bootstrap completed successfully.
-...
-```
-
 Checking for pods and services in the `polaris` namespace should display:
 
 ```text
@@ -362,7 +357,7 @@ service/postgresql-hl   ClusterIP      None           <none>                  54
 ### Available Services
 
 | Service        | URL                                                  | Default Credentials                                                                                |
-| -------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+|----------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | Polaris UI     | http://localhost:18181                               | $PROJECT_HOME/k8s/polaris/.bootstrap-credentials.env                                               |
 | Adminer        | http://localhost:18080                               | PostgreSQL host will be: `postgresql.polaris`, check $FEATURES_DIR/postgresql.yaml for credentials |
 | LocalStack     | http://localhost:14566                               | Use `test/test` for AWS credentials with Endpoint URL as http://localhost:14566                    |
@@ -399,19 +394,84 @@ Next, we will do the following:
 $PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
 ```
 
-## Verify Setup
-
-Once you are successful in setting up the catalog, run the [notebook](./notebooks/verify_setup.ipynb) to make sure you are able to create the namespace, table, and insert some data.
-
-To double-check if we have all our iceberg files created and committed, open <https://app.localstack.cloud/inst/default/resources/s3/balloon-game>. You should see something as shown in the screenshots below:
-
-Your local Apache Polaris environment is ready for use.
-
 ## Setup Sources and Sink
 
-In this section we will setup the sources and sink for the demo.
+Create database named `balloon_pops` which will hold all sink tables that will be created in later section
 
-**TODO**
+## Create Database
+
+```shell
+$PROJECT_HOME/polaris-forge-setup/catalog_setup.yml --tags=database
+```
+
+### Generate Source and Sink SQL Scripts
+
+> ![NOTE]
+> Since Source and Sink might have sensitive values we will generate them.
+> Both [source.sql](./scripts/source.sql) and [sink.sql](./scripts/sink.sql) are ignored by git.
+
+```shell
+$PROJECT_HOME/polaris-forge-setup/generate_source_sinks.yml
+```
+### Source
+
+Set up sources to consume messages from Kafka and sink into Iceberg Tables:
+
+```shell
+psql -f $PROJECT_HOME/scripts/source.sql
+```
+### Sink
+
+Setup sinks to drain the messages to Iceberg Tables
+
+```shell
+psql -f $PROJECT_HOME/scripts/sink.sql
+```
+
+## Run Application
+
+### Simulate Data Generation
+
+The demo repo has [streaming data generator](./packages/generator) that can be used to generate data into Kafka to be drained to Iceberg Tables.
+
+Sample payloads that will when a balloon is popped,
+
+```json
+{
+  "player": "Cosmic Phoenix",
+  "balloon_color": "pink",
+  "score": 55,
+  "favorite_color_bonus": false,
+  "event_ts": "2025-02-17T13: 59: 00.430087Z"
+}
+```
+
+```json
+{
+  "player": "Cosmic Phoenix",
+  "balloon_color": "blue",
+  "score": 150,
+  "favorite_color_bonus": true,
+  "event_ts": "2025-02-17T13:59:04.453717Z"
+}
+```
+
+Open a new terminal and run the following command,
+
+```shell
+task generator-local
+```
+
+> ![NOTE]
+> We can use notebook [workbook](./notebooks/workbook.ipynb) to work with the Iceberg catalog using the [PyIceberg](https://py.iceberg.apache.org/)
+
+###  Visualize Data using Streamlit
+
+Open new terminal and run the following command,
+
+```shell
+task streamlit
+```
 
 ## Troubleshooting
 
@@ -424,6 +484,44 @@ You can use `kubectl logs` to inspect the logs of various components:
 ```bash
 # Check Polaris server logs
 kubectl logs -f -n polaris deployment/polaris
+```
+##### Purge and Bootstrap
+
+Whenever there is a need to clean and do bootstrap again, run the following sequence of commands:
+
+```shell
+kubectl patch job polaris-purge -p '{"spec":{"suspend":false}}'
+```
+
+Wait for purge to complete:
+
+```shell
+kubectl logs -f -n polaris jobs/polaris-purge
+```
+
+Scale down bootstrap and then scale it up:
+
+```shell
+kubectl delete -k k8s/polaris/job
+```
+
+```shell
+kubectl apply -k k8s/polaris/job
+```
+
+Wait for bootstrap to complete successfully:
+
+```shell
+kubectl logs -f -n polaris jobs/polaris-bootstrap
+```
+
+A successful bootstrap will have the following text in the log:
+
+```text
+...
+Realm 'POLARIS' successfully bootstrapped.
+Bootstrap completed successfully.
+...
 ```
 
 #### Bootstrap and Purge Jobs
@@ -481,7 +579,22 @@ kubectl logs -f -n localstack deployment/localstack
    # Verify PostgreSQL connectivity
    kubectl exec -it -n polaris postgresql-0 -- pg_isready -h localhost
    ```
+4. If Risingwave connection fails:
 
+   ```bash
+   # Check Risingwave service
+   kubectl get svc -n risingwave risingwave
+
+   # Verify Risingwave logs
+   kubectl logs -n risingwave deployment/risingwave-frontend
+   # (or)
+   kubectl logs -n risingwave deployment/risingwave-risingwave-compactor 
+   # (or)
+   kubectl logs -n risingwave statefulset/risingwave-compute 
+   # (or)
+   kubectl logs -n risingwave statefulset/risingwave-meta
+   ```
+   
 ## Cleanup
 
 Cleanup the Polaris resources:
@@ -502,6 +615,7 @@ $PROJECT_HOME/bin/cleanup.sh
 
 - [Apache Polaris](https://github.com/apache/arrow-datafusion-python) - Data Catalog and Governance Platform
 - [PyIceberg](https://py.iceberg.apache.org/) - Python library to interact with Apache Iceberg
+- [Risingwave](https://docs.risingwave.com/) - Risingwave Streaming Database
 - [LocalStack](https://github.com/localstack/localstack) - AWS Cloud Service Emulator
 - [k3d](https://k3d.io) - k3s in Docker
 - [k3s](https://k3s.io) - Lightweight Kubernetes Distribution
