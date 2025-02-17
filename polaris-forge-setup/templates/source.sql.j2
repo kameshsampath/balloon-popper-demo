@@ -16,29 +16,30 @@ WITH (
 
 -- Leaderboard for final
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_leaderboard AS
-  SELECT 
+  SELECT
     player,
     sum(score) as total_score,
-    count(case when favorite_color_bonus = true then 1 end) as bonus_hits 
-  FROM balloon_game_events 
+    count(case when favorite_color_bonus = true then 1 end) as bonus_hits,
+    max(event_ts) as event_ts
+  FROM balloon_game_events
   GROUP BY player;
 
 -- Leaderboard over window of 15 seconds
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_realtime_scores AS
-  SELECT 
+  SELECT
     player,
     sum(score) as total_score,
     window_start,
     window_end
-  FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS') 
-  GROUP BY 
+  FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
+  GROUP BY
     player,
-    window_start, 
+    window_start,
     window_end;
 
 -- Analyze the various balloon_color pops in 15 seconds
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_colored_pops AS
- SELECT 
+ SELECT
    player,
    balloon_color,
    count(*) as balloon_pops,
@@ -46,21 +47,38 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_colored_pops AS
    count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
    window_start,
    window_end
- FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS') 
- GROUP BY 
+ FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
+ GROUP BY
    player,
    balloon_color,
-   window_start, 
+   window_start,
    window_end;
 
 -- Color based performance
-CREATE MATERIALIZED VIEW mv_color_performance AS 
- SELECT 
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_color_performance_trends AS
+ SELECT
   balloon_color,
   avg(score) as avg_score_per_pop,
-  count(*) as total_pops
+  count(*) as total_pops,
+  window_start,
+  window_end
  FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
- GROUP BY 
-    balloon_color, 
-    window_start, 
+ GROUP BY
+    balloon_color,
+    window_start,
     window_end;
+
+-- Overall Color Stats
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_color_stats AS
+ SELECT
+   player,
+   balloon_color,
+   count(*) as balloon_pops,
+   sum(score) as points_by_color,
+   count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
+   max(event_ts) as event_ts
+ FROM balloon_game_events
+ GROUP BY
+   player,
+   balloon_color;
