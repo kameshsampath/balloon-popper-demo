@@ -253,3 +253,69 @@
       tags:
         - roles
         - grants
+
+    ###################################################################
+    # Create the Database using Principal
+    ###################################################################
+    - name: Parse principal credentials
+      ansible.builtin.set_fact:
+        "{{ columns[item|int] }}": "{{ csvline }}"
+      vars:
+        csvline: "{{ lookup('csvfile', plf_realm, file= plf_work_dir~'/principal.txt', delimiter=',', col=item) }}"
+        columns: [ "realm", "principal_client_id", "principal_client_secret" ]
+      loop: "{{ range(columns | length | int) }}"
+      tags:
+        - database
+
+    # Authentication
+    - name: Get access token
+      ansible.builtin.uri:
+        url: "http://{{ plf_api_host }}:{{ plf_api_port }}/api/catalog/v1/oauth/tokens"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ principal_client_id }}:{{ principal_client_secret }}"
+          accept: application/json
+          content-type: application/x-www-form-urlencoded
+          Polaris-Realm: "{{ realm }}"
+        body_format: form-urlencoded
+        body:
+          grant_type: client_credentials
+          client_id: "{{ principal_client_id }}"
+          client_secret: "{{ principal_client_secret }}"
+          scope: "PRINCIPAL_ROLE:ALL"
+        status_code: [ 200 ]
+      register: principal_token_response
+      tags:
+        - database
+
+    - name: Set access token
+      ansible.builtin.set_fact:
+        principal_access_token: "{{ principal_token_response.json.access_token }}"
+      tags:
+        - database
+
+    - name: Print access token
+      ansible.builtin.debug:
+        var: principal_access_token
+      tags:
+        - database
+
+    # Create Database
+    - name: Create Balloon Game Iceberg Database
+      ansible.builtin.uri:
+        url: "http://{{ plf_api_host }}:{{ plf_api_port }}/api/catalog/v1/{{ plf_catalog_name }}/namespaces"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ principal_access_token }}"
+          accept: application/json
+          content-type: application/json
+          Polaris-Realm: "{{ realm }}"
+        body_format: json
+        body:
+            namespace: ["{{ balloon_game_db }}"]
+            "properties": {
+              "owner": "Balloon Game Demo"
+            }
+        status_code: [ 200, 201, 409 ] # Allow 409 for idempotency
+      tags:
+        - database
