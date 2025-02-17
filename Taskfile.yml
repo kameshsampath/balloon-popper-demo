@@ -42,6 +42,9 @@ tasks:
 
   dashboard-local:
     silent: true
+    aliases:
+      - dashboard
+      - streamlit
     desc: run the streamlit dashboard locally
     cmds:
       - uv run --package=dashboard dashboard
@@ -50,8 +53,7 @@ tasks:
     silent: true
     desc: run the data generator  locally
     aliases:
-      - dashboard
-      - streamlit
+      - generator
     cmds:
       - uv run --package=generator generator
 
