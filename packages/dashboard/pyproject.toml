@@ -1,0 +1,28 @@
+[project]
+name = "dashboard"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kamesh Sampath", email = "kamesh.sampath@hotmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pyarrow==18.1.0",
+    "pyiceberg[s3fs]>=0.8.1",
+    "python-dotenv>=1.0.1",
+    "streamlit>=1.42.0",
+]
+
+[project.scripts]
+dashboard = "dashboard:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "watchdog>=6.0.0",
+]

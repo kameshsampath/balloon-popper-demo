@@ -75,7 +75,7 @@ uv python pin 3.12
 uv venv
 # On Unix-like systems
 source .venv/bin/activate
-# Install deps/packages
+# Install deps/packages.old
 uv sync
 ```
 

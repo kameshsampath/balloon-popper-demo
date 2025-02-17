@@ -9,6 +9,7 @@ vars:
 tasks:
   build-generator:
     dir: generator
+    desc: build the generator image and push to local registry
     cmds:
       - >-
         docker build --no-cache --push -t {{.IMAGE_REGISTRY}}/{{.IMAGE_NAME}} .
@@ -20,12 +21,14 @@ tasks:
 
   generator-stop:
     silent: true
+    desc:  scale down the generator pod
     cmds:
       - >-
         kubectl scale deployment -n default balloon-game-data-generator --replicas 0
 
   generator-start:
     silent: true
+    desc: scale up the generator pod
     cmds:
       - >-
         kubectl scale deployment -n default balloon-game-data-generator --replicas 1
@@ -36,6 +39,21 @@ tasks:
       - task: generator-stop
       - sleep .3
       - task: generator-start
+
+  dashboard-local:
+    silent: true
+    desc: run the streamlit dashboard locally
+    cmds:
+      - uv run --package=dashboard dashboard
+
+  generator-local:
+    silent: true
+    desc: run the data generator dashboard locally
+    aliases:
+      - dashboard
+      - streamlit
+    cmds:
+      - uv run --package=dashboard dashboard
 
   create-test-topic:
     silent: false

@@ -1,0 +1,22 @@
+[project]
+name = "generator"
+version = "0.1.0"
+description = "Ballon Game Streaming Data Generator"
+readme = "README.md"
+authors = [
+    { name = "Kamesh Sampath", email = "kamesh.sampath@hotmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "aiokafka>=0.12.0",
+    "common",
+    "pydantic>=2.10.6",
+    "python-dotenv>=1.0.1",
+]
+
+[project.scripts]
+generator = "generator:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

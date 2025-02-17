@@ -28,3 +28,9 @@ plf_jpa_persistence_unit_name: polaris-dev
 plf_jdbc_username: postgres
 plf_polaris_database: polaris
 plf_jdbc_url: "jdbc:postgresql://postgresql:5432/{{ plf_polaris_database }}"
+
+# Balloon Game settings
+balloon_game_db: balloon_pops
+balloon_game_kafka_bootstrap_servers: my-cluster-kafka-bootstrap.kafka:9092
+balloon_game_kafka_topic: balloon-game
+polaris_catalog_uri: http://polaris.polaris:8181/api/catalog/

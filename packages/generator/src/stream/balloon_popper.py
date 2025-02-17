@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 import asyncio
 import json
@@ -8,8 +7,8 @@ from datetime import datetime, timezone
 
 from aiokafka import AIOKafkaProducer
 from dotenv import load_dotenv
-from logger import get_logger
-from models import GAME_CONFIG, GameEvent
+from common.log.logger import get_logger
+from stream.models import GAME_CONFIG, GameEvent
 
 load_dotenv()
 
@@ -154,7 +153,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-async def main():
+async def run():
     args = parse_args()
 
     global logger
@@ -183,5 +182,4 @@ async def main():
         raise
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+

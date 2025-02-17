@@ -1,0 +1,66 @@
+-- source events from Kafka
+CREATE SOURCE IF NOT EXISTS balloon_game_events (
+ player string,
+ balloon_color string,
+ score integer,
+ page_id integer,
+ favorite_color_bonus boolean,
+ event_ts timestamptz
+)
+WITH (
+ connector='kafka',
+ topic='{{ balloon_game_kafka_topic }}',
+ properties.bootstrap.server='{{ balloon_game_kafka_bootstrap_servers }}',
+ scan.startup.mode='latest'
+) FORMAT PLAIN ENCODE JSON;
+
+-- Leaderboard for final
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_leaderboard AS
+  SELECT 
+    player,
+    sum(score) as total_score,
+    count(case when favorite_color_bonus = true then 1 end) as bonus_hits 
+  FROM balloon_game_events 
+  GROUP BY player;
+
+-- Leaderboard over window of 15 seconds
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_realtime_scores AS
+  SELECT 
+    player,
+    sum(score) as total_score,
+    window_start,
+    window_end
+  FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS') 
+  GROUP BY 
+    player,
+    window_start, 
+    window_end;
+
+-- Analyze the various balloon_color pops in 15 seconds
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_colored_pops AS
+ SELECT 
+   player,
+   balloon_color,
+   count(*) as balloon_pops,
+   sum(score) as points_by_color,
+   count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
+   window_start,
+   window_end
+ FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS') 
+ GROUP BY 
+   player,
+   balloon_color,
+   window_start, 
+   window_end;
+
+-- Color based performance
+CREATE MATERIALIZED VIEW mv_color_performance AS 
+ SELECT 
+  balloon_color,
+  avg(score) as avg_score_per_pop,
+  count(*) as total_pops
+ FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
+ GROUP BY 
+    balloon_color, 
+    window_start, 
+    window_end;

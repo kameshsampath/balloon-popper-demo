@@ -26,4 +26,3 @@ work/**
 **/risingwave.yaml
 **/polaris.env
 scripts/*.sql
-!scripts/source.sql

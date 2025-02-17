@@ -6,12 +6,13 @@
     name: "{{ polaris_namespace | default('polaris') }}"
     api_version: v1
   register: polaris_ns_status
-  until: polaris_ns_status.resources[0].status.phase is defined and polaris_ns_status.resources[0].status.phase ==
-    "Active"
+  until:
+    polaris_ns_status.resources[0].status.phase is defined and polaris_ns_status.resources[0].status.phase == "Active"
   retries: 30
   delay: 10
   tags:
     - namespace
+    - polaris
 
 # Check PostgreSQL deployment in Polaris namespace
 - name: Wait for PostgreSQL deployment to be ready
@@ -23,9 +24,8 @@
   register: postgresql_status
   until: >
     postgresql_status.resources[0].status.availableReplicas is defined and
-    postgresql_status.resources[0].status.availableReplicas > 0 and
-    postgresql_status.resources[0].status.readyReplicas is defined and
-    postgresql_status.resources[0].status.readyReplicas == postgresql_status.resources[0].status.replicas
+    postgresql_status.resources[0].status.availableReplicas > 0 and postgresql_status.resources[0].status.readyReplicas
+    is defined and postgresql_status.resources[0].status.readyReplicas == postgresql_status.resources[0].status.replicas
   retries: 60
   delay: 10
   tags:
@@ -75,8 +75,7 @@
     api_version: batch/v1
   register: polaris_purge_status
   until: >
-    polaris_purge_status.resources[0].spec.suspend is defined and
-    polaris_purge_status.resources[0].spec.suspend == true
+    polaris_purge_status.resources[0].spec.suspend is defined and polaris_purge_status.resources[0].spec.suspend == true
   retries: 60
   delay: 10
   tags:

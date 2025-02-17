@@ -1,7 +1,7 @@
 [project]
-name = "polaris"
-version = "0.1.0"
-description = "Add your description here"
+name = "balloon-popper-demo"
+version = "0.0.1"
+description = "A balloon game demo show how realtime analytics works with Iceberg"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -9,11 +9,11 @@ dependencies = [
     "cryptography>=44.0.0",
     "jinja2>=3.1.5",
     "pandas>=2.2.3",
-    "pyarrow>=19.0.0",
+    "pyarrow==18.1.0",
     "pydantic>=2.10.6",
     "pyiceberg[s3fs]>=0.8.1",
     "pyjwt>=2.10.1",
-    "python-dotenv>=1.0.1",
+    "python-dotenv>=1.0.1"
 ]
 
 [dependency-groups]
@@ -27,5 +27,8 @@ dev = [
     "yamllint>=1.35.1",
 ]
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [tool.uv.workspace]
-members = ["generator"]
+members = ["packages/*"]

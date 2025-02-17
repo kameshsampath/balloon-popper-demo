@@ -1,0 +1,47 @@
+#!ansible-playbook
+---
+- name: Generate Risingwave source and sink
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars_files:
+    - defaults/main.yml
+
+  tasks:
+    # Directory Setup
+    - name: Ensure work directory exists
+      ansible.builtin.file:
+        path: "{{ plf_work_dir }}"
+        state: directory
+        mode: "0755"
+      tags:
+        - source
+        - sink
+
+    - name: Parse principal credentials
+      ansible.builtin.set_fact:
+        "{{ columns[item|int] }}": "{{ csvline }}"
+      vars:
+        csvline: "{{ lookup('csvfile', plf_realm, file= plf_work_dir~'/principal.txt', delimiter=',', col=item) }}"
+        columns: ["realm", "principal_client_id", "principal_client_secret"]
+      loop: "{{ range(columns | length | int) }}"
+      tags:
+        - source
+        - sink
+
+    - name: Generate source
+      ansible.builtin.template:
+        src: templates/source.sql.j2
+        dest: "{{ playbook_dir }}/../scripts/source.sql"
+        mode: "0600"
+      tags:
+        - source
+
+    - name: Generate sink
+      ansible.builtin.template:
+        src: templates/sink.sql.j2
+        dest: "{{ playbook_dir }}/../scripts/sink.sql"
+        mode: "0600"
+      tags:
+        - sink

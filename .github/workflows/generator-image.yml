@@ -4,12 +4,12 @@ on:
     branches: ["main"]
     tags: ["v*.*.*"]
     paths:
-      - "generator/**"
+      - "../../packages.old/generator/**"
       - ".github/workflows/generator-image.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "generator/**"
+      - "../../packages.old/generator/**"
       - ".github/workflows/generator-image.yml"
 jobs:
   build:
