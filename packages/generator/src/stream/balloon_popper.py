@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from aiokafka import AIOKafkaProducer
 from dotenv import load_dotenv
 from common.log.logger import get_logger
-from stream.models import GAME_CONFIG, GameEvent
+from common.stream.models import GAME_CONFIG, GameEvent
 
 load_dotenv()
 
