@@ -8,55 +8,8 @@ import streamlit as st
 from pandas import Timestamp
 
 from common.log.logger import get_logger
-from dashboard.polaris import catalog
 
 logger = get_logger("polaris", os.environ.get("APP_LOG_LEVEL", "INFO"))
-
-
-@st.cache_data(ttl=timedelta(seconds=3))
-def load_leaderboard_data():
-    """Load Leaderboard data."""
-    try:
-        # database
-        namespace = "balloon_pops"
-        # TODO: fix to use leaderboard
-        table_leaderboard = "leaderboard2"
-        # Load leaderboard data
-        table = catalog.load_table(f"{namespace}.{table_leaderboard}")
-        __leaderboard = table.scan().to_pandas()
-        return __leaderboard.sort_values(["total_score", "bonus_hits"], ascending=False)
-    except Exception as e:
-        st.error(f"Error loading data: {str(e)}")
-        return None
-
-
-@st.cache_data(ttl=timedelta(seconds=3))
-def load_realtime_scores_data():
-    """Load and preprocess the color trend data."""
-    try:
-        # database
-        namespace = "balloon_pops"
-        tbl_realtime_scores_name = "realtime_scores"
-        # Load Realtime scores
-        tbl_realtime_scores = catalog.load_table(
-            f"{namespace}.{tbl_realtime_scores_name}"
-        )
-        ## TODO: want to set the max window time to further filter data?
-        _realtime_scores_df = tbl_realtime_scores.scan().to_pandas()
-
-        # Convert time windows to datetime and extract hour
-        _realtime_scores_df["window_start"] = pd.to_datetime(
-            _realtime_scores_df["window_start"]
-        )
-        _realtime_scores_df["window_end"] = pd.to_datetime(
-            _realtime_scores_df["window_end"]
-        )
-
-        return _realtime_scores_df
-    except Exception as e3:
-        st.error(f"Error loading data: {str(e3)}")
-        return None
-
 
 def create_score_chart(data, f_selected_players, f_time_unit: str = "minutes"):
     filtered_df = data[data['player'].isin(f_selected_players)]
@@ -232,5 +185,3 @@ if st.session_state.leaderboard_data is not None:
         else:
             st.warning("Please select at least one player from the sidebar.")
 
-st.session_state.leaderboard_data = load_leaderboard_data()
-st.session_state.realtime_scores_data = load_realtime_scores_data()
