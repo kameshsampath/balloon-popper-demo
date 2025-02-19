@@ -396,7 +396,7 @@ $PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
 
 ## Setup Sources and Sink
 
-Create database named `balloon_pops` which will hold all sink tables that will be created in later section
+The Iceberg database `balloon_pops`  will hold all sink tables that will be created in the upcoming sections.
 
 ## Create Database
 
