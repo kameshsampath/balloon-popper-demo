@@ -27,3 +27,4 @@ work/**
 **/polaris.env
 scripts/*.sql
 __pycache__
+**/.ipynb_checkpoints/
