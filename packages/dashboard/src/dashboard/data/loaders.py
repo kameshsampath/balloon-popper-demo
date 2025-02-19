@@ -5,10 +5,11 @@ import pandas as pd
 import streamlit as st
 
 from common.log.logger import get_logger
-from dashboard.polaris import catalog
+from dashboard.polaris import get_catalog
 
 logger = get_logger("data_loaders", os.environ.get("APP_LOG_LEVEL", "INFO"))
 
+catalog = get_catalog()
 
 @st.cache_data(ttl=timedelta(seconds=3))
 def load_leaderboard_data():
@@ -82,4 +83,27 @@ def load_color_analysis_data():
         return balloon_colored_pops, balloon_color_stats
     except Exception as e2:
         st.error(f"Error loading data: {str(e2)}")
+        return None
+
+@st.cache_data(ttl=timedelta(seconds=3))
+def load_color_performance_data():
+    """Load and preprocess the color trend data."""
+    try:
+        # database
+        namespace = "balloon_pops"
+        tbl_color_performance = "color_performance_trends"
+        # Load Realtime scores
+        tbl_color_performance = catalog.load_table(
+            f"{namespace}.{tbl_color_performance}"
+        )
+        _color_performance_df = tbl_color_performance.scan().to_pandas()
+        _color_performance_df = _color_performance_df.astype(
+            {
+                "avg_score_per_pop": int,
+                "total_pops": int,
+            }
+        )
+        return _color_performance_df
+    except Exception as e3:
+        st.error(f"Error loading data: {str(e3)}")
         return None

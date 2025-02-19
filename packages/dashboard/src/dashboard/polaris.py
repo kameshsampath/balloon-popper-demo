@@ -1,6 +1,8 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
+import streamlit as st
 from pyiceberg.catalog.rest import RestCatalog
 
 from common.log.logger import get_logger
@@ -18,15 +20,19 @@ CATALOG_URI = os.environ.get("CATALOG_URI", "http://localhost:18181/api/catalog"
 catalog_name = os.environ.get("CATALOG_NAME", "balloon-game")
 database_name = os.environ.get("DATABASE_NAME", "balloon_pops")
 
-catalog = RestCatalog(
-    name=catalog_name,
-    **{
-        "uri": CATALOG_URI,
-        "credential": f"{client_id}:{client_secret}",
-        "header.content-type": "application/vnd.api+json",
-        "header.X-Iceberg-Access-Delegation": "vended-credentials",
-        "header.Polaris-Realm": realm,
-        "warehouse": catalog_name,
-        "scope": "PRINCIPAL_ROLE:ALL",
-    },
-)
+
+@st.cache_resource(ttl=timedelta(seconds=59))
+def get_catalog() -> RestCatalog:
+    catalog = RestCatalog(
+        name=catalog_name,
+        **{
+            "uri": CATALOG_URI,
+            "credential": f"{client_id}:{client_secret}",
+            "header.content-type": "application/vnd.api+json",
+            "header.X-Iceberg-Access-Delegation": "vended-credentials",
+            "header.Polaris-Realm": realm,
+            "warehouse": catalog_name,
+            "scope": "PRINCIPAL_ROLE:ALL",
+        },
+    )
+    return catalog

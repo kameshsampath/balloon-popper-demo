@@ -6,25 +6,12 @@ import pandas as pd
 import streamlit as st
 
 from common.log.logger import get_logger
+from dashboard.data.colors import  color_map
 
-logger = get_logger("polaris", os.environ.get("APP_LOG_LEVEL", "INFO"))
+logger = get_logger("colo_analysis", os.environ.get("APP_LOG_LEVEL", "INFO"))
 
 st.title("Color Analysis")
 
-# Color mapping for different balloon types
-color_map = {
-    "red": "#FF0000",  # Pure red
-    "blue": "#0000FF",  # Pure blue
-    "green": "#008000",  # Medium green
-    "yellow": "#FFD700",  # Gold-tinted yellow
-    "purple": "#800080",  # Medium purple
-    "brown": "#8B4513",  # Saddle brown
-    "orange": "#FFA500",  # Pure orange
-    "pink": "#FF69B4",  # Hot pink
-    "gold": "#FFD700",  # Gold
-    "grey": "#808080",  # Medium grey
-    "white": "#F0F0F0"  # Slightly off-white for visibility
-}
 
 
 def analyze_balloon_stats(df, ca_selected_player):
