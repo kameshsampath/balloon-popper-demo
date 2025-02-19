@@ -29,10 +29,8 @@ def create_score_chart(data, f_selected_players, f_time_unit: str = "minutes"):
     # Configure time format based on selected time unit
     if f_time_unit == 'hours':
         time_format = '%H:%M'
-        step_value = 3600000  # 1 hour in milliseconds
     else:  # minutes
         time_format = '%H:%M:%S'
-        step_value = 15000  # 15 seconds in milliseconds
 
     base = alt.Chart(aggregated_df).encode(
         x=alt.X('window_start:T',

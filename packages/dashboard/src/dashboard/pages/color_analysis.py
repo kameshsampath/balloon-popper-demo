@@ -129,7 +129,7 @@ def create_balloon_chart(ca_filtered_df, ca_selected_player, ca_selected_metric)
                 title=None,
                 axis=alt.Axis(labels=False, ticks=False)),
         y=alt.Y(f'sum({ca_selected_metric}):Q',
-                title=f'Total'),
+                title='Total'),
         color=alt.Color('balloon_color:N',
                         scale=alt.Scale(domain=list(color_map.keys()),
                                         range=list(color_map.values())),
@@ -167,7 +167,7 @@ def create_balloon_chart(ca_filtered_df, ca_selected_player, ca_selected_metric)
             align='left',
             baseline='top',
             fontSize=16,
-            text=f'Total Score: ',
+            text='Total Score',
             dx=10,
             dy=10
         ).encode(
