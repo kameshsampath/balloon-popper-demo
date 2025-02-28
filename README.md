@@ -385,7 +385,9 @@ Next, we will do the following:
 - Create Catalog named `balloon-game`
 - Create Principal `super_user` with Principal Role `admin`
 - Create Catalog Role `sudo`, assign the role to Principal Role `admin`
-- Finally, grant the Catalog Role `sudo` to manage catalog via `CATALOG_MANAGE_CONTENT` role. This will make the principals with role `admin` able to manage the catalog.
+- Grant the Catalog Role `sudo` to manage catalog via `CATALOG_MANAGE_CONTENT` role. This will make the principals with role `admin` able to manage the catalog.
+- Create Iceberg database named `balloon_pops`
+- Create the principal secret in `trino` namespace
 
 > ![NOTE]:
 > All values can be adjusted via the [defaults](./polaris-forge-setup/defaults/main.yml)
@@ -396,13 +398,7 @@ $PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
 
 ## Setup Sources and Sink
 
-The Iceberg database `balloon_pops`  will hold all sink tables that will be created in the upcoming sections.
-
-## Create Database
-
-```shell
-$PROJECT_HOME/polaris-forge-setup/catalog_setup.yml --tags=database
-```
+The Iceberg database `balloon_pops` will hold all sink tables that will be created in the upcoming sections.
 
 ### Generate Source and Sink SQL Scripts
 
@@ -419,6 +415,20 @@ Set up sources to consume messages from Kafka and sink into Iceberg Tables:
 
 ```shell
 psql -f $PROJECT_HOME/scripts/source.sql
+```
+
+### Trino
+
+We will use `trino` as the SQL engine to query the Iceberg Tables
+
+```shell
+kubectl apply -f k8s/features/trino.yml
+```
+
+Connect to `trino` 
+
+```shell
+trino --server http://localhost:18080
 ```
 ### Sink
 
