@@ -262,7 +262,7 @@
         "{{ columns[item|int] }}": "{{ csvline }}"
       vars:
         csvline: "{{ lookup('csvfile', plf_realm, file= plf_work_dir~'/principal.txt', delimiter=',', col=item) }}"
-        columns: [ "realm", "principal_client_id", "principal_client_secret" ]
+        columns: ["realm", "principal_client_id", "principal_client_secret"]
       loop: "{{ range(columns | length | int) }}"
       tags:
         - database
@@ -283,7 +283,7 @@
           client_id: "{{ principal_client_id }}"
           client_secret: "{{ principal_client_secret }}"
           scope: "PRINCIPAL_ROLE:ALL"
-        status_code: [ 200 ]
+        status_code: [200]
       register: principal_token_response
       tags:
         - database
@@ -312,10 +312,36 @@
           Polaris-Realm: "{{ realm }}"
         body_format: json
         body:
-            namespace: ["{{ balloon_game_db }}"]
-            "properties": {
-              "owner": "Balloon Game Demo"
-            }
-        status_code: [ 200, 201, 409 ] # Allow 409 for idempotency
+          namespace: ["{{ balloon_game_db }}"]
+          "properties": { "owner": "Balloon Game Demo" }
+        status_code: [200, 201, 409] # Allow 409 for idempotency
       tags:
         - database
+    # Trino Settings
+    - name: Create a trino namespace
+      kubernetes.core.k8s:
+        name: trino
+        api_version: v1
+        kind: Namespace
+        state: present
+      tags:
+        - principal
+    - name: Create a polaris principal secret
+      kubernetes.core.k8s:
+        namespace: testing
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: polaris-principal
+            namespace: trino
+          stringData:
+            CLIENT_ID: "{{ principal_client_id }}"
+            CLIENT_SECRET: "{{ principal_client_secret }}"
+            OAUTH2_SCOPE: "PRINCIPAL_ROLE:admin"
+            REALM: "{{ realm }}"
+        apply: yes
+        server_side_apply:
+          field_manager: ansible
+      tags:
+        - principal
