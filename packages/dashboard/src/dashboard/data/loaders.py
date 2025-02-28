@@ -18,7 +18,7 @@ def load_leaderboard_data():
         # database
         namespace = "balloon_pops"
         # TODO: fix to use leaderboard
-        table_leaderboard = "leaderboard2"
+        table_leaderboard = "leaderboard"
         # Load leaderboard data
         table = catalog.load_table(f"{namespace}.{table_leaderboard}")
         __leaderboard = table.scan().to_pandas()
