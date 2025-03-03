@@ -28,7 +28,9 @@ nav:
   - "Environment Setup": setup.md
   - "Create Cluster": local_cloud.md
   - "Catalog Setup": catalog_setup.md
-  - "Verify Setup": verify_setup.md
+  - "Streaming Analytics":
+      - "Source and Sinks": source_and_sinks.md
+      - "Run Application": run_app.md
   - "Summary": "summary.md"
   - "Troubleshooting": "troubleshooting.md"
 markdown_extensions:

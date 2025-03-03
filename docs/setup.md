@@ -68,7 +68,7 @@ uv sync
 ```
 
 
-## DNSmasq (Optional)
+## DNSmasq
 
 For seamless access of services with the local k3s cluster and host, we might need to add entries in `/etc/hosts` of the host. But using dnsmasq is a much cleaner and neater way.
 

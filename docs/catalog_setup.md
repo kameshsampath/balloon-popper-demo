@@ -14,53 +14,28 @@ By the end of this chapter you would have:
 !!!NOTE
     All values can be adjusted via the [defaults](../../polaris-forge-setup/defaults/main.yml)
 
-## Environment variables
-
-```shell
-# just avoid colliding with existing AWS profiles
-unset AWS_PROFILE
-export AWS_ENDPOINT_URL=http://localstack.localstack:4566
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_REGION=us-east-1
-```
+## Create Catalog, Principal, Roles and Grants
 
 Run the following command to create the Catalog:
 
 ```shell
-$PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
+ansible-playbook $PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
 ```
-
-## Setup Sources and Sink
-
-As part of this demo we will drain all the messages from Kafka to Iceberg tables. In streaming word we call it as draining sources to sink.
-
-The Iceberg database `balloon_pops` will hold all sink tables that will be created in the upcoming sections.
-
-### Generate Source and Sink SQL Scripts
 
 !!!NOTE
-    Since Source and Sink might have sensitive values we will generate them.
-    Both [source.sql](./scripts/source.sql) and [sink.sql](./scripts/sink.sql) are ignored by git.
+    The play will set/unset the following environment variables and run the tasks
+    ```shell
+        unset AWS_PROFILE # just avoid colliding with existing AWS profiles
+        export AWS_ENDPOINT_URL=http://localstack.localstack:4566
+        export AWS_ACCESS_KEY_ID=test
+        export AWS_SECRET_ACCESS_KEY=test
+        export AWS_REGION=us-east-1
+    ```
 
-Run the following command to generate sources and sink scripts,
+## Verify Setup
 
-```shell
-$PROJECT_HOME/polaris-forge-setup/generate_source_sinks.yml
-```
+Run the `$PROJECT_HOME/notebooks/verify_polaris.ipynb` to make sure you are able to create the namespace, table, and insert some data.
 
-### Source
+To double-check if we have all our iceberg files created and committed, open <https://app.localstack.cloud/inst/default/resources/s3/balloon-game?prefix=demo_db>. You should see something as shown in the screenshots below:
 
-Set up sources in Risingwave to consume messages from Kafka and sink into Iceberg tables:
-
-```shell
-psql -f $PROJECT_HOME/scripts/source.sql
-```
-
-### Sink
-
-Setup sinks to drain the messages to Iceberg Tables
-
-```shell
-psql -f $PROJECT_HOME/scripts/sink.sql
-```
+![Localstack](images/verify_polaris.png).

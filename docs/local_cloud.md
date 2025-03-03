@@ -48,7 +48,7 @@ All the configuration are set via [defaults/main.yml](../polaris-forge-setup/def
 The following script will generate the required sensitive files from templates using Ansible:
 
 ```shell
-$PROJECT_HOME/polaris-forge-setup/prepare.yml
+ansible-playbook $PROJECT_HOME/polaris-forge-setup/prepare.yml
 ```
 
 ## Create the Cluster
