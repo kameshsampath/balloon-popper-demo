@@ -6,7 +6,8 @@ on:
       - "main"
 env:
   SITE_DIR: "site"
-
+permissions:
+  contents: write
 jobs:
   buildAnDeploySite:
     name: "Build site with mkdocs"
