@@ -1,0 +1,1059 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="This demo showcases streaming analytics using RisingWave with Apache Iceberg integration, visualized through a Streamlit dashboard. It processes real-time data from a balloon popping game, demonstrating RisingWave's stream processing capabilities connected to Apache Iceberg for data lake storage. The demo features live game metrics, materialized views, and shows how to implement end-to-end stream processing workflows with interactive visualizations.
+">
+      
+      
+      
+        <link rel="canonical" href="https://kameshsampath.github.io/balloon-popper-demo/local_cloud/">
+      
+      
+        <link rel="prev" href="../setup/">
+      
+      
+        <link rel="next" href="../catalog_setup/">
+      
+      
+      <link rel="icon" href="../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+    
+    
+      
+        <title>Create Cluster - Balloon Popper Demo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.8608ea7d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#local-cloud" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Balloon Popper Demo" class="md-header__button md-logo" aria-label="Balloon Popper Demo" data-md-component="logo">
+      
+  <img src="../assets/snowflake-logo-blue.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Balloon Popper Demo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Create Cluster
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Balloon Popper Demo" class="md-nav__button md-logo" aria-label="Balloon Popper Demo" data-md-component="logo">
+      
+  <img src="../assets/snowflake-logo-blue.svg" alt="logo">
+
+    </a>
+    Balloon Popper Demo
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Environment Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Create Cluster
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Create Cluster
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prepare-for-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prepare for Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the Cluster
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risingwave" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risingwave
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#localstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      Localstack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    <span class="md-ellipsis">
+      Kafka
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploy-apache-polaris" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploy Apache Polaris
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deploy Apache Polaris">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#container-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Images
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-manifests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Apply Manifests
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Services
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalog_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Catalog Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Streaming Analytics
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Streaming Analytics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../source_and_sinks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Source and Sinks
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run_app/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Run Application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../summary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Summary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prepare-for-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prepare for Deployment
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create the Cluster
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verify Components
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Verify Components">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#risingwave" class="md-nav__link">
+    <span class="md-ellipsis">
+      Risingwave
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#localstack" class="md-nav__link">
+    <span class="md-ellipsis">
+      Localstack
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kafka" class="md-nav__link">
+    <span class="md-ellipsis">
+      Kafka
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deploy-apache-polaris" class="md-nav__link">
+    <span class="md-ellipsis">
+      Deploy Apache Polaris
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Deploy Apache Polaris">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#container-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Images
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-manifests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Apply Manifests
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#available-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      Available Services
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="local-cloud">Local Cloud<a class="headerlink" href="#local-cloud" title="Permanent link">&para;</a></h1>
+<p>In this chapter, we will guide you through the following steps:</p>
+<ul>
+<li>Prepare resources for Kubernetes Deployment</li>
+<li>Create local Kubernetes Cluster</li>
+<li>Deploy Components like Localstack, Kafka, Polaris etc.,</li>
+</ul>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>All the configuration are set via <a href="../polaris-forge-setup/defaults/main.yml">defaults/main.yml</a></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plf_aws_endpoint_url</code></td>
+<td>LocalStack endpoint in k3s</td>
+<td><code>http://localstack.localstack:4566</code></td>
+</tr>
+<tr>
+<td><code>plf_aws_region</code></td>
+<td>AWS region for LocalStack</td>
+<td><code>us-east-1</code></td>
+</tr>
+<tr>
+<td><code>plf_aws_role_arn</code></td>
+<td>Default role ARN for LocalStack</td>
+<td><code>arn:aws:iam::000000000000:role/Admin</code></td>
+</tr>
+<tr>
+<td><code>plf_api_host</code></td>
+<td>Polaris API host</td>
+<td><code>localhost</code></td>
+</tr>
+<tr>
+<td><code>plf_api_port</code></td>
+<td>Default Polaris API port</td>
+<td><code>18181</code></td>
+</tr>
+<tr>
+<td><code>plf_realm</code></td>
+<td>Polaris realm name</td>
+<td><code>POLARIS</code></td>
+</tr>
+<tr>
+<td><code>plf_api_base_url</code></td>
+<td>Polaris API URL</td>
+<td><code>http://{{ plf_api_host }}:{{ plf_api_port }}</code></td>
+</tr>
+<tr>
+<td><code>plf_polaris_log_level</code></td>
+<td>Polaris API Server Log Level</td>
+<td><code>INFO</code></td>
+</tr>
+<tr>
+<td><code>plf_catalog_name</code></td>
+<td>Name of the Polaris catalog</td>
+<td><code>balloon-game</code></td>
+</tr>
+<tr>
+<td><code>plf_base_s3_location</code></td>
+<td>S3 location for catalog storage</td>
+<td><code>s3://{{ plf_catalog_name }}</code></td>
+</tr>
+<tr>
+<td><code>plf_admin_username</code></td>
+<td>Superuser for Polaris</td>
+<td><code>super_user</code></td>
+</tr>
+<tr>
+<td><code>plf_admin_role</code></td>
+<td>Admin role name</td>
+<td><code>admin</code></td>
+</tr>
+<tr>
+<td><code>plf_catalog_role</code></td>
+<td>Catalog role name</td>
+<td><code>sudo</code></td>
+</tr>
+<tr>
+<td><code>plf_work_dir</code></td>
+<td>Work directory for storing credentials</td>
+<td><code>{{ playbook_dir }}/../work</code></td>
+</tr>
+<tr>
+<td><code>plf_k8s_dir</code></td>
+<td>Kubernetes manifests directory</td>
+<td><code>{{ playbook_dir }}/../k8s</code></td>
+</tr>
+<tr>
+<td><code>plf_polaris_dir</code></td>
+<td>Directory where polaris manifests are stored</td>
+<td><code>{{ plf_k8s_dir }}/polaris</code></td>
+</tr>
+<tr>
+<td><code>plf_features_dir</code></td>
+<td>Directory where cluster feature manifests are stored</td>
+<td><code>{{ plf_k8s_dir }}/features</code></td>
+</tr>
+<tr>
+<td><code>plf_sql_scripts_dir</code></td>
+<td>SQL Scripts Directory</td>
+<td><code>{{ playbook_dir }}/scripts</code></td>
+</tr>
+<tr>
+<td><code>plf_credentials_file</code></td>
+<td>Bootstrap credentials location</td>
+<td><code>{{ plf_k8s_dir }}/polaris/.bootstrap-credentials.env</code></td>
+</tr>
+<tr>
+<td><code>plf_notebook_dir</code></td>
+<td></td>
+<td><code>{{ playbook_dir }}/../notebooks</code></td>
+</tr>
+<tr>
+<td><code>plf_template_dir</code></td>
+<td></td>
+<td><code>{{ playbook_dir }}/templates/notebooks</code></td>
+</tr>
+<tr>
+<td><code>plf_jpa_persistence_unit_name</code></td>
+<td></td>
+<td><code>polaris-dev</code></td>
+</tr>
+<tr>
+<td><code>plf_jdbc_username</code></td>
+<td></td>
+<td><code>postgres</code></td>
+</tr>
+<tr>
+<td><code>plf_polaris_database</code></td>
+<td></td>
+<td><code>polaris</code></td>
+</tr>
+<tr>
+<td><code>plf_jdbc_url</code></td>
+<td></td>
+<td><code>jdbc:postgresql://postgresql:5432/{{ plf_polaris_database }}</code></td>
+</tr>
+<tr>
+<td><code>balloon_game_db</code></td>
+<td></td>
+<td><code>balloon_pops</code></td>
+</tr>
+<tr>
+<td><code>balloon_game_kafka_bootstrap_servers</code></td>
+<td></td>
+<td><code>my-cluster-kafka-bootstrap.kafka:9092</code></td>
+</tr>
+<tr>
+<td><code>balloon_game_kafka_topic</code></td>
+<td></td>
+<td><code>balloon-game</code></td>
+</tr>
+<tr>
+<td><code>polaris_catalog_uri</code></td>
+<td></td>
+<td><code>{{ plf_api_base_url }}/api/catalog/</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="prepare-for-deployment">Prepare for Deployment<a class="headerlink" href="#prepare-for-deployment" title="Permanent link">&para;</a></h2>
+<p>The following script will generate the required sensitive files from templates using Ansible:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ansible-playbook<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/prepare.yml
+</span></code></pre></div>
+<h2 id="create-the-cluster">Create the Cluster<a class="headerlink" href="#create-the-cluster" title="Permanent link">&para;</a></h2>
+<p>Run the cluster setup script:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">$PROJECT_HOME</span>/bin/setup.sh
+</span></code></pre></div>
+<h2 id="verify-components">Verify Components<a class="headerlink" href="#verify-components" title="Permanent link">&para;</a></h2>
+<p>Once the cluster is started, wait for the deployments to be ready:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>ansible-playbook<span class="w">  </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/cluster_checks.yml<span class="w"> </span>--tags<span class="o">=</span>bootstrap
+</span></code></pre></div>
+<p>The cluster will deploy <code>risingwave</code>, <code>localstack</code> and <code>kafka</code>. You can verify them as shown in upcoming sections.</p>
+<h3 id="risingwave">Risingwave<a class="headerlink" href="#risingwave" title="Permanent link">&para;</a></h3>
+<p>To verify the deployments:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods,svc<span class="w"> </span>-n<span class="w"> </span>risingwave
+</span></code></pre></div>
+<p>Expected output:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>NAME                                        READY   STATUS    RESTARTS   AGE
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>pod/risingwave-compactor-5d5d975fb4-b74xh   1/1     Running   0          100m
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>pod/risingwave-compute-0                    1/1     Running   0          100m
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>pod/risingwave-frontend-cfff8c67c-gclcc     1/1     Running   0          100m
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>pod/risingwave-meta-0                       1/1     Running   0          100m
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>pod/risingwave-minio-866bf464fb-zh7xg       1/1     Running   0          100m
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>pod/risingwave-postgresql-0                 1/1     Running   0          100m
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>NAME                                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)                      AGE
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>service/risingwave                    NodePort    10.43.80.19    &lt;none&gt;        4567:31910/TCP               100m
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>service/risingwave-compute-headless   ClusterIP   None           &lt;none&gt;        5688/TCP,1222/TCP            100m
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>service/risingwave-meta-headless      ClusterIP   None           &lt;none&gt;        5690/TCP,5691/TCP,1250/TCP   100m
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>service/risingwave-minio              ClusterIP   10.43.5.173    &lt;none&gt;        9000/TCP,9001/TCP            100m
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>service/risingwave-postgresql         ClusterIP   10.43.97.156   &lt;none&gt;        5432/TCP                     100m
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>service/risingwave-postgresql-hl      ClusterIP   None           &lt;none&gt;        5432/TCP                     100m
+</span></code></pre></div>
+<h3 id="localstack">Localstack<a class="headerlink" href="#localstack" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods,svc<span class="w"> </span>-n<span class="w"> </span>localstack
+</span></code></pre></div>
+<p>Expected output:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>NAME                              READY   STATUS    RESTARTS   AGE
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>pod/localstack-86b7f56d7f-hs6vq   1/1     Running   0          76m
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>NAME                 TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>service/localstack   NodePort   10.43.112.185   &lt;none&gt;        4566:31566/TCP,...  76m
+</span></code></pre></div>
+<h3 id="kafka">Kafka<a class="headerlink" href="#kafka" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods,kafka,svc<span class="w"> </span>-n<span class="w"> </span>kafka
+</span></code></pre></div>
+<p>Expected output:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>NAME                                              READY   STATUS    RESTARTS      AGE
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>pod/my-cluster-dual-role-0                        1/1     Running   0             101m
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>pod/my-cluster-entity-operator-57c4b47c85-kvlmj   2/2     Running   0             100m
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>pod/strimzi-cluster-operator-76b947897f-hx7bs     1/1     Running   1 (67m ago)   102m
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>NAME                                DESIRED KAFKA REPLICAS   DESIRED ZK REPLICAS   READY   METADATA STATE   WARNINGS
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>kafka.kafka.strimzi.io/my-cluster                                                  True    KRaft
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>NAME                                          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)                                        AGE
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>service/my-cluster-dual-role-extplain-0       NodePort    10.43.63.36     &lt;none&gt;        9094:31764/TCP                                 101m
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>service/my-cluster-kafka-bootstrap            ClusterIP   10.43.11.246    &lt;none&gt;        9091/TCP,9092/TCP,9093/TCP                     101m
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>service/my-cluster-kafka-brokers              ClusterIP   None            &lt;none&gt;        9090/TCP,9091/TCP,8443/TCP,9092/TCP,9093/TCP   101m
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>service/my-cluster-kafka-extplain-bootstrap   NodePort    10.43.197.175   &lt;none&gt;        9094:31905/TCP                                 101m
+</span></code></pre></div>
+<h2 id="deploy-apache-polaris">Deploy Apache Polaris<a class="headerlink" href="#deploy-apache-polaris" title="Permanent link">&para;</a></h2>
+<h3 id="container-images">Container Images<a class="headerlink" href="#container-images" title="Permanent link">&para;</a></h3>
+<p>Currently, Apache Polaris does not publish any official images. The Apache Polaris images used by the repo are available at:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>docker pull ghcr.io/snowflake-labs/polaris-local-forge/apache-polaris-server-pgsql
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>docker pull ghcr.io/snowflake-labs/polaris-local-forge/apache-polaris-admin-tool-pgsql
+</span></code></pre></div>
+<p>The images are built with PostgreSQL as database dependency.</p>
+<p>(OR)</p>
+<p>The project also has scripts to build them from sources locally.</p>
+<p>Run the following command to build Apache Polaris images and push them into the local registry <code>k3d-registry.localhost:5000</code>. Update the <code>IMAGE_REGISTRY</code> env in <a href="../../Taskfile.yml">Taskfile</a> and then run:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>task<span class="w"> </span>images
+</span></code></pre></div>
+<p>When you build locally, please make sure to update the <code>k8s/polaris/deployment.yaml</code>, <code>k8s/polaris/bootstrap.yaml</code>, and <code>k8s/polaris/purge.yaml</code> with correct images.</p>
+<h3 id="apply-manifests">Apply Manifests<a class="headerlink" href="#apply-manifests" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>kubectl<span class="w"> </span>apply<span class="w"> </span>-k<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/k8s/polaris
+</span></code></pre></div>
+<p>Ensure all deployments and jobs have succeeded:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>ansible-playbook<span class="w">  </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/cluster_checks.yml<span class="w"> </span>--tags<span class="w"> </span>polaris
+</span></code></pre></div>
+<p>Checking for pods and services in the <code>polaris</code> namespace should display:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>NAME                           READY   STATUS      RESTARTS   AGE
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>pod/polaris-694ddbb476-m2trm   1/1     Running     0          13m
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>pod/polaris-bootstrap-tpkh4    0/1     Completed   0          13m
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>pod/postgresql-0               1/1     Running     0          100m
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>NAME                    TYPE           CLUSTER-IP     EXTERNAL-IP             PORT(S)          AGE
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>service/polaris         LoadBalancer   10.43.202.93   172.19.0.3,172.19.0.4   8181:32181/TCP   13m
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>service/postgresql      ClusterIP      10.43.182.31   &lt;none&gt;                  5432/TCP         100m
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>service/postgresql-hl   ClusterIP      None           &lt;none&gt;                  5432/TCP         100m
+</span></code></pre></div>
+<h2 id="available-services">Available Services<a class="headerlink" href="#available-services" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>URL</th>
+<th>Default Credentials</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Polaris UI</td>
+<td>http://localhost:18181</td>
+<td>$PROJECT_HOME/k8s/polaris/.bootstrap-credentials.env</td>
+</tr>
+<tr>
+<td>LocalStack</td>
+<td>http://localhost:14566</td>
+<td>Use <code>test/test</code> for AWS credentials with Endpoint URL as http://localhost:14566</td>
+</tr>
+<tr>
+<td>Kafka</td>
+<td>localhost:19094</td>
+<td>No credentials, set <code>RPK_BROKERS</code> to <code>localhost:19094</code> to start accessing the cluster</td>
+</tr>
+<tr>
+<td>Risingwave SQL</td>
+<td>Host: localhost Port: 14567 User: root Database: dev</td>
+<td>Use <code>psql</code> client to connect, no password set.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../setup/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Environment Setup">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Environment Setup
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../catalog_setup/" class="md-footer__link md-footer__link--next" aria-label="Next: Catalog Setup">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Catalog Setup
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.footer", "toc.follow"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+  </body>
+</html>
