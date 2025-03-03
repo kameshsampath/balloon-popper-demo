@@ -13,7 +13,7 @@ dependencies = [
     "pydantic>=2.10.6",
     "pyiceberg[s3fs]>=0.8.1",
     "pyjwt>=2.10.1",
-    "python-dotenv>=1.0.1"
+    "python-dotenv>=1.0.1",
 ]
 
 [dependency-groups]
