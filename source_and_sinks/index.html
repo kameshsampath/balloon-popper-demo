@@ -71,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#setup-sources-and-sink" class="md-skip">
+        <a href="#iceberg-schema-design-for-real-time-game-analytics" class="md-skip">
           Skip to content
         </a>
       
@@ -331,29 +331,374 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generate-source-and-sink-sql-scripts" class="md-nav__link">
+  <a href="#learning-objectives" class="md-nav__link">
     <span class="md-ellipsis">
-      Generate Source and Sink SQL Scripts
+      Learning Objectives
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
+  <a href="#context-and-overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Source
+      Context and Overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sink" class="md-nav__link">
+  <a href="#table-specifications" class="md-nav__link">
     <span class="md-ellipsis">
-      Sink
+      Table Specifications
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Table Specifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#leaderboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      Leaderboard
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Leaderboard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#balloon-color-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      Balloon Color Stats
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Balloon Color Stats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      Time Series
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Time Series">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#realtime-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      Realtime Scores
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Realtime Scores">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#balloon-colored-pops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Balloon Colored Pops
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Balloon Colored Pops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-performance-trends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Performance Trends
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Color Performance Trends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementing-the-data-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementing the Data Pipeline
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementing the Data Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup Process
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Takeaways
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -464,29 +809,374 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generate-source-and-sink-sql-scripts" class="md-nav__link">
+  <a href="#learning-objectives" class="md-nav__link">
     <span class="md-ellipsis">
-      Generate Source and Sink SQL Scripts
+      Learning Objectives
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
+  <a href="#context-and-overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Source
+      Context and Overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sink" class="md-nav__link">
+  <a href="#table-specifications" class="md-nav__link">
     <span class="md-ellipsis">
-      Sink
+      Table Specifications
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Table Specifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#leaderboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      Leaderboard
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Leaderboard">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#balloon-color-stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      Balloon Color Stats
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Balloon Color Stats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-series" class="md-nav__link">
+    <span class="md-ellipsis">
+      Time Series
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Time Series">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#realtime-scores" class="md-nav__link">
+    <span class="md-ellipsis">
+      Realtime Scores
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Realtime Scores">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#balloon-colored-pops" class="md-nav__link">
+    <span class="md-ellipsis">
+      Balloon Colored Pops
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Balloon Colored Pops">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-performance-trends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Performance Trends
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Color Performance Trends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#schema_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#partitioning_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Partitioning
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sort-order_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sort Order
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-properties_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write Properties
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-for_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Optimized For
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementing-the-data-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Implementing the Data Pipeline
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementing the Data Pipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup Process
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Takeaways
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -506,27 +1196,513 @@
 
 
 
-<h1 id="setup-sources-and-sink">Setup Sources and Sink<a class="headerlink" href="#setup-sources-and-sink" title="Permanent link">&para;</a></h1>
-<p>As part of this demo we will drain all the messages from Kafka to Iceberg tables. In streaming word we call it as draining sources to sink.</p>
-<p>The Iceberg database <code>balloon_pops</code> will hold all sink tables that will be created in the upcoming sections.</p>
-<h2 id="generate-source-and-sink-sql-scripts">Generate Source and Sink SQL Scripts<a class="headerlink" href="#generate-source-and-sink-sql-scripts" title="Permanent link">&para;</a></h2>
+<h1 id="iceberg-schema-design-for-real-time-game-analytics">Iceberg Schema Design for Real-Time Game Analytics<a class="headerlink" href="#iceberg-schema-design-for-real-time-game-analytics" title="Permanent link">&para;</a></h1>
+<h2 id="learning-objectives">Learning Objectives<a class="headerlink" href="#learning-objectives" title="Permanent link">&para;</a></h2>
+<p>By the end of this chapter, you will:</p>
+<ul>
+<li>Understand how to design Iceberg tables for streaming game analytics data</li>
+<li>Learn effective partitioning strategies for different query patterns</li>
+<li>Gain insights into optimizing sort orders for performance</li>
+<li>Master the configuration of write properties for efficient updates</li>
+<li>See how to structure tables for various analytical perspectives (player performance, time-based analysis, and color-based trends)</li>
+</ul>
+<h2 id="context-and-overview">Context and Overview<a class="headerlink" href="#context-and-overview" title="Permanent link">&para;</a></h2>
+<p>Our balloon pop game generates a stream of events when players interact with the game. These events are sent to Kafka and need to be stored in a way that enables both real-time dashboards and historical analysis.</p>
+<p>The <code>balloon_pops</code> database is designed with five Iceberg tables, each focusing on different analytical dimensions:</p>
+<ul>
+<li><strong>Leaderboard</strong>: Tracks overall player performance</li>
+<li><strong>Balloon Color Stats</strong>: Records statistics by balloon color for each player</li>
+<li><strong>Realtime Scores</strong>: Captures time-windowed scoring data</li>
+<li><strong>Balloon Colored Pops</strong>: Tracks detailed pop statistics in time windows</li>
+<li><strong>Color Performance Trends</strong>: Analyzes effectiveness of different balloon colors</li>
+</ul>
+<p>All tables use Iceberg Format Version 2, enabling advanced features like merge-on-read operations for efficient updates without rewriting entire files—particularly important for frequently updated gaming data.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Throughout this tutorial, we'll explore common design patterns and trade-offs in schema design. Pay special attention to how partitioning strategies differ based on expected query patterns.</p>
+</div>
+<h2 id="table-specifications">Table Specifications<a class="headerlink" href="#table-specifications" title="Permanent link">&para;</a></h2>
+<h3 id="leaderboard">Leaderboard<a class="headerlink" href="#leaderboard" title="Permanent link">&para;</a></h3>
+<p><strong>Table Identifier</strong>: <code>balloon_pops.leaderboard</code></p>
+<h4 id="schema">Schema<a class="headerlink" href="#schema" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field ID</th>
+<th>Field Name</th>
+<th>Data Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>player</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Player identifier</td>
+</tr>
+<tr>
+<td>2</td>
+<td>total_score</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Player's cumulative score</td>
+</tr>
+<tr>
+<td>3</td>
+<td>bonus_hits</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Number of bonus hits achieved</td>
+</tr>
+<tr>
+<td>4</td>
+<td>event_ts</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>Timestamp when the event occurred</td>
+</tr>
+</tbody>
+</table>
+<h4 id="partitioning">Partitioning<a class="headerlink" href="#partitioning" title="Permanent link">&para;</a></h4>
+<p>The table is partitioned by:</p>
+<ul>
+<li>Day (from <code>event_ts</code>)</li>
+<li><code>player</code></li>
+</ul>
+<p>This partitioning strategy optimizes queries filtering by date or specific players.</p>
+<h4 id="sort-order">Sort Order<a class="headerlink" href="#sort-order" title="Permanent link">&para;</a></h4>
+<p>Data is sorted by:</p>
+<ol>
+<li><code>total_score</code> (DESC)</li>
+<li><code>bonus_hits</code> (DESC)</li>
+</ol>
+<p>This sorting enables efficient retrieval of top-scoring players.</p>
+<h4 id="write-properties">Write Properties<a class="headerlink" href="#write-properties" title="Permanent link">&para;</a></h4>
+<p>The same merge-on-read properties as the Leaderboard table are applied here.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Since Source and Sink might have sensitive values we will generate them.
-Both <a href="./scripts/source.sql">source.sql</a> and <a href="./scripts/sink.sql">sink.sql</a> are ignored by git.</p>
+<p>The <strong>merge-on-read</strong> properties are crucial for leaderboard data, which is updated frequently. This approach allows updates without rewriting entire data files, significantly improving write performance.</p>
 </div>
-<p>Run the following command to generate sources and sink scripts,</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/generate_source_sinks.yml
-</span></code></pre></div>
-<h2 id="source">Source<a class="headerlink" href="#source" title="Permanent link">&para;</a></h2>
-<p>Set up sources in Risingwave to consume messages from Kafka and sink into Iceberg tables:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/source.sql
-</span></code></pre></div>
-<h2 id="sink">Sink<a class="headerlink" href="#sink" title="Permanent link">&para;</a></h2>
-<p>Setup sinks to drain the messages to Iceberg Tables</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/sink.sql
-</span></code></pre></div>
-<p><strong>TODO</strong>: Explain the source and sinks</p>
+<h4 id="optimized-for">Optimized For<a class="headerlink" href="#optimized-for" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Querying leaderboard data by day</li>
+<li>Filtering operations by player</li>
+<li>Fast retrieval of top-scoring players</li>
+<li>Efficient upsert operations with merge-on-read configuration</li>
+</ul>
+<hr />
+<h3 id="balloon-color-stats">Balloon Color Stats<a class="headerlink" href="#balloon-color-stats" title="Permanent link">&para;</a></h3>
+<p><strong>Table Identifier</strong>: <code>balloon_pops.balloon_color_stats</code></p>
+<h4 id="schema_1">Schema<a class="headerlink" href="#schema_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field ID</th>
+<th>Field Name</th>
+<th>Data Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>player</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Player identifier</td>
+</tr>
+<tr>
+<td>2</td>
+<td>balloon_color</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Color of the balloon</td>
+</tr>
+<tr>
+<td>3</td>
+<td>points_by_color</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Points earned for specific balloon color</td>
+</tr>
+<tr>
+<td>4</td>
+<td>bonus_hits</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Number of bonus hits achieved</td>
+</tr>
+<tr>
+<td>5</td>
+<td>event_ts</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>Timestamp when the event occurred</td>
+</tr>
+</tbody>
+</table>
+<h4 id="partitioning_1">Partitioning<a class="headerlink" href="#partitioning_1" title="Permanent link">&para;</a></h4>
+<p>The table uses a multi-level partitioning strategy:</p>
+<ul>
+<li>Day (from <code>event_ts</code>)</li>
+<li><code>balloon_color</code></li>
+<li><code>player</code></li>
+</ul>
+<p>This allows efficient queries when filtering by any combination of these dimensions.</p>
+<h4 id="sort-order_1">Sort Order<a class="headerlink" href="#sort-order_1" title="Permanent link">&para;</a></h4>
+<p>Data is sorted by:</p>
+<ol>
+<li><code>points_by_color</code> (DESC)</li>
+<li><code>bonus_hits</code> (DESC)</li>
+</ol>
+<p>This sorting prioritizes high-scoring color statistics.</p>
+<h4 id="optimized-for_1">Optimized For<a class="headerlink" href="#optimized-for_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Querying balloon color statistics by day</li>
+<li>Filtering by balloon color and/or player</li>
+<li>Fast retrieval of top-scoring color statistics</li>
+<li>Analysis of performance by color across players</li>
+<li>Efficient upsert operations</li>
+</ul>
+<p>Since both <code>leaderboard</code> and <code>ballon_color_stats</code> table perform <code>upserts</code>, it is crucial to set these iceberg properties when creating these tables,</p>
+<h4 id="write-properties_1">Write Properties<a class="headerlink" href="#write-properties_1" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format-version</td>
+<td>2</td>
+<td>Required for merge-on-read operations</td>
+</tr>
+<tr>
+<td>write.delete.mode</td>
+<td>merge-on-read</td>
+<td>Enables efficient record updates</td>
+</tr>
+<tr>
+<td>write.update.mode</td>
+<td>merge-on-read</td>
+<td>Enables efficient record updates</td>
+</tr>
+<tr>
+<td>write.merge.mode</td>
+<td>merge-on-read</td>
+<td>Enables efficient record updates</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="time-series">Time Series<a class="headerlink" href="#time-series" title="Permanent link">&para;</a></h2>
+<h3 id="realtime-scores">Realtime Scores<a class="headerlink" href="#realtime-scores" title="Permanent link">&para;</a></h3>
+<p><strong>Table Identifier</strong>: <code>balloon_pops.realtime_scores</code></p>
+<h4 id="schema_2">Schema<a class="headerlink" href="#schema_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field ID</th>
+<th>Field Name</th>
+<th>Data Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>player</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Player identifier</td>
+</tr>
+<tr>
+<td>2</td>
+<td>total_score</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Player's cumulative score</td>
+</tr>
+<tr>
+<td>3</td>
+<td>window_start</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>Start timestamp of the scoring window</td>
+</tr>
+<tr>
+<td>4</td>
+<td>window_end</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>End timestamp of the scoring window</td>
+</tr>
+</tbody>
+</table>
+<h4 id="partitioning_2">Partitioning<a class="headerlink" href="#partitioning_2" title="Permanent link">&para;</a></h4>
+<p>The table is partitioned by:</p>
+<ul>
+<li>Hour (from <code>window_start</code>)</li>
+</ul>
+<p>This enables efficient time-based queries and analysis.</p>
+<h4 id="write-properties_2">Write Properties<a class="headerlink" href="#write-properties_2" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format-version</td>
+<td>2</td>
+<td>Enables advanced Iceberg features</td>
+</tr>
+</tbody>
+</table>
+<h4 id="optimized-for_2">Optimized For<a class="headerlink" href="#optimized-for_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Time-series analysis of player scores within defined windows</li>
+<li>Hourly aggregation and querying</li>
+<li>Real-time tracking of player performance</li>
+<li>Temporal filtering based on scoring window start time</li>
+</ul>
+<hr />
+<h3 id="balloon-colored-pops">Balloon Colored Pops<a class="headerlink" href="#balloon-colored-pops" title="Permanent link">&para;</a></h3>
+<p><strong>Table Identifier</strong>: <code>balloon_pops.balloon_colored_pops</code></p>
+<h4 id="schema_3">Schema<a class="headerlink" href="#schema_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field ID</th>
+<th>Field Name</th>
+<th>Data Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>player</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Player identifier</td>
+</tr>
+<tr>
+<td>2</td>
+<td>balloon_color</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Color of the balloon</td>
+</tr>
+<tr>
+<td>3</td>
+<td>balloon_pops</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Number of balloons popped</td>
+</tr>
+<tr>
+<td>4</td>
+<td>points_by_color</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Points earned for specific balloon color</td>
+</tr>
+<tr>
+<td>5</td>
+<td>bonus_hits</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Number of bonus hits achieved</td>
+</tr>
+<tr>
+<td>6</td>
+<td>window_start</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>Start timestamp of the scoring window</td>
+</tr>
+<tr>
+<td>7</td>
+<td>window_end</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>End timestamp of the scoring window</td>
+</tr>
+</tbody>
+</table>
+<h4 id="partitioning_3">Partitioning<a class="headerlink" href="#partitioning_3" title="Permanent link">&para;</a></h4>
+<p>The table is partitioned by:</p>
+<ul>
+<li>Hour (from <code>window_start</code>)</li>
+<li><code>player</code></li>
+</ul>
+<p>This dual partitioning strategy optimizes for both time-based and player-specific queries.</p>
+<h4 id="sort-order_2">Sort Order<a class="headerlink" href="#sort-order_2" title="Permanent link">&para;</a></h4>
+<p>Data is sorted by:</p>
+<ul>
+<li><code>balloon_color</code> (ASC)</li>
+</ul>
+<p>This sorting enhances performance for color-based filtering.</p>
+<h4 id="write-properties_3">Write Properties<a class="headerlink" href="#write-properties_3" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format-version</td>
+<td>2</td>
+<td>Enables advanced Iceberg features</td>
+</tr>
+</tbody>
+</table>
+<h4 id="optimized-for_3">Optimized For<a class="headerlink" href="#optimized-for_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Tracking balloon pop statistics by color for each player</li>
+<li>Time-series analysis within defined windows</li>
+<li>Querying performance by specific time periods</li>
+<li>Filtering by player identifier</li>
+<li>Fast retrieval when filtering by balloon color</li>
+</ul>
+<hr />
+<h3 id="color-performance-trends">Color Performance Trends<a class="headerlink" href="#color-performance-trends" title="Permanent link">&para;</a></h3>
+<p><strong>Table Identifier</strong>: <code>balloon_pops.color_performance_trends</code></p>
+<h4 id="schema_4">Schema<a class="headerlink" href="#schema_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Field ID</th>
+<th>Field Name</th>
+<th>Data Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>balloon_color</td>
+<td>STRING</td>
+<td>Yes</td>
+<td>Color of the balloon</td>
+</tr>
+<tr>
+<td>2</td>
+<td>avg_score_per_pop</td>
+<td>DOUBLE</td>
+<td>Yes</td>
+<td>Average score earned per balloon pop</td>
+</tr>
+<tr>
+<td>3</td>
+<td>total_pops</td>
+<td>INTEGER</td>
+<td>Yes</td>
+<td>Total number of balloon pops</td>
+</tr>
+<tr>
+<td>4</td>
+<td>window_start</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>Start timestamp of the analysis window</td>
+</tr>
+<tr>
+<td>5</td>
+<td>window_end</td>
+<td>TIMESTAMPTZ</td>
+<td>Yes</td>
+<td>End timestamp of the analysis window</td>
+</tr>
+</tbody>
+</table>
+<h4 id="partitioning_4">Partitioning<a class="headerlink" href="#partitioning_4" title="Permanent link">&para;</a></h4>
+<p>The table is partitioned by:</p>
+<ul>
+<li>Hour (from <code>window_start</code>)</li>
+<li><code>balloon_color</code></li>
+</ul>
+<p>This enables efficient queries for analyzing color performance over time.</p>
+<h4 id="sort-order_3">Sort Order<a class="headerlink" href="#sort-order_3" title="Permanent link">&para;</a></h4>
+<p>Data is sorted by:</p>
+<ul>
+<li><code>balloon_color</code> (ASC)</li>
+</ul>
+<p>This optimizes lookups for specific colors.</p>
+<h4 id="write-properties_4">Write Properties<a class="headerlink" href="#write-properties_4" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>format-version</td>
+<td>2</td>
+<td>Enables advanced Iceberg features</td>
+</tr>
+</tbody>
+</table>
+<h4 id="optimized-for_4">Optimized For<a class="headerlink" href="#optimized-for_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Analyzing performance trends by balloon color over time</li>
+<li>Time-series analysis with hourly granularity</li>
+<li>Comparing efficiency metrics across different balloon colors</li>
+<li>Tracking popularity and effectiveness of different colors</li>
+</ul>
+<h2 id="implementing-the-data-pipeline">Implementing the Data Pipeline<a class="headerlink" href="#implementing-the-data-pipeline" title="Permanent link">&para;</a></h2>
+<p>Now that we've designed our schema, let's walk through how to set up the streaming data flow:</p>
+<h3 id="setup-process">Setup Process<a class="headerlink" href="#setup-process" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Generate Configuration Scripts</strong>: First, we'll generate the necessary SQL scripts:
+   <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ansible-playbook<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/generate_source_sinks.yml
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Configure Kafka Sources</strong>: Set up sources in RisingWave to consume messages from Kafka:
+   <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/source.sql
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Create Iceberg Tables</strong>: The tables can be created using the <code>$PROJECT_HOME/notebooks/workbook.ipynb</code> notebook's "Create Table" cells with the schema definitions we've explored.</p>
+</li>
+<li>
+<p><strong>Configure Sinks</strong>: Set up the data flow from sources to Iceberg tables:
+   <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/sink.sql
+</span></code></pre></div></p>
+</li>
+</ol>
+<h3 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h3>
+<p>When designing Iceberg tables for streaming analytics, remember these principles:</p>
+<ol>
+<li><strong>Match partitioning to query patterns</strong>: Partition by time for time-series analysis, by entity (player/color) for entity-specific queries</li>
+<li><strong>Set appropriate sort orders</strong>: Sort by metrics you'll often use for filtering or ranking</li>
+<li><strong>Enable merge-on-read</strong> for frequently updated tables to improve write performance</li>
+<li><strong>Consider multiple analytical dimensions</strong>: Design separate tables optimized for different query patterns</li>
+</ol>
+<p>These principles apply not just to game analytics, but to any streaming analytics application where you need to balance write throughput with query performance.</p>
+<p>In the next chapter, we'll explore how to query these tables efficiently and build real-time dashboards on top of this data model.</p>
 
 
 

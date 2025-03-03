@@ -380,6 +380,75 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-youve-accomplished" class="md-nav__link">
+    <span class="md-ellipsis">
+      What You've Accomplished
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What You&#39;ve Accomplished">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infrastructure-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Infrastructure Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Processing Pipeline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Development
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-benefits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture Benefits
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#potential-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Potential Enhancements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Takeaways
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related-projects-and-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Related Projects and Tools
@@ -477,6 +546,75 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#what-youve-accomplished" class="md-nav__link">
+    <span class="md-ellipsis">
+      What You've Accomplished
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="What You&#39;ve Accomplished">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infrastructure-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Infrastructure Setup
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-processing-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Processing Pipeline
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Development
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-benefits" class="md-nav__link">
+    <span class="md-ellipsis">
+      Architecture Benefits
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#potential-enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Potential Enhancements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Takeaways
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related-projects-and-tools" class="md-nav__link">
     <span class="md-ellipsis">
       Related Projects and Tools
@@ -535,7 +673,73 @@
 
 
 <h1 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h1>
-<p><strong>TODO</strong></p>
+<p>Throughout this tutorial, you've built a complete end-to-end streaming analytics platform using modern data architecture patterns and tools. The Balloon Popper Game analytics platform demonstrates how to implement real-time data processing with persistent storage and interactive visualizations.</p>
+<h2 id="what-youve-accomplished">What You've Accomplished<a class="headerlink" href="#what-youve-accomplished" title="Permanent link">&para;</a></h2>
+<h3 id="infrastructure-setup">Infrastructure Setup<a class="headerlink" href="#infrastructure-setup" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Created a local Kubernetes cluster using K3d</li>
+<li>Deployed essential services including Kafka, LocalStack, and PostgreSQL</li>
+<li>Set up Apache Polaris as a REST catalog for Iceberg</li>
+</ul>
+<h3 id="data-processing-pipeline">Data Processing Pipeline<a class="headerlink" href="#data-processing-pipeline" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Configured RisingWave for stream processing with SQL</li>
+<li>Created Iceberg tables with optimized schemas for different query patterns</li>
+<li>Implemented materialized views for efficient real-time analytics</li>
+<li>Connected streaming sources to persistent storage sinks</li>
+</ul>
+<h3 id="application-development">Application Development<a class="headerlink" href="#application-development" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Generated simulated game events to populate the data pipeline</li>
+<li>Built interactive visualizations with Streamlit</li>
+<li>Explored data using PyIceberg and Jupyter notebooks</li>
+</ul>
+<h2 id="architecture-benefits">Architecture Benefits<a class="headerlink" href="#architecture-benefits" title="Permanent link">&para;</a></h2>
+<p>This architecture provides several advantages for real-time analytics applications:</p>
+<ol>
+<li>
+<p><strong>Decoupled Components</strong>: Each part of the system (generation, processing, storage, visualization) operates independently, allowing for easier maintenance and scaling.</p>
+</li>
+<li>
+<p><strong>Schema Evolution</strong>: Apache Iceberg enables schema changes without disrupting ongoing operations.</p>
+</li>
+<li>
+<p><strong>Query Performance</strong>: Optimized partitioning and sort orders in Iceberg tables accelerate common query patterns.</p>
+</li>
+<li>
+<p><strong>Real-time and Historical Analysis</strong>: The system supports both instant metrics and historical trend analysis.</p>
+</li>
+<li>
+<p><strong>Open Standards</strong>: Built entirely on open-source technologies with active communities.</p>
+</li>
+</ol>
+<h2 id="potential-enhancements">Potential Enhancements<a class="headerlink" href="#potential-enhancements" title="Permanent link">&para;</a></h2>
+<p>This demo provides a foundation that can be extended in several ways:</p>
+<ul>
+<li>Add more complex event processing logic in RisingWave</li>
+<li>Implement ML models for predictive analytics</li>
+<li>Expand the dashboard with additional visualizations</li>
+<li>Add data quality monitoring and alerting</li>
+<li>Scale to handle higher event volumes</li>
+</ul>
+<h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
+<ol>
+<li>
+<p><strong>Stream Processing with SQL</strong>: RisingWave makes it possible to process streaming data using familiar SQL syntax rather than complex streaming frameworks.</p>
+</li>
+<li>
+<p><strong>Modern Data Lake</strong>: Apache Iceberg provides table format capabilities typically associated with data warehouses in an open data lake architecture.</p>
+</li>
+<li>
+<p><strong>Local Development Environment</strong>: The entire stack runs locally, enabling development and testing without cloud resources.</p>
+</li>
+<li>
+<p><strong>Declarative Infrastructure</strong>: Kubernetes manifests and Ansible playbooks make the environment reproducible and maintainable.</p>
+</li>
+<li>
+<p><strong>Real-time Insights</strong>: The end-to-end pipeline delivers analytics with minimal latency from event generation to visualization.</p>
+</li>
+</ol>
 <h2 id="related-projects-and-tools">Related Projects and Tools<a class="headerlink" href="#related-projects-and-tools" title="Permanent link">&para;</a></h2>
 <h3 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h3>
 <ul>

@@ -272,18 +272,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-catalog-principal-roles-and-grants" class="md-nav__link">
+  <a href="#learning-objectives" class="md-nav__link">
     <span class="md-ellipsis">
-      Create Catalog, Principal, Roles and Grants
+      Learning Objectives
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#verify-setup" class="md-nav__link">
+  <a href="#understanding-polaris-components" class="md-nav__link">
     <span class="md-ellipsis">
-      Verify Setup
+      Understanding Polaris Components
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-the-catalog-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating the Catalog Infrastructure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating the Catalog Infrastructure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-during-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Happens During Setup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-the-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verifying the Setup
     </span>
   </a>
   
@@ -453,18 +486,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-catalog-principal-roles-and-grants" class="md-nav__link">
+  <a href="#learning-objectives" class="md-nav__link">
     <span class="md-ellipsis">
-      Create Catalog, Principal, Roles and Grants
+      Learning Objectives
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#verify-setup" class="md-nav__link">
+  <a href="#understanding-polaris-components" class="md-nav__link">
     <span class="md-ellipsis">
-      Verify Setup
+      Understanding Polaris Components
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-the-catalog-infrastructure" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating the Catalog Infrastructure
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Creating the Catalog Infrastructure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-happens-during-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      What Happens During Setup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-the-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verifying the Setup
     </span>
   </a>
   
@@ -487,38 +553,80 @@
 
 
 <h1 id="setup-iceberg-catalog-using-apache-polaris">Setup Iceberg Catalog using Apache Polaris<a class="headerlink" href="#setup-iceberg-catalog-using-apache-polaris" title="Permanent link">&para;</a></h1>
-<p>The Polaris server does not yet have any catalogs. Run the following script to set up your first catalog, principal, principal role, catalog role, and grants.</p>
-<p>By the end of this chapter you would have:</p>
+<h2 id="learning-objectives">Learning Objectives<a class="headerlink" href="#learning-objectives" title="Permanent link">&para;</a></h2>
+<p>By the end of this chapter, you will have:</p>
 <ul>
-<li>Created s3 bucket</li>
-<li>Created Catalog named <code>balloon-game</code></li>
-<li>Created Principal <code>super_user</code> with Principal Role <code>admin</code></li>
-<li>Created Catalog Role <code>sudo</code>, assign the role to Principal Role <code>admin</code></li>
-<li>Granted the Catalog Role <code>sudo</code> to manage catalog via <code>CATALOG_MANAGE_CONTENT</code> role. This will make the principals with role <code>admin</code> able to manage the catalog.</li>
-<li>Created Iceberg database named <code>balloon_pops</code></li>
+<li>Created an S3 bucket for Iceberg data storage</li>
+<li>Configured a Polaris Catalog named <code>balloon-game</code></li>
+<li>Set up the <code>super_user</code> Principal with the <code>admin</code> Principal Role</li>
+<li>Created the Catalog Role <code>sudo</code> and assigned it to the Principal Role <code>admin</code></li>
+<li>Granted the <code>CATALOG_MANAGE_CONTENT</code> permission to the <code>sudo</code> role</li>
+<li>Created the Iceberg database <code>balloon_pops</code> for our application</li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>All values can be adjusted via the <a href="../../polaris-forge-setup/defaults/main.yml">defaults</a></p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>The Polaris server starts with no catalogs configured. We'll set up the first catalog along with the necessary security roles and permissions.</p>
 </div>
-<h2 id="create-catalog-principal-roles-and-grants">Create Catalog, Principal, Roles and Grants<a class="headerlink" href="#create-catalog-principal-roles-and-grants" title="Permanent link">&para;</a></h2>
-<p>Run the following command to create the Catalog:</p>
+<h2 id="understanding-polaris-components">Understanding Polaris Components<a class="headerlink" href="#understanding-polaris-components" title="Permanent link">&para;</a></h2>
+<p>Before we begin, let's clarify the key components we'll be setting up:</p>
+<ul>
+<li><strong>Catalog</strong>: A top-level container that manages Iceberg tables and their metadata</li>
+<li><strong>Principal</strong>: A user identity that can access the catalog</li>
+<li><strong>Principal Role</strong>: A collection of permissions assigned to principals</li>
+<li><strong>Catalog Role</strong>: A role specific to a catalog that defines what actions can be performed</li>
+<li><strong>Grants</strong>: Permissions assigned to roles</li>
+</ul>
+<h2 id="creating-the-catalog-infrastructure">Creating the Catalog Infrastructure<a class="headerlink" href="#creating-the-catalog-infrastructure" title="Permanent link">&para;</a></h2>
+<p>Run the following command to create the entire catalog infrastructure:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ansible-playbook<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/catalog_setup.yml
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The play will set/unset the following environment variables and run the tasks
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w">    </span><span class="nb">unset</span><span class="w"> </span>AWS_PROFILE<span class="w"> </span><span class="c1"># just avoid colliding with existing AWS profiles</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_ENDPOINT_URL</span><span class="o">=</span>http://localstack.localstack:4566
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="nb">test</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="nb">test</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_REGION</span><span class="o">=</span>us-east-1
-</span></code></pre></div></p>
+<p>All configuration values can be customized by modifying the <a href="../../polaris-forge-setup/defaults/main.yml">defaults</a> file.</p>
 </div>
-<h2 id="verify-setup">Verify Setup<a class="headerlink" href="#verify-setup" title="Permanent link">&para;</a></h2>
-<p>Run the <code>$PROJECT_HOME/notebooks/verify_polaris.ipynb</code> to make sure you are able to create the namespace, table, and insert some data.</p>
-<p>To double-check if we have all our iceberg files created and committed, open <a href="https://app.localstack.cloud/inst/default/resources/s3/balloon-game?prefix=demo_db">https://app.localstack.cloud/inst/default/resources/s3/balloon-game?prefix=demo_db</a>. You should see something as shown in the screenshots below:</p>
-<p><img alt="Localstack" src="../images/verify_polaris.png" />.</p>
+<h3 id="what-happens-during-setup">What Happens During Setup<a class="headerlink" href="#what-happens-during-setup" title="Permanent link">&para;</a></h3>
+<p>The playbook performs these key operations:</p>
+<ol>
+<li>Creates an S3 bucket named <code>balloon-game</code> for storing Iceberg data</li>
+<li>Configures the Polaris catalog with the same name</li>
+<li>Sets up the <code>super_user</code> principal for administration</li>
+<li>Creates the <code>admin</code> principal role and assigns it to <code>super_user</code></li>
+<li>Creates the <code>sudo</code> catalog role with elevated permissions</li>
+<li>Grants the <code>CATALOG_MANAGE_CONTENT</code> permission to the <code>sudo</code> role</li>
+<li>Creates the <code>balloon_pops</code> database for our application data</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The playbook temporarily modifies your environment variables for AWS connectivity:
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">unset</span><span class="w"> </span>AWS_PROFILE<span class="w"> </span><span class="c1"># avoids collision with existing AWS profiles</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_ENDPOINT_URL</span><span class="o">=</span>http://localstack.localstack:4566
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_ACCESS_KEY_ID</span><span class="o">=</span><span class="nb">test</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_SECRET_ACCESS_KEY</span><span class="o">=</span><span class="nb">test</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">export</span><span class="w"> </span><span class="nv">AWS_REGION</span><span class="o">=</span>us-east-1
+</span></code></pre></div>
+These settings ensure proper connection to the LocalStack environment.</p>
+</div>
+<h2 id="verifying-the-setup">Verifying the Setup<a class="headerlink" href="#verifying-the-setup" title="Permanent link">&para;</a></h2>
+<p>To confirm that everything is working correctly:</p>
+<ol>
+<li>
+<p>Run the verification notebook:
+   <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>jupyter<span class="w"> </span>notebook<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/notebooks/verify_polaris.ipynb
+</span></code></pre></div></p>
+</li>
+<li>
+<p>The notebook will create a test namespace, table, and insert sample data.</p>
+</li>
+<li>
+<p>You can also verify the S3 bucket contents by opening the LocalStack web interface at <a href="https://app.localstack.cloud/inst/default/resources/s3/balloon-game?prefix=demo_db">https://app.localstack.cloud/inst/default/resources/s3/balloon-game?prefix=demo_db</a>.</p>
+</li>
+</ol>
+<p>You should see something similar to this:</p>
+<p><img alt="Localstack verification screenshot" src="../images/verify_polaris.png" /></p>
+<div class="admonition success">
+<p class="admonition-title">Next Steps</p>
+<p>Now that you have set up the Polaris catalog infrastructure, you're ready to create the schema definitions for your Iceberg tables in the next chapter.</p>
+</div>
 
 
 
