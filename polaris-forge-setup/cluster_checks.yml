@@ -1,4 +1,4 @@
-#!ansible-playbook
+#!/usr/bin/env ansible-playbook
 ---
 - name: Ensure the cluster is ready with required deployments
   hosts: localhost
@@ -12,27 +12,163 @@
     - name: Install required collections
       ansible.builtin.command: ansible-galaxy collection install kubernetes.core
       changed_when: false
+
   tasks:
-    - name: Localstack Status Checks
-      ansible.builtin.include_tasks:
-        file: tasks/localstack_checks.yml
+    - name: Wait for Namespaces to be ready
+      kubernetes.core.k8s_info:
+        kind: Namespace
+        name: "{{ namespace.name }}"
+        api_version: v1
+      register: ns_status
+      until: ns_status.resources[0].status.phase is defined and ns_status.resources[0].status.phase == "Active"
+      loop: "{{ namespace_list }}"
+      loop_control:
+        label: "{{ namespace.name }}"
+        loop_var: "namespace"
+      retries: 30
+      delay: 10
       tags:
-        - localstack
+        - bootstrap
+      when: "namespace.tags | intersect(ansible_run_tags) or not ansible_run_tags"
+      vars:
+        namespace_list:
+          - name: localstack
+            tags: ["bootstrap"]
+          - name: polaris
+            tags: ["bootstrap"]
+          - name: kafka
+            tags: ["bootstrap"]
+          - name: risingwave
+            tags: ["bootstrap"]
 
-    - name: Risingwave Status Checks
-      ansible.builtin.include_tasks:
-        file: tasks/risingwave_checks.yml
+    - name: Wait for Deployments to be ready
+      kubernetes.core.k8s_info:
+        kind: "{{ deployment.kind }}"
+        name: "{{ deployment.name }}"
+        namespace: "{{ deployment.namespace }}"
+        api_version: "{{ deployment.api_version | default('apps/v1') }}"
+      register: resource_status
+      until: resource_status.resources[0].status.availableReplicas is defined and
+        resource_status.resources[0].status.availableReplicas > 0 and
+        resource_status.resources[0].status.readyReplicas is defined and
+        resource_status.resources[0].status.readyReplicas == resource_status.resources[0].status.replicas
+      loop: "{{ deployment_resources_list }}"
+      loop_control:
+        label: "{{ deployment.namespace }}/{{ deployment.kind }}/{{ deployment.name }}"
+        loop_var: "deployment"
+      retries: 60
+      delay: 10
       tags:
-        - risingwave
-
-    - name: Kafka Status Checks
-      ansible.builtin.include_tasks:
-        file: tasks/kafka_checks.yml
-      tags:
-        - kafka
-
-    - name: Polaris Status Checks
-      ansible.builtin.include_tasks:
-        file: tasks/polaris_checks.yml
+        - bootstrap
+        - polaris
+      when: "deployment.tags | intersect(ansible_run_tags) or not ansible_run_tags"
+      vars:
+        deployment_resources_list:
+          - name: localstack
+            namespace: localstack
+            kind: Deployment
+            tags:
+              - bootstrap
+          - name: postgresql
+            namespace: polaris
+            kind: StatefulSet
+            tags:
+              - bootstrap
+          - name: strimzi-cluster-operator
+            namespace: kafka
+            kind: Deployment
+            tags:
+              - bootstrap
+          - name: my-cluster-entity-operator
+            namespace: kafka
+            kind: Deployment
+            tags:
+              - bootstrap
+          - name: risingwave-compute
+            namespace: risingwave
+            kind: StatefulSet
+            tags:
+              - bootstrap
+          - name: risingwave-meta
+            namespace: risingwave
+            kind: StatefulSet
+            tags:
+              - bootstrap
+          - name: risingwave-frontend
+            namespace: risingwave
+            kind: Deployment
+            tags:
+              - bootstrap
+          - name: risingwave-compactor
+            namespace: risingwave
+            kind: Deployment
+            tags:
+              - bootstrap
+          - name: polaris
+            namespace: polaris
+            kind: Deployment
+            tags:
+              - polaris
+    - name: Wait for Jobs to reach desired state
+      kubernetes.core.k8s_info:
+        kind: Job
+        name: "{{ job.name }}"
+        namespace: "{{ job.namespace }}"
+        api_version: batch/v1
+      register: job_status
+      until: >
+        (job.type == 'completion' and job_status.resources[0].status.succeeded is defined and job_status.resources[0].status.succeeded > 0) or
+        (job.type == 'suspension' and job_status.resources[0].spec.suspend is defined and job_status.resources[0].spec.suspend == true)
+      retries: 60
+      delay: 10
+      loop: "{{ job_resources_list }}"
+      loop_control:
+        loop_var: "job"
+        label: "{{ job.name }}"
       tags:
         - polaris
+      when: "job.tags | intersect(ansible_run_tags) or not ansible_run_tags"
+      vars:
+        job_resources_list:
+          - name: polaris-bootstrap
+            namespace: polaris
+            type: completion
+            tags:
+              - polaris
+          - name: polaris-purge
+            namespace: polaris
+            type: suspension
+            tags:
+              - polaris
+
+    # Kafka Specific Resources
+    - name: Wait for Kafka NodePool to be ready
+      kubernetes.core.k8s_info:
+        kind: KafkaNodePool
+        name: dual-role
+        namespace: "{{ plf_kafka_namespace | default('kafka') }}"
+        api_version: kafka.strimzi.io/v1beta2
+      register: kafka_nodepool_status
+      until: >
+        kafka_nodepool_status.resources[0].status.replicas is defined and
+        kafka_nodepool_status.resources[0].status.replicas > 0
+      retries: 60
+      delay: 20
+      tags:
+        - bootstrap
+
+    - name: Wait for Kafka Cluster to be ready
+      kubernetes.core.k8s_info:
+        kind: Kafka
+        name: my-cluster
+        namespace: "{{ plf_kafka_namespace | default('kafka') }}"
+        api_version: kafka.strimzi.io/v1beta2
+        wait: true
+        wait_sleep: 10
+        wait_timeout: 120
+        wait_condition:
+          type: Ready
+          status: "True"
+      register: kafka_cluster_status
+      tags:
+        - bootstrap
