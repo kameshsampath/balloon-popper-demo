@@ -1,43 +1,47 @@
-# Setup
+# Getting Started with Balloon Popper Game
 
-In this chapter, we will guide you through the following steps:
+## Learning Objectives
 
-- Setting tools needed for running this tutorial
-- Cloning the demo sources to your local machine
-- Configuring the project settings
-- Optionally Running the starter app locally to ensure everything is set up correctly
+By the end of this chapter, you will:
 
-Let's get started!
+- Install all required tools and dependencies
+- Clone and configure the project repository
+- Set up a Python virtual environment with necessary packages
+- Understand the project structure
+- Configure DNS settings for streamlined development (optional)
 
-## What is required
+## Prerequisites
 
-To follow along with this tutorial and set up your project successfully, you'll need the following tools and accounts:
+Before beginning this tutorial, ensure you have the following tools installed and properly configured:
 
-- A [GitHub account](https://github.com/signup){:target=\_blank}: If you don't already have a GitHub account, you'll need to create one.
+| Tool | Purpose | Minimum Version |
+|------|---------|----------------|
+| [GitHub Account](https://github.com/signup) | Repository access | N/A |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Container runtime | Latest |
+| [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) | Kubernetes CLI | Latest |
+| [rpk](https://docs.redpanda.com/current/get-started/rpk-install/) | Kafka CLI | Latest |
+| [k3d](https://k3d.io/) | Lightweight Kubernetes | >= 5.0.0 |
+| [Python](https://www.python.org/downloads/) | Programming language | >= 3.12 |
+| [uv](https://github.com/astral-sh/uv) | Python package manager | Latest |
+| [Task](https://taskfile.dev) | Task runner | Latest |
+| [LocalStack](https://localstack.cloud/) | AWS emulator | >= 3.0.0 |
+| [Dnsmasq](https://dnsmasq.org/doc.html) | DNS management | Latest (Optional) |
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Docker Engine](https://docs.docker.com/engine/install/)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) - Kubernetes command-line tool
-- [rpk](https://docs.redpanda.com/current/get-started/rpk-install/) - RPK CLI to interact with Apache Kafka cluster
-- [k3d](https://k3d.io/) (>= 5.0.0) - Lightweight wrapper to run [k3s](https://k3s.io) in Docker
-- [Python](https://www.python.org/downloads/) >= 3.12
-- [uv](https://github.com/astral-sh/uv) - Python packaging tool
-- [Task](https://taskfile.dev) - Makefile in YAML
-- [LocalStack](https://localstack.cloud/) (>= 3.0.0) - AWS cloud service emulator
-- [Dnsmasq](https://dnsmasq.org/doc.html) - **Optional** to avoid editing `/etc/hosts`
+!!! warning "Prerequisites Check"
+    Make sure all required tools are properly installed and available in your system PATH before proceeding. This will prevent issues later in the setup process.
 
-!!!Important
-    Ensure the tools are downloaded and on your path before proceeding further with this tutorial.
+## Setting Up the Project
 
-## Get the Sources
-
-Clone the repository:
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/kameshsampath/balloon-popper-game
 cd balloon-popper-game
 ```
 
-Set up environment variables:
+### Step 2: Configure Environment Variables
+
+Set up essential environment variables for the project:
 
 ```bash
 export PROJECT_HOME="$PWD"
@@ -47,151 +51,90 @@ export K3S_VERSION=v1.32.1-k3s1
 export FEATURES_DIR="$PWD/k8s"
 ```
 
-!!!TIP
-     Use tools like [direnv](https://direnv.net) to make it easy setting environment variables
+!!! tip "Environment Management"
+    Consider using [direnv](https://direnv.net) to automatically set environment variables when entering the project directory. This simplifies your workflow and ensures consistent configuration.
 
-Going forward we will refer to the cloned sources folder as `$PROJECT_HOME`.
+### Step 3: Set Up Python Environment
 
-## Python Virtual Environment
-
-Let us setup Python virtual environment and required tools.
+Create and activate a Python virtual environment:
 
 ```bash
-# Pin python version
+# Pin Python version
 uv python pin 3.12
-# Install and set up Python environment
+
+# Create virtual environment
 uv venv
-# On Unix-like systems
-source .venv/bin/activate
-# Install deps/packages.old
+
+# Activate virtual environment
+source .venv/bin/activate  # On Unix/Linux/macOS
+# OR
+.venv\Scripts\activate     # On Windows
+
+# Install dependencies
 uv sync
 ```
 
+!!! note
+    The virtual environment isolates your project dependencies from system-wide Python packages, preventing conflicts and ensuring reproducibility.
 
-## DNSmasq
+### Step 4: DNS Configuration (Optional)
 
-For seamless access of services with the local k3s cluster and host, we might need to add entries in `/etc/hosts` of the host. But using dnsmasq is a much cleaner and neater way.
+For seamless access to services within your local Kubernetes cluster, you can set up Dnsmasq instead of manually editing `/etc/hosts`.
 
-Assuming you have `dnsmasq` installed, here is what is needed to set that up on macOS:
+On macOS with Homebrew:
 
-```shell
+```bash
+# Configure Dnsmasq to resolve .localstack domains to localhost
 echo "address=/.localstack/127.0.0.1" >> $(brew --prefix)/etc/dnsmasq.conf
-```
 
-```shell
+# Configure macOS to use Dnsmasq for .localstack domains
+sudo mkdir -p /etc/resolver
 cat <<EOF | sudo tee /etc/resolver/localstack
 nameserver 127.0.0.1
 EOF
 ```
 
-## Directory Structure
+!!! info
+    After configuring Dnsmasq, you may need to restart the service and flush your DNS cache for changes to take effect.
 
-The project has the following directories and files:
+## Project Structure Overview
 
-```text
-.
-├── LICENSE
-├── README.md
-├── Taskfile.yml
-├── bin
-│   ├── cleanup.sh
-│   └── setup.sh
-├── config
-│   └── cluster-config.yaml
-├── docs
-│   ├── catalog_data.png
-│   ├── catalog_metadata.png
-│   ├── catalog_storage.png
-│   └── localstack_view.png
-├── k8s
-│   ├── features
-│   │   ├── adminer.yaml
-│   │   ├── cert-manager.yaml
-│   │   ├── kafka-cluster.yaml
-│   │   ├── localstack.yaml
-│   │   └── strimzi-kafka-op.yaml
-│   ├── generator
-│   │   ├── deployment.yaml
-│   │   └── kustomization.yaml
-│   └── polaris
-│       ├── deployment.yaml
-│       ├── jobs
-│       │   ├── job-bootstrap.yaml
-│       │   ├── job-purge.yaml
-│       │   └── kustomization.yaml
-│       ├── kustomization.yaml
-│       ├── rbac.yaml
-│       ├── sa.yaml
-│       └── service.yaml
-├── notebooks
-│   └── workbook.ipynb
-├── packages
-│   ├── common
-│   │   ├── README.md
-│   │   ├── pyproject.toml
-│   │   └── src
-│   │       └── common
-│   │           ├── __init__.py
-│   │           ├── log
-│   │           │   ├── __init__.py
-│   │           │   └── logger.py
-│   │           └── py.typed
-│   ├── dashboard
-│   │   ├── README.md
-│   │   ├── pyproject.toml
-│   │   └── src
-│   │       └── dashboard
-│   │           ├── __init__.py
-│   │           └── streamlit_app.py
-│   └── generator
-│       ├── Dockerfile
-│       ├── README.md
-│       ├── pyproject.toml
-│       └── src
-│           ├── generator
-│           │   └── __init__.py
-│           └── stream
-│               ├── __init__.py
-│               ├── balloon_popper.py
-│               └── models.py
-├── polaris-forge-setup
-│   ├── ansible.cfg
-│   ├── catalog_cleanup.yml
-│   ├── catalog_setup.yml
-│   ├── cluster_checks.yml
-│   ├── defaults
-│   │   └── main.yml
-│   ├── generate_source_sinks.yml
-│   ├── inventory
-│   │   └── hosts
-│   ├── prepare.yml
-│   ├── tasks
-│   │   ├── drop_tables.yml
-│   │   ├── kafka_checks.yml
-│   │   ├── localstack_checks.yml
-│   │   ├── polaris_checks.yml
-│   │   └── risingwave_checks.yml
-│   └── templates
-│       ├── bootstrap-credentials.env.j2
-│       ├── persistence.xml.j2
-│       ├── polaris.env.j2
-│       ├── postgresql.yml.j2
-│       ├── risingwave.yaml.j2
-│       ├── sink.sql.j2
-│       └── source.sql.j2
-├── pyproject.toml
-├── scripts
-├── uv.lock
-└── work
-```
+The repository is organized into several key directories:
 
-!!!NOTE
-    To ensure reuse and for security, files with passwords are not added to git. Currently, the following files are ignored or not available out of the box (they will be generated in upcoming steps):
+- `bin/`: Contains setup and cleanup scripts
+- `config/`: Kubernetes cluster configuration
+- `k8s/`: Kubernetes manifests for all components
+  - `features/`: Core infrastructure components (Kafka, LocalStack, etc.)
+  - `generator/`: Event generator deployment
+  - `polaris/`: Apache Polaris configuration
+- `notebooks/`: Jupyter notebooks for analysis
+- `packages/`: Python packages for the application components
+  - `common/`: Shared utilities
+  - `dashboard/`: Streamlit dashboard
+  - `generator/`: Event generation logic
+- `polaris-forge-setup/`: Ansible playbooks for infrastructure setup
+- `scripts/`: Generated SQL scripts (will be created in later steps)
+- `work/`: Working directory for credentials and temporary files
 
-    - k8s/features/postgresql.yaml
-    - k8s/features/risingwave.yaml
-    - k8s/polaris/persistence.xml
-    - k8s/polaris/.bootstrap-credentials
-    - k8s/polaris/.polaris.env
-    - All RSA KeyPairs
-    - scripts/\*.sql
+!!! note "Generated Files"
+    Several configuration files containing sensitive information are not included in the repository and will be generated during the setup process:
+    
+    - `k8s/features/postgresql.yaml`
+    - `k8s/features/risingwave.yaml`
+    - `k8s/polaris/persistence.xml`
+    - `k8s/polaris/.bootstrap-credentials`
+    - `k8s/polaris/.polaris.env`
+    - RSA key pairs
+    - SQL scripts
+
+## Next Steps
+
+Now that you have set up the project environment, you're ready to create your local Kubernetes cluster and deploy the necessary components. In the next chapter, we'll set up the local cloud infrastructure using K3d and deploy essential services like Kafka, LocalStack, and Apache Polaris.
+
+!!! success "Checkpoint"
+    Before proceeding to the next chapter, ensure that:
+    
+    - All required tools are installed
+    - The repository is cloned and environment variables are set
+    - The Python virtual environment is activated
+    - You understand the basic project structure
