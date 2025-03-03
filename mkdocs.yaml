@@ -1,0 +1,64 @@
+site_name: "Balloon Popper Demo"
+site_url: https://kameshsampath.github.io/balloon-popper-demo/
+site_description: >
+  This demo showcases streaming analytics using RisingWave with Apache Iceberg integration, visualized through a
+  Streamlit dashboard. It processes real-time data from a balloon popping game, demonstrating RisingWave's stream
+  processing capabilities connected to Apache Iceberg for data lake storage. The demo features live game metrics,
+  materialized views, and shows how to implement end-to-end stream processing workflows with interactive visualizations.
+extra_css:
+  - stylesheets/extra.css
+theme:
+  name: material
+  palette:
+    primary: white
+  logo: assets/snowflake-logo-blue.svg
+  favicon: assets/favicon.ico
+  font: false
+  features:
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
+    - navigation.footer
+    - toc.follow
+nav:
+  - "Overview": index.md
+  - "Environment Setup": setup.md
+  - "Create Cluster": local_cloud.md
+  - "Catalog Setup": catalog_setup.md
+  - "Verify Setup": verify_setup.md
+  - "Summary": "summary.md"
+  - "Troubleshooting": "troubleshooting.md"
+markdown_extensions:
+  - toc:
+      baselevel: 1
+      permalink: "&para;"
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.betterem
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - tables
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+plugins: []
+# plugins:
+#     - search
+#     - table-reader
