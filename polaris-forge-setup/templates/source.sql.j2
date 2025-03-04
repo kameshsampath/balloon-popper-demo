@@ -14,7 +14,7 @@ WITH (
  scan.startup.mode='latest'
 ) FORMAT PLAIN ENCODE JSON;
 
--- Leaderboard for final
+-- Leaderboard stats
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_leaderboard AS
   SELECT
     player,
@@ -24,6 +24,23 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_leaderboard AS
   FROM balloon_game_events
   GROUP BY player;
 
+
+-- Overall Color Stats
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_color_stats AS
+ SELECT
+   player,
+   balloon_color,
+   count(*) as balloon_pops,
+   sum(score) as points_by_color,
+   count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
+   max(event_ts) as event_ts
+ FROM balloon_game_events
+ GROUP BY
+   player,
+   balloon_color;
+
+-- Timeseries 
 -- Leaderboard over window of 15 seconds
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_realtime_scores AS
   SELECT
@@ -67,18 +84,3 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_color_performance_trends AS
     balloon_color,
     window_start,
     window_end;
-
--- Overall Color Stats
-
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_color_stats AS
- SELECT
-   player,
-   balloon_color,
-   count(*) as balloon_pops,
-   sum(score) as points_by_color,
-   count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
-   max(event_ts) as event_ts
- FROM balloon_game_events
- GROUP BY
-   player,
-   balloon_color;
