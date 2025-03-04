@@ -2,8 +2,8 @@ CREATE SINK IF NOT EXISTS leaderboard
  FROM mv_leaderboard
  WITH (
    connector='iceberg',
-   type = 'upsert',
-   primary_key='player',
+   type = 'append-only',
+   force_append_only='true',
    database.name = '{{ balloon_game_db }}',
    table.name = 'leaderboard',
    warehouse.path = '{{ plf_catalog_name }}',
@@ -23,8 +23,8 @@ CREATE SINK IF NOT EXISTS balloon_color_stats
  FROM mv_balloon_color_stats
  WITH (
    connector='iceberg',
-   type = 'upsert',
-   primary_key='player',
+   type = 'append-only',
+   force_append_only='true',
    database.name = '{{ balloon_game_db }}',
    table.name = 'balloon_color_stats',
    warehouse.path = '{{ plf_catalog_name }}',
