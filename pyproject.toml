@@ -26,6 +26,7 @@ dev = [
     "kubernetes>=32.0.0",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.6.7",
+    "mkdocs-mermaid2-plugin>=1.2.1",
     "notebook>=7.3.2",
     "ruff>=0.9.6",
     "watchdog>=6.0.0",

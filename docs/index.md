@@ -6,9 +6,67 @@ This demonstration showcases a complete streaming analytics pipeline that proces
 
 ## Architecture
 
-![Balloon Popper Game Architecture](images/architecture-diagram.png)
+```mermaid
+flowchart TD
+    %% Define subgraphs for layers
+    subgraph K8s["Kubernetes Cluster"]
+        subgraph Generation["Data Generation"]
+            EventGen["Event Generator\n(Balloon Pop Events)"]
+            PyGen["Python Generator\n(Simulated Game Data)"]
+        end
 
-*Note: Architecture diagram to be added*
+        subgraph Streaming["Data Streaming"]
+            Kafka["Apache Kafka\n(Strimzi Operator)"]
+        end
+
+        subgraph Processing["Stream Processing"]
+            RisingWave["RisingWave\nSQL Stream Processing"]
+            MatViews["Materialized Views\nReal-time Aggregations"]
+        end
+
+        subgraph Storage["Data Storage & Visualization"]
+            Polaris["Apache Polaris\nREST Catalog"]
+            LocalStack["LocalStack\nS3 Storage"]
+            Iceberg["Apache Iceberg\nTable Format"]
+            Streamlit["Streamlit\nDashboard"]
+            Jupyter["Jupyter\nNotebooks"]
+        end
+    end
+
+    %% Define connections
+    EventGen --> |Game Events| Kafka
+    PyGen --> |Game Events| Kafka
+    Kafka --> |Stream Processing| RisingWave
+    RisingWave --> |Continuous Queries| MatViews
+    RisingWave --> |Sink to Iceberg| Iceberg
+    
+    %% Metadata connections
+    Polaris -.-> LocalStack
+    Polaris -.-> Iceberg
+    
+    %% Storage to visualization
+    LocalStack --> Iceberg
+    Iceberg --> |Visualization| Streamlit
+    Iceberg --> |Analysis| Jupyter
+
+    %% Styling
+    classDef generationClass fill:#e6f7ff,stroke:#1890ff,stroke-width:2px
+    classDef streamingClass fill:#ebf8f2,stroke:#52c41a,stroke-width:2px
+    classDef processingClass fill:#fff7e6,stroke:#fa8c16,stroke-width:2px
+    classDef storageClass fill:#f9f0ff,stroke:#722ed1,stroke-width:2px
+    
+    class EventGen,PyGen generationClass
+    class Kafka streamingClass
+    class RisingWave,MatViews processingClass
+    class Polaris,LocalStack,Iceberg,Streamlit,Jupyter storageClass
+    
+    %% Subgraph styling
+    style Generation fill:#e6f7ff,stroke:#1890ff,stroke-width:2px
+    style Streaming fill:#ebf8f2,stroke:#52c41a,stroke-width:2px
+    style Processing fill:#fff7e6,stroke:#fa8c16,stroke-width:2px
+    style Storage fill:#f9f0ff,stroke:#722ed1,stroke-width:2px
+    style K3D fill:#f8f9fa,stroke:#dddddd,stroke-width:3px,stroke-dasharray: 5 5
+```
 
 ## Core Components
 

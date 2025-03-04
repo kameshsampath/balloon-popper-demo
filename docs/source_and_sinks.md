@@ -285,6 +285,65 @@ Now that we've designed our schema, let's walk through how to set up the streami
    psql -f $PROJECT_HOME/scripts/sink.sql
    ```
 
+### Verify Sources and Sinks
+
+Run the following command to shell into Risingwave shell,
+
+```shell
+psql
+```
+
+List all sources,
+
+```sql
+show sources;
+```
+
+```text
+dev=> show sources;
+        Name         
+---------------------
+ balloon_game_events
+(1 row)
+
+```
+
+List all materialized views,
+
+```sql
+show materialized views;
+```
+
+```text
+dev=> show materialized views;
+            Name             
+-----------------------------
+ mv_balloon_colored_pops
+ mv_leaderboard
+ mv_color_performance_trends
+ mv_balloon_color_stats
+ mv_realtime_scores
+(5 rows)
+```
+
+List all sinks,
+
+```sql
+show sinks;
+```
+
+```text
+dev=> show sinks;
+           Name           
+--------------------------
+ color_performance_trends
+ realtime_scores
+ balloon_colored_pops
+ balloon_color_stats
+ leaderboard
+(5 rows)
+```
+
 ### Key Takeaways
 
 When designing Iceberg tables for streaming analytics, remember these principles:
