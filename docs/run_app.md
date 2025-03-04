@@ -10,7 +10,7 @@ By the end of this chapter, you will:
 
 ## Generating Game Events
 
-The repository includes a [streaming data generator](../packages/generator) that simulates balloon pop events and sends them to Kafka. These events will then be processed by RisingWave and stored in Iceberg tables.
+The repository includes a [streaming data generator](https://github.com/kameshsampath/balloon-popper-demo/tree/main/packages/generator) that simulates balloon pop events and sends them to Kafka. These events will then be processed by RisingWave and stored in Iceberg tables.
 
 ### Event Structure
 
@@ -79,56 +79,6 @@ The dashboard provides several visualizations:
 !!! tip
     You can filter and interact with the visualizations to explore different aspects of the game data.
 
-## Advanced Data Exploration
-
-For more advanced data exploration and direct interaction with the Iceberg tables:
-
-1. Open the Jupyter notebook [workbook.ipynb](../notebooks/workbook.ipynb)
-2. Use [PyIceberg](https://py.iceberg.apache.org/) to query and analyze the data
-
-```python
-# Example PyIceberg query from the workbook
-from pyiceberg.catalog import load_catalog
-
-# Load the catalog
-catalog = load_catalog("balloon-game")
-
-# List all tables
-tables = catalog.list_tables(catalog_name="balloon_pops")
-print(tables)
-
-# Query a table
-table = catalog.load_table("balloon_pops.leaderboard")
-results = table.scan().to_arrow()
-```
-
-!!! note
-    The notebook provides a more flexible environment for data scientists and analysts who want to perform custom queries and analyses beyond what's available in the dashboard.
-
-## Verifying Data Flow
-
-To verify that data is flowing correctly through the system:
-
-1. Check Kafka to ensure messages are being produced:
-   ```shell
-   kubectl exec -n kafka my-cluster-dual-role-0 -- \
-     /opt/kafka/bin/kafka-console-consumer.sh \
-     --bootstrap-server localhost:9092 \
-     --topic balloon-game \
-     --from-beginning \
-     --max-messages 5
-   ```
-
-2. Check RisingWave to ensure data is being processed:
-   ```shell
-   psql -h localhost -p 14567 -U root -d dev -c "SELECT count(*) FROM balloon_game_source"
-   ```
-
-3. Verify data is landing in Iceberg tables via LocalStack:
-   ```shell
-   aws --endpoint-url=http://localhost:14566 \
-     s3 ls s3://balloon-game/balloon_pops/leaderboard/ --recursive
-   ```
 
 ## Next Steps
 
@@ -138,3 +88,5 @@ Now that you have your application running with simulated data, you can:
 - Explore the RisingWave materialized views that power the analytics
 - Customize the Streamlit dashboard to add new visualizations
 - Analyze the Iceberg table structures and query optimization
+
+In the next chapter, we'll go through the verification process to ensure data is flowing correctly through each component of the pipeline.

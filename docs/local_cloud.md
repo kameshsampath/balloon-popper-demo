@@ -11,7 +11,7 @@ By the end of this chapter, you will:
 
 ## Configuration Overview
 
-All configuration settings are managed through a single file: [defaults/main.yml](../polaris-forge-setup/defaults/main.yml)
+All configuration settings are managed through a single file: [defaults/main.yml](https://github.com/kameshsampath/balloon-popper-demo/blob/main/polaris-forge-setup/defaults/main.yml){target=_blank}
 
 !!! tip "Configuration Customization"
     The table below shows the key configuration parameters. You can adjust these values in the defaults file before deployment if needed.
@@ -26,7 +26,7 @@ All configuration settings are managed through a single file: [defaults/main.yml
 | `balloon_game_kafka_topic` | Kafka topic for game events | `balloon-game` |
 
 !!! note
-    For a complete list of configuration parameters, refer to the [defaults/main.yml](../polaris-forge-setup/defaults/main.yml) file.
+    For a complete list of configuration parameters, refer to the [defaults/main.yml](https://github.com/kameshsampath/balloon-popper-demo/blob/main/polaris-forge-setup/defaults/main.yml){target=_blank} file.
 
 ## Deployment Process
 

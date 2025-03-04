@@ -14,18 +14,18 @@ By the end of this chapter, you will:
 
 Before beginning this tutorial, ensure you have the following tools installed and properly configured:
 
-| Tool | Purpose | Minimum Version |
-|------|---------|----------------|
-| [GitHub Account](https://github.com/signup) | Repository access | N/A |
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Container runtime | Latest |
-| [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) | Kubernetes CLI | Latest |
-| [rpk](https://docs.redpanda.com/current/get-started/rpk-install/) | Kafka CLI | Latest |
-| [k3d](https://k3d.io/) | Lightweight Kubernetes | >= 5.0.0 |
-| [Python](https://www.python.org/downloads/) | Programming language | >= 3.12 |
-| [uv](https://github.com/astral-sh/uv) | Python package manager | Latest |
-| [Task](https://taskfile.dev) | Task runner | Latest |
-| [LocalStack](https://localstack.cloud/) | AWS emulator | >= 3.0.0 |
-| [Dnsmasq](https://dnsmasq.org/doc.html) | DNS management | Latest (Optional) |
+| Tool | Purpose | Minimum Version | Remarks
+|------|---------|----------------|----------------|
+| [GitHub Account](https://github.com/signup){target=_blank} | Repository access | N/A |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/){target=_blank}  | Container runtime | Latest |
+| [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl){target=_blank}  | Kubernetes CLI | Latest | `$PROJECT_HOME/setup.sh` will download latest matching the cluster version
+| [rpk](https://docs.redpanda.com/current/get-started/rpk-install/){target=_blank}  | Kafka CLI | Latest | `$PROJECT_HOME/setup.sh` will download latest matching the cluster Kafka version
+| [k3d](https://k3d.io/){target=_blank}  | Lightweight Kubernetes | >= 5.0.0 |
+| [Python](https://www.python.org/downloads/){target=_blank}  | Programming language | >= 3.12 |
+| [uv](https://github.com/astral-sh/uv){target=_blank}  | Python package manager | Latest |
+| [Task](https://taskfile.dev){target=_blank}  | Task runner | Latest |
+| [LocalStack](https://localstack.cloud/){target=_blank}  | AWS emulator | >= 3.0.0 |
+| [Dnsmasq](https://dnsmasq.org/doc.html){target=_blank}  | DNS management | Latest (Optional) |
 
 !!! warning "Prerequisites Check"
     Make sure all required tools are properly installed and available in your system PATH before proceeding. This will prevent issues later in the setup process.
@@ -52,7 +52,7 @@ export FEATURES_DIR="$PWD/k8s"
 ```
 
 !!! tip "Environment Management"
-    Consider using [direnv](https://direnv.net) to automatically set environment variables when entering the project directory. This simplifies your workflow and ensures consistent configuration.
+    Consider using [direnv](https://direnv.net){target=_blank}  to automatically set environment variables when entering the project directory. This simplifies your workflow and ensures consistent configuration.
 
 ### Step 3: Set Up Python Environment
 
@@ -77,9 +77,9 @@ uv sync
 !!! note
     The virtual environment isolates your project dependencies from system-wide Python packages, preventing conflicts and ensuring reproducibility.
 
-### Step 4: DNS Configuration (Optional)
+### Step 4: DNS Configuration
 
-For seamless access to services within your local Kubernetes cluster, you can set up Dnsmasq instead of manually editing `/etc/hosts`.
+For seamless access to services within your local Kubernetes cluster.
 
 On macOS with Homebrew:
 
@@ -96,6 +96,14 @@ EOF
 
 !!! info
     After configuring Dnsmasq, you may need to restart the service and flush your DNS cache for changes to take effect.
+
+(OR)
+
+Edit `/etc/hosts` and add the following entry
+
+```shell
+127.0.0.1 *.localstack
+```
 
 ## Project Structure Overview
 

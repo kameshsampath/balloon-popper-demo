@@ -24,7 +24,7 @@ The `balloon_pops` database is designed with five Iceberg tables, each focusing 
 
 All tables use Iceberg Format Version 2, enabling advanced features like merge-on-read operations for efficient updates without rewriting entire files—particularly important for frequently updated gaming data.
 
-!!!IMPORTANT
+!!! important
     Throughout this tutorial, we'll explore common design patterns and trade-offs in schema design. Pay special attention to how partitioning strategies differ based on expected query patterns.
 
 ## Table Specifications
@@ -38,8 +38,8 @@ All tables use Iceberg Format Version 2, enabling advanced features like merge-o
 | Field ID | Field Name | Data Type | Required | Description |
 |----------|------------|-----------|----------|-------------|
 | 1 | player | STRING | Yes | Player identifier |
-| 2 | total_score | INTEGER | Yes | Player's cumulative score |
-| 3 | bonus_hits | INTEGER | Yes | Number of bonus hits achieved |
+| 2 | total_score | LONG | Yes | Player's cumulative score |
+| 3 | bonus_hits | LONG | Yes | Number of bonus hits achieved |
 | 4 | event_ts | TIMESTAMPTZ | Yes | Timestamp when the event occurred |
 
 #### Partitioning
@@ -60,12 +60,6 @@ Data is sorted by:
 
 This sorting enables efficient retrieval of top-scoring players.
 
-#### Write Properties
-
-The same merge-on-read properties as the Leaderboard table are applied here.
-
-!!!NOTE
-     The **merge-on-read** properties are crucial for leaderboard data, which is updated frequently. This approach allows updates without rewriting entire data files, significantly improving write performance.
 
 #### Optimized For
 
@@ -86,8 +80,8 @@ The same merge-on-read properties as the Leaderboard table are applied here.
 |----------|------------|-----------|----------|-------------|
 | 1 | player | STRING | Yes | Player identifier |
 | 2 | balloon_color | STRING | Yes | Color of the balloon |
-| 3 | points_by_color | INTEGER | Yes | Points earned for specific balloon color |
-| 4 | bonus_hits | INTEGER | Yes | Number of bonus hits achieved |
+| 3 | points_by_color | LONG | Yes | Points earned for specific balloon color |
+| 4 | bonus_hits | LONG | Yes | Number of bonus hits achieved |
 | 5 | event_ts | TIMESTAMPTZ | Yes | Timestamp when the event occurred |
 
 #### Partitioning
@@ -117,18 +111,6 @@ This sorting prioritizes high-scoring color statistics.
 - Analysis of performance by color across players
 - Efficient upsert operations
 
-Since both `leaderboard` and `ballon_color_stats` table perform `upserts`, it is crucial to set these iceberg properties when creating these tables,
-
-
-#### Write Properties
-
-| Property | Value | Description |
-|----------|-------|-------------|
-| format-version | 2 | Required for merge-on-read operations |
-| write.delete.mode | merge-on-read | Enables efficient record updates |
-| write.update.mode | merge-on-read | Enables efficient record updates |
-| write.merge.mode | merge-on-read | Enables efficient record updates |
-
 ---
 
 ## Time Series
@@ -142,7 +124,7 @@ Since both `leaderboard` and `ballon_color_stats` table perform `upserts`, it is
 | Field ID | Field Name | Data Type | Required | Description |
 |----------|------------|-----------|----------|-------------|
 | 1 | player | STRING | Yes | Player identifier |
-| 2 | total_score | INTEGER | Yes | Player's cumulative score |
+| 2 | total_score | LONG | Yes | Player's cumulative score |
 | 3 | window_start | TIMESTAMPTZ | Yes | Start timestamp of the scoring window |
 | 4 | window_end | TIMESTAMPTZ | Yes | End timestamp of the scoring window |
 
@@ -179,9 +161,9 @@ This enables efficient time-based queries and analysis.
 |----------|------------|-----------|----------|-------------|
 | 1 | player | STRING | Yes | Player identifier |
 | 2 | balloon_color | STRING | Yes | Color of the balloon |
-| 3 | balloon_pops | INTEGER | Yes | Number of balloons popped |
-| 4 | points_by_color | INTEGER | Yes | Points earned for specific balloon color |
-| 5 | bonus_hits | INTEGER | Yes | Number of bonus hits achieved |
+| 3 | balloon_pops | LONG | Yes | Number of balloons popped |
+| 4 | points_by_color | LONG | Yes | Points earned for specific balloon color |
+| 5 | bonus_hits | LONG | Yes | Number of bonus hits achieved |
 | 6 | window_start | TIMESTAMPTZ | Yes | Start timestamp of the scoring window |
 | 7 | window_end | TIMESTAMPTZ | Yes | End timestamp of the scoring window |
 
@@ -227,8 +209,8 @@ This sorting enhances performance for color-based filtering.
 | Field ID | Field Name | Data Type | Required | Description |
 |----------|------------|-----------|----------|-------------|
 | 1 | balloon_color | STRING | Yes | Color of the balloon |
-| 2 | avg_score_per_pop | DOUBLE | Yes | Average score earned per balloon pop |
-| 3 | total_pops | INTEGER | Yes | Total number of balloon pops |
+| 2 | avg_score_per_pop | DECIMAL(10,28) | Yes | Average score earned per balloon pop |
+| 3 | total_pops | LONG | Yes | Total number of balloon pops |
 | 4 | window_start | TIMESTAMPTZ | Yes | Start timestamp of the analysis window |
 | 5 | window_end | TIMESTAMPTZ | Yes | End timestamp of the analysis window |
 
@@ -262,89 +244,7 @@ This optimizes lookups for specific colors.
 - Comparing efficiency metrics across different balloon colors
 - Tracking popularity and effectiveness of different colors
 
-## Implementing the Data Pipeline
-
-Now that we've designed our schema, let's walk through how to set up the streaming data flow:
-
-### Setup Process
-
-1. **Generate Configuration Scripts**: First, we'll generate the necessary SQL scripts:
-   ```shell
-   ansible-playbook $PROJECT_HOME/polaris-forge-setup/generate_source_sinks.yml
-   ```
-
-2. **Configure Kafka Sources**: Set up sources in RisingWave to consume messages from Kafka:
-   ```shell
-   psql -f $PROJECT_HOME/scripts/source.sql
-   ```
-
-3. **Create Iceberg Tables**: The tables can be created using the `$PROJECT_HOME/notebooks/workbook.ipynb` notebook's "Create Table" cells with the schema definitions we've explored.
-
-4. **Configure Sinks**: Set up the data flow from sources to Iceberg tables:
-   ```shell
-   psql -f $PROJECT_HOME/scripts/sink.sql
-   ```
-
-### Verify Sources and Sinks
-
-Run the following command to shell into Risingwave shell,
-
-```shell
-psql
-```
-
-List all sources,
-
-```sql
-show sources;
-```
-
-```text
-dev=> show sources;
-        Name         
----------------------
- balloon_game_events
-(1 row)
-
-```
-
-List all materialized views,
-
-```sql
-show materialized views;
-```
-
-```text
-dev=> show materialized views;
-            Name             
------------------------------
- mv_balloon_colored_pops
- mv_leaderboard
- mv_color_performance_trends
- mv_balloon_color_stats
- mv_realtime_scores
-(5 rows)
-```
-
-List all sinks,
-
-```sql
-show sinks;
-```
-
-```text
-dev=> show sinks;
-           Name           
---------------------------
- color_performance_trends
- realtime_scores
- balloon_colored_pops
- balloon_color_stats
- leaderboard
-(5 rows)
-```
-
-### Key Takeaways
+## Key Takeaways
 
 When designing Iceberg tables for streaming analytics, remember these principles:
 
@@ -355,4 +255,4 @@ When designing Iceberg tables for streaming analytics, remember these principles
 
 These principles apply not just to game analytics, but to any streaming analytics application where you need to balance write throughput with query performance.
 
-In the next chapter, we'll explore how to query these tables efficiently and build real-time dashboards on top of this data model.
+In the next chapter, we'll explore how to implement this data model using sources and sinks in our streaming pipeline.

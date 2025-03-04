@@ -33,7 +33,7 @@ ansible-playbook $PROJECT_HOME/polaris-forge-setup/catalog_setup.yml
 ```
 
 !!! note
-    All configuration values can be customized by modifying the [defaults](../../polaris-forge-setup/defaults/main.yml) file.
+    All configuration values can be customized by modifying the [defaults/main.yml](https://github.com/kameshsampath/balloon-popper-demo/blob/main/polaris-forge-setup/defaults/main.yml){target=_blank} file.
 
 ### What Happens During Setup
 
