@@ -28,7 +28,7 @@ plf_work_dir: "{{ playbook_dir }}/../work" # Work directory for storing credenti
 plf_k8s_dir: "{{ playbook_dir }}/../k8s" # Kubernetes manifests directory
 plf_polaris_dir: "{{ plf_k8s_dir }}/polaris" # Directory where polaris manifests are stored
 plf_features_dir: "{{ plf_k8s_dir }}/features" # Directory where cluster feature manifests are stored
-plf_sql_scripts_dir: "{{ playbook_dir }}/scripts" # SQL Scripts Directory
+plf_sql_scripts_dir: "{{ playbook_dir }}/../scripts" # SQL Scripts Directory
 plf_credentials_file: "{{ plf_k8s_dir }}/polaris/.bootstrap-credentials.env" # Bootstrap credentials location
 plf_notebook_dir: "{{ playbook_dir }}/../notebooks"
 plf_template_dir: "{{ playbook_dir }}/templates/notebooks"
@@ -47,4 +47,4 @@ plf_demo_table: fruits
 balloon_game_db: balloon_pops
 balloon_game_kafka_bootstrap_servers: my-cluster-kafka-bootstrap.kafka:9092
 balloon_game_kafka_topic: balloon-game
-polaris_catalog_uri: "{{ plf_api_base_url }}/api/catalog/"
+plf_polaris_catalog_uri: "http://polaris.polaris:8181/api/catalog/"

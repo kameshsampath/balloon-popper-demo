@@ -37,11 +37,23 @@
         - source
         - sink
 
-    - name: Check if config files exist
+    - name: Check if script files exist
       ansible.builtin.stat:
         path: "{{ item.file }}"
       loop: "{{ plf_sql_script_files }}"
       register: sql_script_file_stats
+      tags:
+        - source
+        - sink
+
+    - name: Create script files if they don't exist
+      ansible.builtin.template:
+        src: "{{ item.0.template }}"
+        dest: "{{ item.0.file }}"
+        mode: "0600"
+      loop: "{{ plf_sql_script_files | zip(sql_script_file_stats.results) | list }}"
+      loop_control:
+        label: "{{ item.0.file }}"
       tags:
         - source
         - sink
