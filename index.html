@@ -728,8 +728,65 @@
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>This demonstration showcases a complete streaming analytics pipeline that processes real-time data from a balloon popping game. The project illustrates modern data architecture patterns by combining stream processing with data lake storage and interactive visualizations.</p>
 <h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">&para;</a></h2>
-<p><img alt="Balloon Popper Game Architecture" src="images/architecture-diagram.png" /></p>
-<p><em>Note: Architecture diagram to be added</em></p>
+<pre class="mermaid"><code>flowchart TD
+    %% Define subgraphs for layers
+    subgraph K8s["Kubernetes Cluster"]
+        subgraph Generation["Data Generation"]
+            EventGen["Event Generator\n(Balloon Pop Events)"]
+            PyGen["Python Generator\n(Simulated Game Data)"]
+        end
+
+        subgraph Streaming["Data Streaming"]
+            Kafka["Apache Kafka\n(Strimzi Operator)"]
+        end
+
+        subgraph Processing["Stream Processing"]
+            RisingWave["RisingWave\nSQL Stream Processing"]
+            MatViews["Materialized Views\nReal-time Aggregations"]
+        end
+
+        subgraph Storage["Data Storage &amp; Visualization"]
+            Polaris["Apache Polaris\nREST Catalog"]
+            LocalStack["LocalStack\nS3 Storage"]
+            Iceberg["Apache Iceberg\nTable Format"]
+            Streamlit["Streamlit\nDashboard"]
+            Jupyter["Jupyter\nNotebooks"]
+        end
+    end
+
+    %% Define connections
+    EventGen --&gt; |Game Events| Kafka
+    PyGen --&gt; |Game Events| Kafka
+    Kafka --&gt; |Stream Processing| RisingWave
+    RisingWave --&gt; |Continuous Queries| MatViews
+    RisingWave --&gt; |Sink to Iceberg| Iceberg
+
+    %% Metadata connections
+    Polaris -.-&gt; LocalStack
+    Polaris -.-&gt; Iceberg
+
+    %% Storage to visualization
+    LocalStack --&gt; Iceberg
+    Iceberg --&gt; |Visualization| Streamlit
+    Iceberg --&gt; |Analysis| Jupyter
+
+    %% Styling
+    classDef generationClass fill:#e6f7ff,stroke:#1890ff,stroke-width:2px
+    classDef streamingClass fill:#ebf8f2,stroke:#52c41a,stroke-width:2px
+    classDef processingClass fill:#fff7e6,stroke:#fa8c16,stroke-width:2px
+    classDef storageClass fill:#f9f0ff,stroke:#722ed1,stroke-width:2px
+
+    class EventGen,PyGen generationClass
+    class Kafka streamingClass
+    class RisingWave,MatViews processingClass
+    class Polaris,LocalStack,Iceberg,Streamlit,Jupyter storageClass
+
+    %% Subgraph styling
+    style Generation fill:#e6f7ff,stroke:#1890ff,stroke-width:2px
+    style Streaming fill:#ebf8f2,stroke:#52c41a,stroke-width:2px
+    style Processing fill:#fff7e6,stroke:#fa8c16,stroke-width:2px
+    style Storage fill:#f9f0ff,stroke:#722ed1,stroke-width:2px
+    style K3D fill:#f8f9fa,stroke:#dddddd,stroke-width:3px,stroke-dasharray: 5 5</code></pre>
 <h2 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h2>
 <h3 id="data-generation">Data Generation<a class="headerlink" href="#data-generation" title="Permanent link">&para;</a></h3>
 <ul>
