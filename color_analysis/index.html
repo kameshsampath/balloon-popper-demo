@@ -1,0 +1,1164 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="This demo showcases streaming analytics using RisingWave with Apache Iceberg integration, visualized through a Streamlit dashboard. It processes real-time data from a balloon popping game, demonstrating RisingWave's stream processing capabilities connected to Apache Iceberg for data lake storage. The demo features live game metrics, materialized views, and shows how to implement end-to-end stream processing workflows with interactive visualizations.
+">
+      
+      
+      
+        <link rel="canonical" href="https://kameshsampath.github.io/balloon-popper-demo/color_analysis/">
+      
+      
+        <link rel="prev" href="../leaderboard/">
+      
+      
+        <link rel="next" href="../performance_trends/">
+      
+      
+      <link rel="icon" href="../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.7">
+    
+    
+      
+        <title>Color Analysis Dashboard - Balloon Popper Demo</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.8608ea7d.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#color-analysis-dashboard" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Balloon Popper Demo" class="md-header__button md-logo" aria-label="Balloon Popper Demo" data-md-component="logo">
+      
+  <img src="../assets/snowflake-logo-blue.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Balloon Popper Demo
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Color Analysis Dashboard
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Balloon Popper Demo" class="md-nav__button md-logo" aria-label="Balloon Popper Demo" data-md-component="logo">
+      
+  <img src="../assets/snowflake-logo-blue.svg" alt="logo">
+
+    </a>
+    Balloon Popper Demo
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Environment Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../local_cloud/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create Cluster
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../catalog_setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Catalog Setup
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Data Pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Data Pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../iceberg_schema_design/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Iceberg Schema Design
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../implementing_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementing the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../run_app/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Running the Application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verifying_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Verifying the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Analytics Dashboards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Analytics Dashboards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboards/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dashboard Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../leaderboard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Leaderboard Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Color Analysis Dashboard
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Color Analysis Dashboard
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technical Implementation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interactive Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#player-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Player Selection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metric-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Metric Selection
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Visualizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Visualizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#color-usage-gauge" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Usage Gauge
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-distribution-heatmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Distribution Heatmap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-specific-metrics-chart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color-specific Metrics Chart
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#color-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Statistics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Processing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insights-and-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Insights and Applications
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_trends/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Performance Analysis Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../summary/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Summary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#technical-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Technical Implementation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive Features
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interactive Features">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#player-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Player Selection
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metric-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      Metric Selection
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-visualizations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Visualizations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Visualizations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#color-usage-gauge" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Usage Gauge
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-distribution-heatmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Distribution Heatmap
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#color-specific-metrics-chart" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color-specific Metrics Chart
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#color-statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Color Statistics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Processing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#insights-and-applications" class="md-nav__link">
+    <span class="md-ellipsis">
+      Insights and Applications
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="color-analysis-dashboard">Color Analysis Dashboard<a class="headerlink" href="#color-analysis-dashboard" title="Permanent link">&para;</a></h1>
+<p>The Color Analysis dashboard provides detailed insights into players' balloon color preferences and performance metrics across different colors in the game.</p>
+<div class="admonition info">
+<p class="admonition-title">Dashboard Purpose</p>
+<p>This dashboard helps analyze player behavior patterns related to balloon colors, identifying favorite colors, usage statistics, and performance metrics by color.</p>
+</div>
+<p>The complete code for this dashboard is available on GitHub: <a href="https://github.com/kameshsampath/balloon-popper-demo/blob/main/packages/dashboard/src/dashboard/pages/color_analysis.py">balloon-popper-demo/color_analysis.py</a></p>
+<p><img alt="Color Analysis Dashboard Overview" src="../images/color-analysis-overview.png" />
+<em>Figure 1: Full view of the Color Analysis Dashboard showing player statistics and color patterns</em></p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The Color Analysis dashboard provides several key components:</p>
+<ol>
+<li><strong>Player Summary Statistics</strong>: Key metrics about a player's balloon popping behavior</li>
+<li><strong>Color Usage Patterns</strong>: Visual representation of color preferences</li>
+<li><strong>Color Distribution</strong>: Heatmap showing the distribution of balloon colors</li>
+<li><strong>Color-specific Metrics</strong>: Performance metrics broken down by balloon color</li>
+</ol>
+<h2 id="technical-implementation">Technical Implementation<a class="headerlink" href="#technical-implementation" title="Permanent link">&para;</a></h2>
+<p>This dashboard leverages:</p>
+<ul>
+<li><strong>Streamlit</strong>: For creating the interactive interface</li>
+<li><strong>Altair</strong>: For generating the specialized visualizations</li>
+<li><strong>Pandas</strong>: For data manipulation and analysis</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Summary statistics display with multiple columns</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">favorite_color</span> <span class="o">=</span> <span class="n">analyze_balloon_stats</span><span class="p">(</span><span class="n">colored_pops</span><span class="p">,</span> <span class="n">selected_player</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Player Name&quot;</span><span class="p">,</span> <span class="n">selected_player</span><span class="p">)</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Total Balloon Pops&quot;</span><span class="p">,</span> <span class="n">colored_pops</span><span class="p">[</span><span class="n">colored_pops</span><span class="p">[</span><span class="s1">&#39;player&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">selected_player</span><span class="p">][</span><span class="s1">&#39;balloon_pops&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Total Colors Used&quot;</span><span class="p">,</span> <span class="n">colored_pops</span><span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">())</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">with</span> <span class="n">col4</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Favorite Color&quot;</span><span class="p">,</span> <span class="n">favorite_color</span><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Player Summary Statistics" src="../images/color-analysis-summary.png" />
+<em>Figure 2: Player summary statistics showing key metrics at a glance</em></p>
+<h2 id="interactive-features">Interactive Features<a class="headerlink" href="#interactive-features" title="Permanent link">&para;</a></h2>
+<p>The dashboard includes several interactive elements for customized analysis:</p>
+<h3 id="player-selection">Player Selection<a class="headerlink" href="#player-selection" title="Permanent link">&para;</a></h3>
+<p>Users can select specific players to analyze their color preferences and statistics:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Player selector in sidebar</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">players</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">colored_pops</span><span class="p">[</span><span class="s2">&quot;player&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">selected_player</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="s2">&quot;Select Player&quot;</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">options</span><span class="o">=</span><span class="n">players</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="metric-selection">Metric Selection<a class="headerlink" href="#metric-selection" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Users can choose from different metrics to analyze performance by color.</p>
+</blockquote>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Metric selector</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;Balloon Pops&quot;</span><span class="p">:</span> <span class="s2">&quot;balloon_pops&quot;</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="s2">&quot;Points by Color&quot;</span><span class="p">:</span> <span class="s2">&quot;points_by_color&quot;</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="s2">&quot;Bonus Hits&quot;</span><span class="p">:</span> <span class="s2">&quot;bonus_hits&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">selected_metric</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span><span class="s2">&quot;Select Metric&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</span></code></pre></div>
+<p><img alt="Dashboard Settings" src="../images/color-analysis-settings.png" />
+<em>Figure 3: Sidebar controls for selecting players and metrics</em></p>
+<h2 id="data-visualizations">Data Visualizations<a class="headerlink" href="#data-visualizations" title="Permanent link">&para;</a></h2>
+<p>The dashboard includes several specialized visualizations:</p>
+<h3 id="color-usage-gauge">Color Usage Gauge<a class="headerlink" href="#color-usage-gauge" title="Permanent link">&para;</a></h3>
+<p>This visualization shows the player's color variety usage compared to total available colors:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Create gauge visualization for color usage</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">gauge_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">_unique_colors</span><span class="p">],</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="s1">&#39;max_value&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">total_colors</span><span class="p">],</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="s1">&#39;display&#39;</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_unique_colors</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_colors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">})</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">arc</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_arc</span><span class="p">(</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">innerRadius</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">cornerRadius</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="n">stroke</span><span class="o">=</span><span class="s2">&quot;#fff&quot;</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="n">color</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">gauge_color</span><span class="p">)</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="p">)</span>
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">text</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">mark_text</span><span class="p">(</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>    <span class="n">align</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>    <span class="n">baseline</span><span class="o">=</span><span class="s1">&#39;middle&#39;</span><span class="p">,</span>
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>    <span class="n">fontSize</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>    <span class="n">font</span><span class="o">=</span><span class="s1">&#39;Arial&#39;</span>
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    <span class="n">text</span><span class="o">=</span><span class="s1">&#39;display:N&#39;</span>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Color Usage Gauge" src="../images/color-usage-gauge.png" />
+<em>Figure 4: Gauge chart showing unique colors used versus total available colors</em></p>
+<h3 id="color-distribution-heatmap">Color Distribution Heatmap<a class="headerlink" href="#color-distribution-heatmap" title="Permanent link">&para;</a></h3>
+<div class="admonition example">
+<p class="admonition-title">Color Distribution Visualization</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Color distribution heatmap</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">color_dist</span> <span class="o">=</span> <span class="p">(</span><span class="n">_filtered_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;player&#39;</span><span class="p">,</span> <span class="s1">&#39;balloon_color&#39;</span><span class="p">])</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>            <span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>            <span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>            <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">))</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">heatmap</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">color_dist</span><span class="p">)</span><span class="o">.</span><span class="n">mark_rect</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">x</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;player:N&#39;</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>            <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Player&#39;</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">)),</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="s1">&#39;balloon_color:N&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Balloon Color&#39;</span><span class="p">),</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">color</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Color</span><span class="p">(</span><span class="s1">&#39;count:Q&#39;</span><span class="p">,</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>                    <span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">scheme</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">color_scheme</span><span class="p">),</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>                    <span class="n">legend</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Legend</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="nb">sorted</span><span class="p">(</span><span class="n">color_dist</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()),</span> <span class="p">)),</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>    <span class="n">tooltip</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;player&#39;</span><span class="p">,</span> <span class="s1">&#39;balloon_color&#39;</span><span class="p">,</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>            <span class="n">alt</span><span class="o">.</span><span class="n">Tooltip</span><span class="p">(</span><span class="s1">&#39;count:Q&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;,d&#39;</span><span class="p">)]</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><img alt="Color Distribution Heatmap" src="../images/color-distribution-heatmap.png" />
+<em>Figure 5: Heatmap showing distribution and frequency of balloon colors</em></p>
+<h3 id="color-specific-metrics-chart">Color-specific Metrics Chart<a class="headerlink" href="#color-specific-metrics-chart" title="Permanent link">&para;</a></h3>
+<p>The dashboard visualizes performance metrics by color with an interactive bar chart:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Base chart for color-specific metrics</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">base_chart</span> <span class="o">=</span> <span class="n">alt</span><span class="o">.</span><span class="n">Chart</span><span class="p">(</span><span class="n">ca_filtered_df</span><span class="p">)</span><span class="o">.</span><span class="n">mark_bar</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">x</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="s1">&#39;balloon_color:N&#39;</span><span class="p">,</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>            <span class="n">title</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>            <span class="n">axis</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Axis</span><span class="p">(</span><span class="n">labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="kc">False</span><span class="p">)),</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">y</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Y</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sum(</span><span class="si">{</span><span class="n">ca_selected_metric</span><span class="si">}</span><span class="s1">):Q&#39;</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>            <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Total&#39;</span><span class="p">),</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">color</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Color</span><span class="p">(</span><span class="s1">&#39;balloon_color:N&#39;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>                    <span class="n">scale</span><span class="o">=</span><span class="n">alt</span><span class="o">.</span><span class="n">Scale</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">color_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>                                    <span class="nb">range</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">color_map</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>                    <span class="n">legend</span><span class="o">=</span><span class="kc">None</span><span class="p">),</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">tooltip</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="n">alt</span><span class="o">.</span><span class="n">Tooltip</span><span class="p">(</span><span class="s1">&#39;balloon_color:N&#39;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Color&#39;</span><span class="p">),</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>        <span class="n">alt</span><span class="o">.</span><span class="n">Tooltip</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;sum(</span><span class="si">{</span><span class="n">ca_selected_metric</span><span class="si">}</span><span class="s1">):Q&#39;</span><span class="p">,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>                    <span class="n">title</span><span class="o">=</span><span class="n">metric_titles</span><span class="p">[</span><span class="n">ca_selected_metric</span><span class="p">],</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>                    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;,.0f&#39;</span><span class="p">)</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>    <span class="p">]</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Color Metrics Chart" src="../images/color-metrics-chart.png" />
+<em>Figure 6: Bar chart showing performance metrics broken down by balloon color</em></p>
+<h2 id="color-statistics">Color Statistics<a class="headerlink" href="#color-statistics" title="Permanent link">&para;</a></h2>
+<p>The dashboard includes detailed statistics on color popularity:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">stat_col1</span><span class="p">,</span> <span class="n">stat_col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">with</span> <span class="n">stat_col1</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="c1"># Least used colors</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">least_used</span> <span class="o">=</span> <span class="n">colored_pops</span><span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">nsmallest</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;### Least Popular Colors&quot;</span><span class="p">)</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">least_used_df</span> <span class="o">=</span> <span class="n">to_df</span><span class="p">(</span><span class="n">least_used</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">])</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">least_used_df</span><span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">least_used_df</span><span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">title</span><span class="p">()</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">least_used_df</span><span class="p">,</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="n">column_config</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>            <span class="s2">&quot;balloon_color&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">TextColumn</span><span class="p">(</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Balloon Color&quot;</span><span class="p">,</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Balloon Color&quot;</span><span class="p">,</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>            <span class="p">),</span>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>            <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="n">st</span><span class="o">.</span><span class="n">column_config</span><span class="o">.</span><span class="n">ProgressColumn</span><span class="p">(</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>                <span class="s2">&quot;Count&quot;</span><span class="p">,</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>                <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Count of the least popular color for the player </span><span class="si">{</span><span class="n">selected_player</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>                <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>                <span class="n">min_value</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>                <span class="n">max_value</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">least_used_df</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>            <span class="p">)</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>        <span class="p">},</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        <span class="n">hide_index</span><span class="o">=</span><span class="kc">True</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    <span class="p">)</span>
+</span></code></pre></div>
+<p><img alt="Color Popularity Statistics" src="../images/color-popularity-stats.png" />
+<em>Figure 7: Data tables showing most and least popular balloon colors</em></p>
+<h2 id="data-processing">Data Processing<a class="headerlink" href="#data-processing" title="Permanent link">&para;</a></h2>
+<p>The dashboard performs several key data transformations:</p>
+<ol>
+<li>
+<p><strong>Color preference analysis</strong>:
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Favorite colors (most popped)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">color_counts</span> <span class="o">=</span> <span class="n">_filtered_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;player&#39;</span><span class="p">,</span> <span class="s1">&#39;balloon_color&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">favorite_colors</span> <span class="o">=</span> <span class="n">color_counts</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;player&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+</span></code></pre></div></p>
+</li>
+<li>
+<p><strong>Color usage pattern analysis</strong>:
+   <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Unique colors used by each player</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">_unique_colors</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;player&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">selected_player</span><span class="p">][</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">total_colors</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;balloon_color&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>  <span class="c1"># Total possible colors</span>
+</span></code></pre></div></p>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Color Mapping</p>
+<p>The dashboard relies on the <code>color_map</code> dictionary to correctly map color names to their visual representation. Ensure this mapping is kept up-to-date if new balloon colors are added to the game.</p>
+</div>
+<h2 id="insights-and-applications">Insights and Applications<a class="headerlink" href="#insights-and-applications" title="Permanent link">&para;</a></h2>
+<p>This dashboard enables several types of analysis:</p>
+<ul>
+<li><strong>Player Color Preferences</strong>: Identify which colors each player tends to favor</li>
+<li><strong>Difficulty Analysis</strong>: Determine if certain colors are consistently ignored or targeted</li>
+<li><strong>Performance Optimization</strong>: See which colors yield the highest points or bonus hits</li>
+<li><strong>Game Balance</strong>: Evaluate if the color distribution is balanced across gameplay</li>
+</ul>
+<hr />
+<p><em>The Color Analysis dashboard provides valuable insights into player behavior patterns and preferences, helping game designers optimize the gaming experience.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../leaderboard/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Leaderboard Dashboard">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Leaderboard Dashboard
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../performance_trends/" class="md-footer__link md-footer__link--next" aria-label="Next: Performance Analysis Dashboard">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Performance Analysis Dashboard
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.footer", "toc.follow"], "search": "../assets/javascripts/workers/search.f8cc74c7.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+  </body>
+</html>

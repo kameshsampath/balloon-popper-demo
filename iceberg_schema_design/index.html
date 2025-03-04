@@ -11,13 +11,13 @@
       
       
       
-        <link rel="canonical" href="https://kameshsampath.github.io/balloon-popper-demo/source_and_sinks/">
+        <link rel="canonical" href="https://kameshsampath.github.io/balloon-popper-demo/iceberg_schema_design/">
       
       
         <link rel="prev" href="../catalog_setup/">
       
       
-        <link rel="next" href="../run_app/">
+        <link rel="next" href="../implementing_data_pipeline/">
       
       
       <link rel="icon" href="../assets/favicon.ico">
@@ -25,7 +25,7 @@
     
     
       
-        <title>Source and Sinks - Balloon Popper Demo</title>
+        <title>Iceberg Schema Design - Balloon Popper Demo</title>
       
     
     
@@ -106,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Source and Sinks
+              Iceberg Schema Design
             
           </span>
         </div>
@@ -261,7 +261,7 @@
             
   
   <span class="md-ellipsis">
-    Streaming Analytics
+    Data Pipeline
     
   </span>
   
@@ -272,7 +272,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
-            Streaming Analytics
+            Data Pipeline
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -296,7 +296,7 @@
           
   
   <span class="md-ellipsis">
-    Source and Sinks
+    Iceberg Schema Design
     
   </span>
   
@@ -308,7 +308,7 @@
         
   
   <span class="md-ellipsis">
-    Source and Sinks
+    Iceberg Schema Design
     
   </span>
   
@@ -396,15 +396,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      Write Properties
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#optimized-for" class="md-nav__link">
     <span class="md-ellipsis">
       Optimized For
@@ -464,15 +455,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#write-properties_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Write Properties
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -522,7 +504,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_2" class="md-nav__link">
+  <a href="#write-properties" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -582,7 +564,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_3" class="md-nav__link">
+  <a href="#write-properties_1" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -642,7 +624,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_4" class="md-nav__link">
+  <a href="#write-properties_2" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -670,44 +652,11 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementing-the-data-pipeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      Implementing the Data Pipeline
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Implementing the Data Pipeline">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#setup-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      Setup Process
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verify-sources-and-sinks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Verify Sources and Sinks
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       Key Takeaways
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -727,11 +676,184 @@
   
   
     <li class="md-nav__item">
+      <a href="../implementing_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementing the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../run_app/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Run Application
+    Running the Application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verifying_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Verifying the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Analytics Dashboards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Analytics Dashboards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboards/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dashboard Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../leaderboard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Leaderboard Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_analysis/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Color Analysis Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_trends/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Performance Analysis Dashboard
     
   </span>
   
@@ -883,15 +1005,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties" class="md-nav__link">
-    <span class="md-ellipsis">
-      Write Properties
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#optimized-for" class="md-nav__link">
     <span class="md-ellipsis">
       Optimized For
@@ -951,15 +1064,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#write-properties_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Write Properties
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1009,7 +1113,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_2" class="md-nav__link">
+  <a href="#write-properties" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -1069,7 +1173,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_3" class="md-nav__link">
+  <a href="#write-properties_1" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -1129,7 +1233,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#write-properties_4" class="md-nav__link">
+  <a href="#write-properties_2" class="md-nav__link">
     <span class="md-ellipsis">
       Write Properties
     </span>
@@ -1157,44 +1261,11 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#implementing-the-data-pipeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      Implementing the Data Pipeline
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Implementing the Data Pipeline">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#setup-process" class="md-nav__link">
-    <span class="md-ellipsis">
-      Setup Process
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#verify-sources-and-sinks" class="md-nav__link">
-    <span class="md-ellipsis">
-      Verify Sources and Sinks
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       Key Takeaways
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1264,14 +1335,14 @@
 <tr>
 <td>2</td>
 <td>total_score</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Player's cumulative score</td>
 </tr>
 <tr>
 <td>3</td>
 <td>bonus_hits</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Number of bonus hits achieved</td>
 </tr>
@@ -1298,12 +1369,6 @@
 <li><code>bonus_hits</code> (DESC)</li>
 </ol>
 <p>This sorting enables efficient retrieval of top-scoring players.</p>
-<h4 id="write-properties">Write Properties<a class="headerlink" href="#write-properties" title="Permanent link">&para;</a></h4>
-<p>The same merge-on-read properties as the Leaderboard table are applied here.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <strong>merge-on-read</strong> properties are crucial for leaderboard data, which is updated frequently. This approach allows updates without rewriting entire data files, significantly improving write performance.</p>
-</div>
 <h4 id="optimized-for">Optimized For<a class="headerlink" href="#optimized-for" title="Permanent link">&para;</a></h4>
 <ul>
 <li>Querying leaderboard data by day</li>
@@ -1343,14 +1408,14 @@
 <tr>
 <td>3</td>
 <td>points_by_color</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Points earned for specific balloon color</td>
 </tr>
 <tr>
 <td>4</td>
 <td>bonus_hits</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Number of bonus hits achieved</td>
 </tr>
@@ -1386,39 +1451,6 @@
 <li>Analysis of performance by color across players</li>
 <li>Efficient upsert operations</li>
 </ul>
-<p>Since both <code>leaderboard</code> and <code>ballon_color_stats</code> table perform <code>upserts</code>, it is crucial to set these iceberg properties when creating these tables,</p>
-<h4 id="write-properties_1">Write Properties<a class="headerlink" href="#write-properties_1" title="Permanent link">&para;</a></h4>
-<table>
-<thead>
-<tr>
-<th>Property</th>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>format-version</td>
-<td>2</td>
-<td>Required for merge-on-read operations</td>
-</tr>
-<tr>
-<td>write.delete.mode</td>
-<td>merge-on-read</td>
-<td>Enables efficient record updates</td>
-</tr>
-<tr>
-<td>write.update.mode</td>
-<td>merge-on-read</td>
-<td>Enables efficient record updates</td>
-</tr>
-<tr>
-<td>write.merge.mode</td>
-<td>merge-on-read</td>
-<td>Enables efficient record updates</td>
-</tr>
-</tbody>
-</table>
 <hr />
 <h2 id="time-series">Time Series<a class="headerlink" href="#time-series" title="Permanent link">&para;</a></h2>
 <h3 id="realtime-scores">Realtime Scores<a class="headerlink" href="#realtime-scores" title="Permanent link">&para;</a></h3>
@@ -1445,7 +1477,7 @@
 <tr>
 <td>2</td>
 <td>total_score</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Player's cumulative score</td>
 </tr>
@@ -1471,7 +1503,7 @@
 <li>Hour (from <code>window_start</code>)</li>
 </ul>
 <p>This enables efficient time-based queries and analysis.</p>
-<h4 id="write-properties_2">Write Properties<a class="headerlink" href="#write-properties_2" title="Permanent link">&para;</a></h4>
+<h4 id="write-properties">Write Properties<a class="headerlink" href="#write-properties" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -1527,21 +1559,21 @@
 <tr>
 <td>3</td>
 <td>balloon_pops</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Number of balloons popped</td>
 </tr>
 <tr>
 <td>4</td>
 <td>points_by_color</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Points earned for specific balloon color</td>
 </tr>
 <tr>
 <td>5</td>
 <td>bonus_hits</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Number of bonus hits achieved</td>
 </tr>
@@ -1574,7 +1606,7 @@
 <li><code>balloon_color</code> (ASC)</li>
 </ul>
 <p>This sorting enhances performance for color-based filtering.</p>
-<h4 id="write-properties_3">Write Properties<a class="headerlink" href="#write-properties_3" title="Permanent link">&para;</a></h4>
+<h4 id="write-properties_1">Write Properties<a class="headerlink" href="#write-properties_1" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -1624,14 +1656,14 @@
 <tr>
 <td>2</td>
 <td>avg_score_per_pop</td>
-<td>DOUBLE</td>
+<td>DECIMAL(10,28)</td>
 <td>Yes</td>
 <td>Average score earned per balloon pop</td>
 </tr>
 <tr>
 <td>3</td>
 <td>total_pops</td>
-<td>INTEGER</td>
+<td>LONG</td>
 <td>Yes</td>
 <td>Total number of balloon pops</td>
 </tr>
@@ -1664,7 +1696,7 @@
 <li><code>balloon_color</code> (ASC)</li>
 </ul>
 <p>This optimizes lookups for specific colors.</p>
-<h4 id="write-properties_4">Write Properties<a class="headerlink" href="#write-properties_4" title="Permanent link">&para;</a></h4>
+<h4 id="write-properties_2">Write Properties<a class="headerlink" href="#write-properties_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
@@ -1688,69 +1720,7 @@
 <li>Comparing efficiency metrics across different balloon colors</li>
 <li>Tracking popularity and effectiveness of different colors</li>
 </ul>
-<h2 id="implementing-the-data-pipeline">Implementing the Data Pipeline<a class="headerlink" href="#implementing-the-data-pipeline" title="Permanent link">&para;</a></h2>
-<p>Now that we've designed our schema, let's walk through how to set up the streaming data flow:</p>
-<h3 id="setup-process">Setup Process<a class="headerlink" href="#setup-process" title="Permanent link">&para;</a></h3>
-<ol>
-<li>
-<p><strong>Generate Configuration Scripts</strong>: First, we'll generate the necessary SQL scripts:
-   <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ansible-playbook<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/polaris-forge-setup/generate_source_sinks.yml
-</span></code></pre></div></p>
-</li>
-<li>
-<p><strong>Configure Kafka Sources</strong>: Set up sources in RisingWave to consume messages from Kafka:
-   <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/source.sql
-</span></code></pre></div></p>
-</li>
-<li>
-<p><strong>Create Iceberg Tables</strong>: The tables can be created using the <code>$PROJECT_HOME/notebooks/workbook.ipynb</code> notebook's "Create Table" cells with the schema definitions we've explored.</p>
-</li>
-<li>
-<p><strong>Configure Sinks</strong>: Set up the data flow from sources to Iceberg tables:
-   <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>psql<span class="w"> </span>-f<span class="w"> </span><span class="nv">$PROJECT_HOME</span>/scripts/sink.sql
-</span></code></pre></div></p>
-</li>
-</ol>
-<h3 id="verify-sources-and-sinks">Verify Sources and Sinks<a class="headerlink" href="#verify-sources-and-sinks" title="Permanent link">&para;</a></h3>
-<p>Run the following command to shell into Risingwave shell,</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>psql
-</span></code></pre></div>
-<p>List all sources,</p>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">show</span><span class="w"> </span><span class="n">sources</span><span class="p">;</span>
-</span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>dev=&gt; show sources;
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>        Name         
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>---------------------
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a> balloon_game_events
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>(1 row)
-</span></code></pre></div>
-<p>List all materialized views,</p>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">show</span><span class="w"> </span><span class="n">materialized</span><span class="w"> </span><span class="n">views</span><span class="p">;</span>
-</span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>dev=&gt; show materialized views;
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>            Name             
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>-----------------------------
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a> mv_balloon_colored_pops
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a> mv_leaderboard
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a> mv_color_performance_trends
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a> mv_balloon_color_stats
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a> mv_realtime_scores
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>(5 rows)
-</span></code></pre></div>
-<p>List all sinks,</p>
-<div class="language-sql highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">show</span><span class="w"> </span><span class="n">sinks</span><span class="p">;</span>
-</span></code></pre></div>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>dev=&gt; show sinks;
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>           Name           
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>--------------------------
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a> color_performance_trends
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a> realtime_scores
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a> balloon_colored_pops
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a> balloon_color_stats
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a> leaderboard
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>(5 rows)
-</span></code></pre></div>
-<h3 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h3>
+<h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
 <p>When designing Iceberg tables for streaming analytics, remember these principles:</p>
 <ol>
 <li><strong>Match partitioning to query patterns</strong>: Partition by time for time-series analysis, by entity (player/color) for entity-specific queries</li>
@@ -1759,7 +1729,7 @@
 <li><strong>Consider multiple analytical dimensions</strong>: Design separate tables optimized for different query patterns</li>
 </ol>
 <p>These principles apply not just to game analytics, but to any streaming analytics application where you need to balance write throughput with query performance.</p>
-<p>In the next chapter, we'll explore how to query these tables efficiently and build real-time dashboards on top of this data model.</p>
+<p>In the next chapter, we'll explore how to implement this data model using sources and sinks in our streaming pipeline.</p>
 
 
 
@@ -1806,13 +1776,13 @@
         
         
           
-          <a href="../run_app/" class="md-footer__link md-footer__link--next" aria-label="Next: Run Application">
+          <a href="../implementing_data_pipeline/" class="md-footer__link md-footer__link--next" aria-label="Next: Implementing the Pipeline">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Run Application
+                Implementing the Pipeline
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -285,9 +285,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-dns-configuration-optional" class="md-nav__link">
+  <a href="#step-4-dns-configuration" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 4: DNS Configuration (Optional)
+      Step 4: DNS Configuration
     </span>
   </a>
   
@@ -387,7 +387,7 @@
             
   
   <span class="md-ellipsis">
-    Streaming Analytics
+    Data Pipeline
     
   </span>
   
@@ -398,7 +398,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
-            Streaming Analytics
+            Data Pipeline
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -409,11 +409,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../source_and_sinks/" class="md-nav__link">
+      <a href="../iceberg_schema_design/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Source and Sinks
+    Iceberg Schema Design
     
   </span>
   
@@ -431,11 +431,184 @@
   
   
     <li class="md-nav__item">
+      <a href="../implementing_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementing the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../run_app/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Run Application
+    Running the Application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verifying_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Verifying the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Analytics Dashboards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Analytics Dashboards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboards/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dashboard Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../leaderboard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Leaderboard Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_analysis/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Color Analysis Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_trends/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Performance Analysis Dashboard
     
   </span>
   
@@ -577,9 +750,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-4-dns-configuration-optional" class="md-nav__link">
+  <a href="#step-4-dns-configuration" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 4: DNS Configuration (Optional)
+      Step 4: DNS Configuration
     </span>
   </a>
   
@@ -642,58 +815,69 @@
 <th>Tool</th>
 <th>Purpose</th>
 <th>Minimum Version</th>
+<th>Remarks</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/signup">GitHub Account</a></td>
+<td><a href="https://github.com/signup" target="_blank">GitHub Account</a></td>
 <td>Repository access</td>
 <td>N/A</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a></td>
+<td><a href="https://www.docker.com/products/docker-desktop/" target="_blank">Docker Desktop</a></td>
 <td>Container runtime</td>
 <td>Latest</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://kubernetes.io/docs/tasks/tools/#kubectl">kubectl</a></td>
+<td><a href="https://kubernetes.io/docs/tasks/tools/#kubectl" target="_blank">kubectl</a></td>
 <td>Kubernetes CLI</td>
 <td>Latest</td>
+<td><code>$PROJECT_HOME/setup.sh</code> will download latest matching the cluster version</td>
 </tr>
 <tr>
-<td><a href="https://docs.redpanda.com/current/get-started/rpk-install/">rpk</a></td>
+<td><a href="https://docs.redpanda.com/current/get-started/rpk-install/" target="_blank">rpk</a></td>
 <td>Kafka CLI</td>
 <td>Latest</td>
+<td><code>$PROJECT_HOME/setup.sh</code> will download latest matching the cluster Kafka version</td>
 </tr>
 <tr>
-<td><a href="https://k3d.io/">k3d</a></td>
+<td><a href="https://k3d.io/" target="_blank">k3d</a></td>
 <td>Lightweight Kubernetes</td>
 <td>&gt;= 5.0.0</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://www.python.org/downloads/">Python</a></td>
+<td><a href="https://www.python.org/downloads/" target="_blank">Python</a></td>
 <td>Programming language</td>
 <td>&gt;= 3.12</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://github.com/astral-sh/uv">uv</a></td>
+<td><a href="https://github.com/astral-sh/uv" target="_blank">uv</a></td>
 <td>Python package manager</td>
 <td>Latest</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://taskfile.dev">Task</a></td>
+<td><a href="https://taskfile.dev" target="_blank">Task</a></td>
 <td>Task runner</td>
 <td>Latest</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://localstack.cloud/">LocalStack</a></td>
+<td><a href="https://localstack.cloud/" target="_blank">LocalStack</a></td>
 <td>AWS emulator</td>
 <td>&gt;= 3.0.0</td>
+<td></td>
 </tr>
 <tr>
-<td><a href="https://dnsmasq.org/doc.html">Dnsmasq</a></td>
+<td><a href="https://dnsmasq.org/doc.html" target="_blank">Dnsmasq</a></td>
 <td>DNS management</td>
 <td>Latest (Optional)</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -716,7 +900,7 @@
 </span></code></pre></div>
 <div class="admonition tip">
 <p class="admonition-title">Environment Management</p>
-<p>Consider using <a href="https://direnv.net">direnv</a> to automatically set environment variables when entering the project directory. This simplifies your workflow and ensures consistent configuration.</p>
+<p>Consider using <a href="https://direnv.net" target="_blank">direnv</a>  to automatically set environment variables when entering the project directory. This simplifies your workflow and ensures consistent configuration.</p>
 </div>
 <h3 id="step-3-set-up-python-environment">Step 3: Set Up Python Environment<a class="headerlink" href="#step-3-set-up-python-environment" title="Permanent link">&para;</a></h3>
 <p>Create and activate a Python virtual environment:</p>
@@ -738,8 +922,8 @@
 <p class="admonition-title">Note</p>
 <p>The virtual environment isolates your project dependencies from system-wide Python packages, preventing conflicts and ensuring reproducibility.</p>
 </div>
-<h3 id="step-4-dns-configuration-optional">Step 4: DNS Configuration (Optional)<a class="headerlink" href="#step-4-dns-configuration-optional" title="Permanent link">&para;</a></h3>
-<p>For seamless access to services within your local Kubernetes cluster, you can set up Dnsmasq instead of manually editing <code>/etc/hosts</code>.</p>
+<h3 id="step-4-dns-configuration">Step 4: DNS Configuration<a class="headerlink" href="#step-4-dns-configuration" title="Permanent link">&para;</a></h3>
+<p>For seamless access to services within your local Kubernetes cluster.</p>
 <p>On macOS with Homebrew:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Configure Dnsmasq to resolve .localstack domains to localhost</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;address=/.localstack/127.0.0.1&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span><span class="k">$(</span>brew<span class="w"> </span>--prefix<span class="k">)</span>/etc/dnsmasq.conf
@@ -754,6 +938,10 @@
 <p class="admonition-title">Info</p>
 <p>After configuring Dnsmasq, you may need to restart the service and flush your DNS cache for changes to take effect.</p>
 </div>
+<p>(OR)</p>
+<p>Edit <code>/etc/hosts</code> and add the following entry</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="m">127</span>.0.0.1<span class="w"> </span>*.localstack
+</span></code></pre></div>
 <h2 id="project-structure-overview">Project Structure Overview<a class="headerlink" href="#project-structure-overview" title="Permanent link">&para;</a></h2>
 <p>The repository is organized into several key directories:</p>
 <ul>

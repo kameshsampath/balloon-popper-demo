@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://kameshsampath.github.io/balloon-popper-demo/summary/">
       
       
-        <link rel="prev" href="../run_app/">
+        <link rel="prev" href="../performance_trends/">
       
       
         <link rel="next" href="../troubleshooting/">
@@ -259,7 +259,7 @@
             
   
   <span class="md-ellipsis">
-    Streaming Analytics
+    Data Pipeline
     
   </span>
   
@@ -270,7 +270,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
-            Streaming Analytics
+            Data Pipeline
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -281,11 +281,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../source_and_sinks/" class="md-nav__link">
+      <a href="../iceberg_schema_design/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Source and Sinks
+    Iceberg Schema Design
     
   </span>
   
@@ -303,11 +303,184 @@
   
   
     <li class="md-nav__item">
+      <a href="../implementing_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Implementing the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../run_app/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Run Application
+    Running the Application
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../verifying_data_pipeline/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Verifying the Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Analytics Dashboards
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Analytics Dashboards
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboards/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Dashboard Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../leaderboard/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Leaderboard Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_analysis/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Color Analysis Dashboard
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../performance_trends/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Performance Analysis Dashboard
     
   </span>
   
@@ -416,6 +589,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#analytics-dashboards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Analytics Dashboards
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -462,6 +644,15 @@
   <a href="#core-components" class="md-nav__link">
     <span class="md-ellipsis">
       Core Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visualization-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Visualization Tools
     </span>
   </a>
   
@@ -582,6 +773,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#analytics-dashboards" class="md-nav__link">
+    <span class="md-ellipsis">
+      Analytics Dashboards
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -628,6 +828,15 @@
   <a href="#core-components" class="md-nav__link">
     <span class="md-ellipsis">
       Core Components
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visualization-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      Visualization Tools
     </span>
   </a>
   
@@ -694,6 +903,13 @@
 <li>Built interactive visualizations with Streamlit</li>
 <li>Explored data using PyIceberg and Jupyter notebooks</li>
 </ul>
+<h3 id="analytics-dashboards">Analytics Dashboards<a class="headerlink" href="#analytics-dashboards" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Developed a <strong>Leaderboard Dashboard</strong> for tracking player performance and rankings</li>
+<li>Created a <strong>Color Analysis Dashboard</strong> to analyze player color preferences and behaviors</li>
+<li>Implemented a <strong>Performance Analysis Dashboard</strong> for measuring scoring efficiency and patterns</li>
+<li>Used interactive filters and visualizations to enable real-time data exploration</li>
+</ul>
 <h2 id="architecture-benefits">Architecture Benefits<a class="headerlink" href="#architecture-benefits" title="Permanent link">&para;</a></h2>
 <p>This architecture provides several advantages for real-time analytics applications:</p>
 <ol>
@@ -712,6 +928,9 @@
 <li>
 <p><strong>Open Standards</strong>: Built entirely on open-source technologies with active communities.</p>
 </li>
+<li>
+<p><strong>Interactive Visualizations</strong>: Streamlit and Altair provide rich, interactive dashboards that make data insights accessible to non-technical users.</p>
+</li>
 </ol>
 <h2 id="potential-enhancements">Potential Enhancements<a class="headerlink" href="#potential-enhancements" title="Permanent link">&para;</a></h2>
 <p>This demo provides a foundation that can be extended in several ways:</p>
@@ -721,6 +940,9 @@
 <li>Expand the dashboard with additional visualizations</li>
 <li>Add data quality monitoring and alerting</li>
 <li>Scale to handle higher event volumes</li>
+<li>Create user-specific dashboard experiences with authentication</li>
+<li>Implement real-time notifications for significant game events</li>
+<li>Develop A/B testing capabilities for game mechanics</li>
 </ul>
 <h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
 <ol>
@@ -739,6 +961,12 @@
 <li>
 <p><strong>Real-time Insights</strong>: The end-to-end pipeline delivers analytics with minimal latency from event generation to visualization.</p>
 </li>
+<li>
+<p><strong>Interactive Data Visualization</strong>: Streamlit and Altair enable the creation of rich, interactive dashboards with minimal code.</p>
+</li>
+<li>
+<p><strong>Data-Driven Game Design</strong>: The analytics platform provides valuable insights for game balancing, feature development, and player engagement strategies.</p>
+</li>
 </ol>
 <h2 id="related-projects-and-tools">Related Projects and Tools<a class="headerlink" href="#related-projects-and-tools" title="Permanent link">&para;</a></h2>
 <h3 id="core-components">Core Components<a class="headerlink" href="#core-components" title="Permanent link">&para;</a></h3>
@@ -749,6 +977,12 @@
 <li><a href="https://github.com/localstack/localstack">LocalStack</a> - AWS Cloud Service Emulator</li>
 <li><a href="https://k3d.io">k3d</a> - k3s in Docker</li>
 <li><a href="https://k3s.io">k3s</a> - Lightweight Kubernetes Distribution</li>
+</ul>
+<h3 id="visualization-tools">Visualization Tools<a class="headerlink" href="#visualization-tools" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="https://streamlit.io/">Streamlit</a> - Python library for creating interactive web applications</li>
+<li><a href="https://altair-viz.github.io/">Altair</a> - Declarative statistical visualization library for Python</li>
+<li><a href="https://pandas.pydata.org/">Pandas</a> - Data analysis and manipulation library</li>
 </ul>
 <h3 id="development-tools">Development Tools<a class="headerlink" href="#development-tools" title="Permanent link">&para;</a></h3>
 <ul>
@@ -768,6 +1002,9 @@
 <li><a href="https://docs.localstack.cloud/overview/">LocalStack Documentation</a></li>
 <li><a href="https://kubernetes.io/docs/home/">Kubernetes Documentation</a></li>
 <li><a href="https://docs.docker.com/">Docker Documentation</a></li>
+<li><a href="https://docs.streamlit.io/">Streamlit Documentation</a></li>
+<li><a href="https://altair-viz.github.io/user_guide/data.html">Altair Documentation</a></li>
+<li><a href="https://pandas.pydata.org/docs/">Pandas Documentation</a></li>
 </ul>
 
 
@@ -798,7 +1035,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../run_app/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Run Application">
+          <a href="../performance_trends/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Performance Analysis Dashboard">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -808,7 +1045,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Run Application
+                Performance Analysis Dashboard
               </div>
             </div>
           </a>
