@@ -2,6 +2,25 @@
 
 This guide provides solutions for common issues you might encounter when running the Balloon Popper Game analytics platform.
 
+## No Data in Sinks
+
+If data isn't appearing in your Iceberg tables:
+
+1. Check that Kafka is receiving events:
+   ```
+   rpk -X brokers=localhost:19094 topic consume balloon-game
+   ```
+
+2. Verify that the materialized views are receiving data:
+   ```sql
+   psql -c "SELECT COUNT(*) FROM mv_leaderboard;"
+   ```
+
+3. Check for errors in the RisingWave logs:
+   ```
+   kubectl logs -n default deploy/risingwave-meta
+   ```
+  
 ## Checking Component Logs
 
 Kubernetes logs are your primary diagnostic tool. Here's how to access logs for each component:
