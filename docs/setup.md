@@ -22,6 +22,7 @@ Before beginning this tutorial, ensure you have the following tools installed an
 | [rpk](https://docs.redpanda.com/current/get-started/rpk-install/){target=_blank}  | Kafka CLI | Latest | `$PROJECT_HOME/setup.sh` will download latest matching the cluster Kafka version
 | [k3d](https://k3d.io/){target=_blank}  | Lightweight Kubernetes | >= 5.0.0 |
 | [Python](https://www.python.org/downloads/){target=_blank}  | Programming language | >= 3.12 |
+| [psql](https://wiki.postgresql.org/wiki/PostgreSQL_Clients#psql){target=_blank}  | PostgreSQL CLI Client | >= 17.4 | PostgreSQL client to work with Risingwave using SQL
 | [uv](https://github.com/astral-sh/uv){target=_blank}  | Python package manager | Latest |
 | [Task](https://taskfile.dev){target=_blank}  | Task runner | Latest |
 | [LocalStack](https://localstack.cloud/){target=_blank}  | AWS emulator | >= 3.0.0 |
