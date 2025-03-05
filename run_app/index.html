@@ -830,7 +830,7 @@
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>The generator will continuously produce random balloon pop events from various players with different balloon colors and scores. These events are sent to the Kafka topic configured in your environment.</p>
+<p>The generator will continuously produce random balloon pop events from various players with different balloon colors and scores. These events are sent to the Kafka topic configured in your environment defaults to topic <code>balloon-game</code>.</p>
 </div>
 <h2 id="visualizing-the-data">Visualizing the Data<a class="headerlink" href="#visualizing-the-data" title="Permanent link">&para;</a></h2>
 <p>The project includes a Streamlit dashboard that visualizes the real-time analytics derived from the game events.</p>
@@ -842,7 +842,7 @@
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>task<span class="w"> </span>streamlit
 </span></code></pre></div>
 <ol>
-<li>Your browser should automatically open to the dashboard URL (typically http://localhost:8501)</li>
+<li>Your browser should automatically open to the dashboard URL typically <a href="http://localhost:8501">http://localhost:8501</a>.</li>
 </ol>
 <h3 id="dashboard-features">Dashboard Features<a class="headerlink" href="#dashboard-features" title="Permanent link">&para;</a></h3>
 <p>The dashboard provides several visualizations:</p>
@@ -856,6 +856,7 @@
 <p class="admonition-title">Tip</p>
 <p>You can filter and interact with the visualizations to explore different aspects of the game data.</p>
 </div>
+<p>We will explore more about these visualizations in <a href="../dashboards/">Analytics Dashboards</a> chapter.</p>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <p>Now that you have your application running with simulated data, you can:</p>
 <ul>
