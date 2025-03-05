@@ -7,7 +7,7 @@ This dashboard provides detailed analytics about balloon popping performance ove
 
 The complete code for this dashboard is available on GitHub: [balloon-popper-demo/performance_trends.py](https://github.com/kameshsampath/balloon-popper-demo/blob/main/packages/dashboard/src/dashboard/pages/performance_trends.py)
 
-![Performance Analysis Dashboard Overview](../images/performance-analysis-overview.png)
+![Performance Analysis Dashboard Overview](images/performance-analysis-overview.png)
 *Figure 1: Full view of the Performance Analysis Dashboard showing performance distributions and color-based metrics*
 
 ## Overview
@@ -42,7 +42,7 @@ def show_summary(df):
                   f"{df['total_pops'].sum()}")
 ```
 
-![Performance Summary](../images/performance-summary.png)
+![Performance Summary](images/performance-summary.png)
 *Figure 2: Summary metrics showing overall performance statistics*
 
 ## Data Visualizations
@@ -77,7 +77,7 @@ main_chart = alt.Chart(performance_trends_df).mark_boxplot(
 )
 ```
 
-![Performance Distribution Chart](../images/performance-distribution.png)
+![Performance Distribution Chart](images/performance-distribution.png)
 *Figure 3: Box plots showing score distribution over different time windows*
 
 ### Color Performance Analysis
@@ -104,7 +104,7 @@ main_chart = alt.Chart(performance_trends_df).mark_boxplot(
     )
     ```
 
-![Color Performance Chart](../images/color-performance-chart.png)
+![Color Performance Chart](images/color-performance-chart.png)
 *Figure 4: Bar chart showing average score performance by balloon color*
 
 ## Statistical Summaries
@@ -143,7 +143,7 @@ st.dataframe(
 )
 ```
 
-![Color Statistics Table](../images/color-statistics-table.png)
+![Color Statistics Table](images/color-statistics-table.png)
 *Figure 5: Detailed statistics table showing performance metrics by balloon color*
 
 ### Time Window Summary
@@ -161,7 +161,7 @@ time_summary = performance_trends_df.groupby(pd.Grouper(key='window_start', freq
 time_summary.columns = ['Mean Score', 'Min Score', 'Max Score', '# Balloons', 'Total Pops']
 ```
 
-![Time Window Summary](../images/time-window-summary.png)
+![Time Window Summary](images/time-window-summary.png)
 *Figure 6: Time-based performance summary showing metrics for 15-second intervals*
 
 ## Data Processing

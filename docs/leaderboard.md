@@ -14,7 +14,7 @@ The dashboard consists of two main components:
 1. **Scoreboard**: A tabular view of the top 5 players with visual indicators
 2. **Score Trends**: An interactive time-series chart showing how scores evolve
 
-![Leaderboard Dashboard Overview](../images/leaderboard-dashboard-overview.png)
+![Leaderboard Dashboard Overview](images/leaderboard-dashboard-overview.png)
 *Figure 1: Full view of the Leaderboard Dashboard showing the scoreboard and score trends*
 
 ## Technical Implementation
@@ -50,7 +50,7 @@ st.dataframe(
 )
 ```
 
-![Scoreboard View](../images/leaderboard-scoreboard.png)
+![Scoreboard View](images/leaderboard-scoreboard.png)
 *Figure 2: The Scoreboard component with progress bars for visual comparison*
 
 ## Interactive Features
@@ -100,7 +100,8 @@ time_unit = st.sidebar.radio(
 )
 ```
 
-![Dashboard Settings](../images/leaderboard-settings.png)
+![Dashboard Settings](images/leaderboard-settings.png)
+
 *Figure 4: Sidebar controls for filtering and customizing the dashboard view*
 
 ## Data Visualization
@@ -129,7 +130,7 @@ The score trend visualization combines multiple visual elements:
     )
     ```
 
-![Score Trends Chart](../images/leaderboard-score-trends.png)
+![Score Trends Chart](images/leaderboard-score-trends.png)
 *Figure 3: Interactive score trends chart showing player performance over time*
 
 ## Data Processing

@@ -73,6 +73,7 @@ WITH (
 ```
 
 This configuration:
+
 - Defines the schema for our game events
 - Connects to the specified Kafka topic through the template variable
 - Specifies JSON as the message format
@@ -196,6 +197,7 @@ CREATE SINK IF NOT EXISTS leaderboard
 ```
 
 This configuration:
+
 - Creates a sink named `leaderboard` from the `mv_leaderboard` materialized view
 - Uses the Iceberg connector to write to our Iceberg table
 - Specifies `append-only` type with `force_append_only` set to true for better performance
@@ -274,87 +276,7 @@ dev=> show sinks;
 (5 rows)
 ```
 
-### Verify Data Flow
-
-To ensure data is flowing through the pipeline correctly:
-
-1. **Generate test data**: This verification should be done after completing the "run_app.md" section, which explains how to generate data into Kafka using the event generator:
-
-   ```shell
-   python $PROJECT_HOME/packages/balloon-pop-events/main.py --players 5 --duration 60
-   ```
-
-2. **Check data in materialized views**:
-
-   ```sql
-   SELECT * FROM mv_leaderboard LIMIT 5;
-   ```
-
-3. **Verify data in Iceberg tables**: You can use the [workbook.ipynb notebook](https://github.com/kameshsampath/balloon-popper-demo/blob/main/notebooks/workbook.ipynb) for comprehensive verification and querying of the data.
-
-4. **Query using PyIceberg with REST Catalog**:
-
-   ```python
-   import os
-   from pathlib import Path
-   
-   from pyiceberg.catalog.rest import RestCatalog
-   from pyiceberg.exceptions import NamespaceAlreadyExistsError
-   
-   POLARIS_BASE_URI="http://localhost:18181"
-   # IMPORTANT!!! /api/catalog or get the prefix from your OpenCatalog instance
-   CATALOG_URI = f"{POLARIS_BASE_URI}/api/catalog"
-   OAUTH2_SERVER_URI= f"{POLARIS_BASE_URI}/api/catalog/v1/oauth/tokens"
-   catalog_name = "balloon-game"
-   # database
-   namespace = "balloon_pops"
-   catalog = RestCatalog(
-       name=catalog_name,
-       **{
-           "uri": CATALOG_URI,
-           "credential": f"{client_id}:{client_secret}",
-           "header.content-type": "application/vnd.api+json",
-           "header.X-Iceberg-Access-Delegation": "vended-credentials",
-           "header.Polaris-Realm": realm,
-           "oauth2-server-uri": OAUTH2_SERVER_URI,
-           "warehouse": catalog_name,
-           "scope": "PRINCIPAL_ROLE:ALL",
-       },
-   )
-   
-   # Load and query a table
-   table = catalog.load_table(f"{namespace}.leaderboard")
-   
-   # Count records
-   print(f"Record count: {len(list(table.scan()))}")
-   
-   # Display sample data
-   for record in list(table.scan())[:5]:
-       print(record)
-   ```
-
 ## Troubleshooting
-
-If you encounter issues with the data pipeline, here are some common problems and solutions:
-
-### No Data in Sinks
-
-If data isn't appearing in your Iceberg tables:
-
-1. Check that Kafka is receiving events:
-   ```
-   kafkacat -b {{ balloon_game_kafka_bootstrap_servers }} -t {{ balloon_game_kafka_topic }} -C
-   ```
-
-2. Verify that the materialized views are receiving data:
-   ```sql
-   SELECT COUNT(*) FROM mv_leaderboard;
-   ```
-
-3. Check for errors in the RisingWave logs:
-   ```
-   kubectl logs -n default deploy/risingwave-frontend
-   ```
 
 ### Template Variable Issues
 
@@ -364,24 +286,6 @@ If you encounter errors related to the Jinja template variables:
 2. Verify that the Ansible playbook has access to the necessary credentials
 3. Check the generated SQL scripts to ensure variables were properly substituted
 
-### Connectivity Issues
-
-If the pipeline components can't connect to each other:
-
-1. Verify that Apache Polaris is accessible:
-   ```
-   curl {{ plf_polaris_catalog_uri }}/api/v1/config
-   ```
-
-2. Check S3 connectivity:
-   ```
-   aws --endpoint-url={{ plf_aws_endpoint_url }} s3 ls
-   ```
-
-3. Ensure Kafka is running and accessible:
-   ```
-   kubectl get pods | grep kafka
-   ```
 
 ### Schema Mismatch Errors
 

@@ -50,7 +50,7 @@ task generator-local
 ```
 
 !!! info
-    The generator will continuously produce random balloon pop events from various players with different balloon colors and scores. These events are sent to the Kafka topic configured in your environment.
+    The generator will continuously produce random balloon pop events from various players with different balloon colors and scores. These events are sent to the Kafka topic configured in your environment defaults to topic `balloon-game`.
 
 ## Visualizing the Data
 
@@ -65,7 +65,7 @@ The project includes a Streamlit dashboard that visualizes the real-time analyti
 task streamlit
 ```
 
-3. Your browser should automatically open to the dashboard URL (typically http://localhost:8501)
+3. Your browser should automatically open to the dashboard URL typically <http://localhost:8501>.
 
 ### Dashboard Features
 
@@ -79,6 +79,7 @@ The dashboard provides several visualizations:
 !!! tip
     You can filter and interact with the visualizations to explore different aspects of the game data.
 
+We will explore more about these visualizations in [Analytics Dashboards](./dashboards.md) chapter.
 
 ## Next Steps
 

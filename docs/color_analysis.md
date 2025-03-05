@@ -7,7 +7,7 @@ The Color Analysis dashboard provides detailed insights into players' balloon co
 
 The complete code for this dashboard is available on GitHub: [balloon-popper-demo/color_analysis.py](https://github.com/kameshsampath/balloon-popper-demo/blob/main/packages/dashboard/src/dashboard/pages/color_analysis.py)
 
-![Color Analysis Dashboard Overview](../images/color-analysis-overview.png)
+![Color Analysis Dashboard Overview](images/color-analysis-overview.png)
 *Figure 1: Full view of the Color Analysis Dashboard showing player statistics and color patterns*
 
 ## Overview
@@ -41,7 +41,7 @@ with col4:
     st.metric("Favorite Color", favorite_color)
 ```
 
-![Player Summary Statistics](../images/color-analysis-summary.png)
+![Player Summary Statistics](images/color-analysis-summary.png)
 *Figure 2: Player summary statistics showing key metrics at a glance*
 
 ## Interactive Features
@@ -75,7 +75,8 @@ metrics = {
 selected_metric = st.sidebar.selectbox("Select Metric", list(metrics.keys()))
 ```
 
-![Dashboard Settings](../images/color-analysis-settings.png)
+![Dashboard Settings](images/color-analysis-settings.png)
+
 *Figure 3: Sidebar controls for selecting players and metrics*
 
 ## Data Visualizations
@@ -112,7 +113,7 @@ text = base.mark_text(
 )
 ```
 
-![Color Usage Gauge](../images/color-usage-gauge.png)
+![Color Usage Gauge](images/color-usage-gauge.png)
 *Figure 4: Gauge chart showing unique colors used versus total available colors*
 
 ### Color Distribution Heatmap
@@ -138,7 +139,7 @@ text = base.mark_text(
     )
     ```
 
-![Color Distribution Heatmap](../images/color-distribution-heatmap.png)
+![Color Distribution Heatmap](images/color-distribution-heatmap.png)
 *Figure 5: Heatmap showing distribution and frequency of balloon colors*
 
 ### Color-specific Metrics Chart
@@ -166,8 +167,8 @@ base_chart = alt.Chart(ca_filtered_df).mark_bar().encode(
 )
 ```
 
-![Color Metrics Chart](../images/color-metrics-chart.png)
-*Figure 6: Bar chart showing performance metrics broken down by balloon color*
+![Color Metrics Chart](images/color-metrics-chart.png)
+*Figure 6: Bar chart showing color analysis by various metrics*
 
 ## Color Statistics
 
@@ -200,7 +201,7 @@ with stat_col1:
     )
 ```
 
-![Color Popularity Statistics](../images/color-popularity-stats.png)
+![Color Popularity Statistics](images/color-popularity-stats.png)
 *Figure 7: Data tables showing most and least popular balloon colors*
 
 ## Data Processing
