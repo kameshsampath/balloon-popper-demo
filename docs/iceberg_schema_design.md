@@ -242,7 +242,23 @@ This optimizes lookups for specific colors.
 - Analyzing performance trends by balloon color over time
 - Time-series analysis with hourly granularity
 - Comparing efficiency metrics across different balloon colors
-- Tracking popularity and effectiveness of different colors
+- Tracking popularity and eLeaderboard
+- 
+## Create Tables
+
+Open the notebook `$PROJECT_HOME/notebooks/workbook.ipynb` and execute the following cells 
+
+* Imports
+* Retrieve Principal Credentials
+* Define Variables
+* Working with Catalog
+* Create Database(Namespace)
+* Create Tables
+    * Leaderboard
+    * Balloon Color Stats
+    * Realtime Scores
+    * Balloon Colored Pops
+    * Color Performance Trends
 
 ## Key Takeaways
 
