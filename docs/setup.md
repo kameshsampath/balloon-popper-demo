@@ -36,8 +36,8 @@ Before beginning this tutorial, ensure you have the following tools installed an
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/kameshsampath/balloon-popper-game
-cd balloon-popper-game
+git clone https://github.com/kameshsampath/balloon-popper-demo
+cd balloon-popper-demo
 ```
 
 ### Step 2: Configure Environment Variables
