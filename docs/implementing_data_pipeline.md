@@ -44,7 +44,27 @@ The generated scripts will be placed in the `$PROJECT_HOME/scripts/` directory.
 !!! note "Template Variables"
     You'll notice that the SQL scripts contain placeholders in the format of `{{ variable_name }}`. These are Jinja2 template variables that are replaced with actual values during script generation. The values for these variables are defined in the application settings file at [polaris-forge-setup/defaults/main.yml](https://github.com/kameshsampath/balloon-popper-demo/blob/main/polaris-forge-setup/defaults/main.yml).
 
-### Step 2: Configure Kafka Sources
+### Step 2: Create an `.env` file with the following contents
+
+```shell
+## psql -h 0.0.0.0 -p 4566 -d dev -U root
+PGHOST=localhost
+PGPORT=14567
+PGDATABASE=dev
+PGUSER=root
+PGPASSWORD=
+AWS_ENDPOINT_URL=http://minio.minio:19000
+AWS_ACCESS_KEY_ID=test
+AWS_SECRET_ACCESS_KEY=test
+AWS_REGION=us-east-1
+CATALOG_NAME="balloon-game"
+CATALOG_NAMESPACE="game_events"
+ICEBERG_REST_URI=http://localhost:18181/api/catalog
+KAFKA_BOOTSTRAP_SERVERS=localhost:19094
+RPK_BROKERS=localhost:19094
+```
+
+### Step 3: Configure Kafka Sources
 
 Next, we'll set up the Kafka source to ingest game events:
 
@@ -93,7 +113,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_leaderboard AS
   GROUP BY player;
 ```
 
-### Step 3: Create RisingWave Materialized Views
+### Step 4: Create RisingWave Materialized Views
 
 The materialized views are already defined in the same Jinja template as the source. These views transform our raw event data into the format expected by our Iceberg tables.
 
@@ -162,7 +182,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_color_performance_trends AS
 
 Note the use of `TUMBLE` windows to create 15-second time slices for our time-series analysis. This allows us to track how performance changes over time in a consistent way.
 
-### Step 4: Configure Iceberg Sinks
+### Step 5: Configure Iceberg Sinks
 
 Now that we have our materialized views set up, we can configure the sinks that will write data to our Iceberg tables:
 
