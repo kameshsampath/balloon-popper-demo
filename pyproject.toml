@@ -5,6 +5,7 @@ description = "A balloon game demo show how realtime analytics works with Iceber
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "ansible>=11.3.0",
     "awscli-local>=0.22.0",
     "cryptography>=44.0.0",
     "jinja2>=3.1.5",
