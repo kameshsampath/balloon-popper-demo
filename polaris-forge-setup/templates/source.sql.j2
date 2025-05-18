@@ -54,7 +54,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_realtime_scores AS
     window_start,
     window_end;
 
--- Analyze the various balloon_color pops in 15 seconds
+-- Analyze the various balloon_color pops in 15 minutes
 CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_colored_pops AS
  SELECT
    player,
@@ -64,7 +64,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_balloon_colored_pops AS
    count(CASE WHEN favorite_color_bonus = true THEN 1 END) as bonus_hits,
    window_start,
    window_end
- FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
+ FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 MINUTES')
  GROUP BY
    player,
    balloon_color,
@@ -79,7 +79,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_color_performance_trends AS
   count(*) as total_pops,
   window_start,
   window_end
- FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 SECONDS')
+ FROM TUMBLE(balloon_game_events, event_ts, INTERVAL '15 MINUTES')
  GROUP BY
     balloon_color,
     window_start,
