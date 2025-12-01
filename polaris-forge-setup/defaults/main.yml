@@ -1,4 +1,6 @@
 # defaults/main.yml
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
 ---
 # AWS LocalStack Configuration
 plf_aws_endpoint_url: http://localstack.localstack:4566 # LocalStack endpoint in k3s

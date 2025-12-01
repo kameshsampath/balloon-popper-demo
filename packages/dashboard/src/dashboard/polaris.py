@@ -1,3 +1,6 @@
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+
 import os
 from datetime import timedelta
 from pathlib import Path

@@ -1,3 +1,6 @@
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+
 import argparse
 import asyncio
 import json
@@ -96,6 +99,7 @@ class AsyncBalloonPopProducer:
 
 
 # Default configuration
+
 CONFIG = {
     "kafka": {
         "bootstrap_servers": os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:19094"),
