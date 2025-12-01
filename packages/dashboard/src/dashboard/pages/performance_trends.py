@@ -1,3 +1,6 @@
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+
 import streamlit as st
 import altair as alt
 import os

@@ -1,4 +1,6 @@
 #!/usr/bin/env ansible-playbook
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
 ---
 - name: Prepare the environment for setting up polaris
   hosts: localhost

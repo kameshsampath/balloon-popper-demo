@@ -83,7 +83,7 @@ $PROJECT_HOME/bin/cleanup.sh
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+Copyright (c) Kamesh Sampath. All rights reserved. Licensed under the Apache 2.0 license.
 
 ## Contributing
 
