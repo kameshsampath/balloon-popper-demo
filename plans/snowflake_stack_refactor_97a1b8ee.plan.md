@@ -390,6 +390,7 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 
 ### Keep or add (expected top-level shape)
 
+- [plans/](plans/) — **versioned lab plan** (e.g. `snowflake_stack_refactor_97a1b8ee.plan.md`); **do not delete** during companion carve-out.
 - [packages/](packages/) — `common`, `generator`, `dashboard` (after Snowflake refactor).
 - [pyproject.toml](pyproject.toml), [uv.lock](uv.lock), [LICENSE](LICENSE), [.python-version](.python-version) if present.
 - [Taskfile.yml](Taskfile.yml) — **modularize**: one logical **task per lab automation step** (PAT setup/refresh via **sfutils-pat**, external volume flows via **sfutils-extvolumes**, **bronze preload**, `snow sql` / notebook / streamlit deploy). Drop k3d/registry generator tasks; optional local `dashboard` task remains secondary to SiS. Prefer **`task <namespace>:<action>`** (or includes) so README/sfguide can cite stable task names.
