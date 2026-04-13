@@ -6,7 +6,7 @@ todos:
     content: "SFGuide Phase 1: author + id; extraction map from current docs/templates (before deleting docs/); commit map under sfguides/"
     status: pending
   - id: phase-bronze-landing-zone
-    content: "Exclusive bronze phase: S3+IAM+bucket policy+Polaris+preload (PyIceberg default; optional Glue) + lab/bronze-landing-zone.md; CLD via Polaris REST same bucket; validate Glue path if used; Taskfile; test; commit alone"
+    content: "Bronze phase: S3+IAM+bucket policy+lab/bronze-landing-zone.md; fork Polaris+PyIceberg/Glue OR Glue ICEBERG_REST+LINKED_CATALOG (gist); vended creds or ext volume; test; commit"
     status: pending
   - id: companion-repo-delete
     content: After map + schema lift + bronze phase copies any needed snippets, delete obsolete trees (polaris, k8s, bin, mkdocs, old docs); tighten .gitignore
@@ -92,7 +92,7 @@ Between sub-phases, **pause** after your commit; do not ask the agent for “Pha
 
 ### Deliverables (single phase, one commit or tight commit series)
 
-- **Exclusive documentation**: add **[`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md)** (or `sfguides/bronze-landing-zone.md` if you prefer it next to the main guide) containing **only** this concern: landing **Iceberg bronze** on **S3** behind **Polaris (REST)** so **Snowflake CLD** can later bind to the **same** catalog and therefore the **same S3 objects** (no duplicate bronze bucket for CLD—one warehouse layout; CLD reads metadata via **REST** and data files via Iceberg semantics on that bucket per Snowflake docs).
+- **Exclusive documentation**: add **[`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md)** (or `sfguides/bronze-landing-zone.md` if you prefer it next to the main guide) covering **Iceberg bronze on S3** and how **Snowflake CLD** binds—**either** (A) **Apache Polaris (REST)** + PyIceberg/Glue writers **or** (B) **AWS Glue Iceberg REST** catalog integration (**`CATALOG_SOURCE = ICEBERG_REST`**, `CATALOG_API_TYPE = AWS_GLUE`, `CATALOG_URI` = `https://glue.<region>.amazonaws.com/iceberg`, vended SIGV4 auth per [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) / docs) then **`CREATE DATABASE … LINKED_CATALOG = ( CATALOG = '<integration_name>' )`**—same “CLD after bronze” lab shape, different catalog backend.
 - **Implementation**: `tools/bronze-preload/` (**PyIceberg**, default), **Docker Compose** (or runbook) for **Polaris**, **Taskfile** targets (`task bronze:…`, `task polaris:…`, optional `task bronze:validate-aws`); **optional** `glue/` or documented **AWS Glue** job(s) for Iceberg→S3 if you choose that path (see checklist below).
 - **Cross-links**: README points to **`lab/bronze-landing-zone.md`** as the source of truth for presenters; the future main sfguide **summarizes** this phase in Setup and links here for depth.
 
@@ -101,6 +101,7 @@ Between sub-phases, **pause** after your commit; do not ask the agent for “Pha
 Authoritative docs plus your walkthrough (link in **Related Resources** in the final sfguide too):
 
 - **Demo / narrative walkthrough**: [Lakehouse / Iceberg + Snowflake flow (YouTube)](https://youtu.be/DObaF-Fk1_A) — use this to **align** the written prereq order, terminology, and “happy path” screenshots or commands with what you show on video.
+- **Snowflake + AWS Glue (S3 Tables / Glue Iceberg REST, catalog integration + IAM)**: [Snowflake s3tables / Glue integration gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) — `CREATE CATALOG INTEGRATION` (`CATALOG_SOURCE = ICEBERG_REST`, `CATALOG_API_TYPE = AWS_GLUE`, `CATALOG_URI = https://glue.<region>.amazonaws.com/iceberg`, SIGV4 role, vended credentials), **IAM policy** / **trust policy** patterns, and sample `CREATE ICEBERG TABLE` / workflow; keep in sync with [docs.snowflake.com](https://docs.snowflake.com/) as the product source of truth.
 - **Apache Iceberg**: [https://iceberg.apache.org/](https://iceberg.apache.org/) — table spec, REST catalog concepts, writer behavior.
 - **Snowflake + Iceberg (CLD / catalog integration / DTs)**: [Configure a catalog integration for Iceberg REST](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest), [Dynamic Iceberg tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-create-iceberg.html), [CREATE ICEBERG TABLE (REST)](https://docs.snowflake.com/en/sql-reference/sql/create-iceberg-table-rest).
 - **AWS Glue + Iceberg**: [AWS Glue Iceberg format / ETL](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-format-iceberg.html) — job parameters, Data Catalog tables, Spark Iceberg catalog config; cross-check **Glue version** support for the Iceberg runtime you pin in the lab.
@@ -121,7 +122,7 @@ Authoritative docs plus your walkthrough (link in **Related Resources** in the f
 
 **Bucket policy (resource-based)**
 
-- When Snowflake must access S3 **directly** (e.g. **storage integration** / external stages for other lab steps), document **bucket policy** statements that trust the Snowflake **storage AWS IAM user ARN** (per Snowflake docs for your cloud). **CLD** primarily uses **catalog integration (REST)** to Polaris; still document how **Snowflake ↔ S3** trust fits the **same bucket** so DT **external volume** or future steps do not fight the bronze layout.
+- When Snowflake must access S3 **directly** (e.g. **storage integration** / external stages / non-vended paths), document **bucket policy** statements that trust the Snowflake **storage AWS IAM user ARN** (per Snowflake docs for your cloud). **CLD** uses **catalog integration (REST)** to **Polaris or Glue Iceberg REST** (per fork); still document how **Snowflake ↔ S3** trust fits the **same bucket** so DT **external volume** or future steps do not fight the bronze layout.
 - Optional: **SSE-KMS key policy** allowing Polaris principal + Snowflake storage principal.
 
 **Polaris**
@@ -138,8 +139,10 @@ Authoritative docs plus your walkthrough (link in **Related Resources** in the f
 - **When to choose Glue**: Teams standardizing on **Glue Spark** for the **landing zone**; larger bronze volumes; or when you want the prereq chapter to mirror **AWS Analytics** reference patterns while Snowflake still teaches **CLD**.
 - **Glue job design**: **Glue 4.0+** (or pinned supported release) Spark ETL with **Iceberg** as output format; **warehouse** path = **same S3 prefix** Polaris uses; **Glue Data Catalog** database/table names documented next to **Polaris namespace/table** names so learners see one mental map. Include **job bookmarks** / idempotent job design for workshop reruns; document **worker type** and **timeout** for predictable cost.
 - **IAM**: **Glue service role** with least privilege: `glue:*` job APIs, `s3:List/Get/Put/Delete` on bronze prefix, `logs:*` for CloudWatch, **Lake Formation** `lakeformation:GetDataAccess` if LF is on; **passrole** for who can start jobs.
-- **CLD alignment (recommended hybrid)**: **Glue writes Iceberg data + metadata files to S3**; **Snowflake CLD** still uses **catalog integration (REST) → Polaris** so the **REST URL** you teach matches the rest of the lab. If Glue does **not** auto-register every snapshot with Polaris, document the **explicit step** (e.g. PyIceberg `register_table` / REST register, or Polaris-native import—whatever you validated on video) so **Polaris is the single REST truth** before attendees run `CREATE CATALOG INTEGRATION`.
-- **Glue-only CLD** (no Polaris): only if you **prove** Snowflake **catalog-linked** support for your exact **Glue Data Catalog + Iceberg** surface—treat as **advanced** fork; default lab remains **Polaris REST + (PyIceberg and/or Glue as S3 writer)**.
+- **CLD alignment — two validated patterns**:
+  - **Pattern A (Polaris REST)**: **Glue and/or PyIceberg** write Iceberg to **S3**; **Polaris** is the **REST** catalog; Snowflake **`CREATE CATALOG INTEGRATION`** targets Polaris; then **`CREATE DATABASE … LINKED_CATALOG`**. Use when you want self-hosted Polaris in the story.
+  - **Pattern B (Glue Iceberg REST — docs + gist)**: Snowflake **`CREATE CATALOG INTEGRATION`** with **`CATALOG_SOURCE = ICEBERG_REST`**, **`REST_CONFIG`** pointing at **`https://glue.<region>.amazonaws.com/iceberg`**, **`CATALOG_API_TYPE = AWS_GLUE`**, **`CATALOG_NAME`** for your **S3 Tables / Glue** catalog namespace, **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`** (or follow docs for **external volume**–backed S3 access where required), **`REST_AUTHENTICATION = ( TYPE = SIGV4 … )`**; run **`DESCRIBE CATALOG INTEGRATION`** to wire **trust policy** on the IAM role ([gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426)). Then **`CREATE DATABASE my_glue_db LINKED_CATALOG = ( CATALOG = 'my_glue_irc_integration' );`** — **no Polaris** required for CLD in this fork.
+- **Prereqs (both patterns)**: (1) **Iceberg REST catalog integration** configured and enabled, (2) **either** vended credentials **or** **external volume** / storage path per Snowflake rules for underlying **S3**, (3) then **linked catalog database (CLD)** as above.
 - **Operational**: store job script under `glue/` (or link to Glue Studio), parameters (`--warehouse_path`, `--database`, etc.), **Run job** vs EventBridge schedule; **reset lab** procedure (drop table / truncate branch vs new prefix).
 
 ### Prerequisites setup ordering
@@ -164,11 +167,14 @@ Document the full narrative in **`lab/bronze-landing-zone.md`**; summarize in th
 
 ### Snowflake CLD and the same S3 bucket
 
-- **CLD** does not “mount S3” like a file share; it **catalog-links** to **Polaris REST**, and Polaris **resolves** table metadata to **locations under that S3 bucket**. Document that **one** bronze bucket/prefix is shared by **(1) Polaris + bronze writers (PyIceberg and/or Glue) (2) Snowflake CLD reads (3) later DT external volume** if you place managed Iceberg output under a **separate prefix** in the same or another bucket—call out prefix separation in `lab/bronze-landing-zone.md` to avoid accidental overwrites.
+- **CLD** links Snowflake to an **Iceberg REST catalog** (`LINKED_CATALOG` / catalog-linked database)—metadata over **REST**, data on **S3** per integration settings.
+- **Polaris path**: CLD → **Polaris REST** → S3 warehouse layout (writers: PyIceberg and/or Glue + Polaris registration as documented).
+- **Glue Iceberg REST path** ([gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426)): CLD → **Glue’s Iceberg REST endpoint** (`https://glue.<region>.amazonaws.com/iceberg`) with **`AWS_GLUE`** API type → S3 Tables / Glue-managed namespace; **IAM + trust** from `DESCRIBE CATALOG INTEGRATION`.
+- Document **one** coherent bucket/namespace layout per workshop fork and **prefix separation** for **DT external volume** vs bronze to avoid overwrites.
 
 ## Assumptions (updated)
 
-- **Bronze (prerequisite, not chapter 1)**: Before the Snowflake hands-on narrative, **Iceberg bronze is on S3** and visible to **Apache Polaris (REST)** for **CLD**—**default** writer **PyIceberg**; **optional** **AWS Glue** (Spark) for the same S3 layout if validated against the **CLD** catalog path. Attendees (or instructors) **finish this in Prerequisites/Setup**; the **lab story then starts with CLD** in Snowflake.
+- **Bronze (prerequisite, not chapter 1)**: Before the Snowflake hands-on narrative, **Iceberg bronze is on S3** and discoverable via the **Iceberg REST catalog integration** you teach—**either** **Polaris** + PyIceberg/Glue **or** **Glue Iceberg REST + `LINKED_CATALOG`** per [docs.snowflake.com](https://docs.snowflake.com/) and [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426). Attendees (or instructors) **finish this in Prerequisites/Setup**; the **lab story then starts with CLD** (`CREATE DATABASE … LINKED_CATALOG`).
 - **Snowflake account + cloud storage**: Real Snowflake org, [catalog integration (Iceberg REST)](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest), and **external volume** for any Snowflake-managed Iceberg outputs (Dynamic Iceberg Tables).
 - **Teaching point**: Other engines use the **Iceberg REST API** against the **Snowflake** catalog for metadata; **files** remain on the external volume (e.g. S3)—aligned with [Create dynamic Apache Iceberg tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-create-iceberg.html) and [CREATE ICEBERG TABLE (REST)](https://docs.snowflake.com/en/sql-reference/sql/create-iceberg-table-rest).
 
@@ -254,12 +260,12 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 - **[Project Nessie](https://projectnessie.org/)**: OSS catalog with **REST**, branching semantics useful for “reset lab” workflows; validate **Snowflake REST catalog integration** compatibility for your target account/edition before committing the lab to it.
 - **Vendor / managed Iceberg catalogs** (e.g. **[Tabular](https://tabular.io/)**): low day-2 ops for workshops; cost and signup friction for attendees—better for **presenter-controlled** bronze than “every learner signs up.”
 
-**AWS Glue (optional bronze *writer*, not default)**:
+**AWS Glue (writer and/or REST catalog for CLD)**:
 
-- **What Glue is good for**: **AWS Glue Spark** jobs writing **Apache Iceberg** to **S3** with the **Glue Data Catalog**—see [AWS Glue Iceberg format](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-format-iceberg.html). Aligns with **production landing zones** and complements **Snowflake CLD** once the **REST catalog** story is clear—see [Snowflake catalog integration (Iceberg REST)](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest).
-- **Recommended lab pattern (Glue + Polaris + Snowflake)**: **Glue** lands **Iceberg** on the **same S3 warehouse** Polaris is configured for; **Polaris** remains the **Iceberg REST** endpoint for **CLD**; **Snowflake** only needs the **Polaris URL** + secrets in **catalog integration** (same end-to-end as PyIceberg path, different writer). Document any **post-Glue** step so Polaris metadata matches what CLD will query (validate against [your demo](https://youtu.be/DObaF-Fk1_A)).
-- **Glue-only CLD** (Snowflake integrates **directly** to Glue catalog without Polaris): **only** if explicitly validated for your account; otherwise treat as out-of-scope for the default quickstart.
-- **Operational cost**: Glue jobs, IAM, optional Lake Formation, CloudWatch logs—**higher** than PyIceberg-only; offset by familiarity for AWS-centric audiences.
+- **Glue as bronze writer**: **Glue Spark** + **Iceberg on S3** + **Glue Data Catalog** — [AWS Glue Iceberg format](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-format-iceberg.html).
+- **Glue as the catalog Snowflake CLD uses (validated)**: Per **docs.snowflake.com** and your [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426), Snowflake can use **`CATALOG_SOURCE = ICEBERG_REST`** with **`CATALOG_API_TYPE = AWS_GLUE`**, **`CATALOG_URI = 'https://glue.<region>.amazonaws.com/iceberg'`**, **`CATALOG_NAME`** for the **S3 Tables / Glue** catalog, **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`** (or **external volume** where docs require), **SIGV4** role + **`DESCRIBE CATALOG INTEGRATION`** for **trust policy**, then **`CREATE DATABASE … LINKED_CATALOG = ( CATALOG = '<integration>' )`**. This is a **first-class** lab fork alongside **Polaris REST**.
+- **Pattern (Glue + Polaris)**: Still valid when you want **Glue ETL** to land files but **Polaris** as the REST namepace for teaching—see [walkthrough](https://youtu.be/DObaF-Fk1_A).
+- **Operational cost**: Glue jobs, IAM, Lake Formation (if used), CloudWatch — budget time in **`phase-bronze-landing-zone`** to validate **one** chosen fork end-to-end.
 
 **Not sufficient alone**: A **JDBC / Hive-only** metastore without a **REST** surface Snowflake can integrate to is a poor fit for the **REST catalog integration** story unless Snowflake adds a different integration type you adopt.
 
@@ -306,11 +312,11 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 
 ### Lab flow order (attendee path)
 
-1. **Prerequisites / infra** (documented): Snowflake account, S3, IAM/policies, **Polaris base URL reachable from Snowflake**, `snow` + `uv`, PAT / external-volume automation (**sfutils-pat**, **sfutils-extvolumes**) as needed.
-2. **Prereq: bronze ready** (still before “lab starts with CLD”): **Docker Polaris** (or shared endpoint) + **Taskfile** → **`task bronze:preload`** (**PyIceberg → Polaris → S3**, default) **or** optional **Glue job** path (document IAM + catalog/CLD validation) → **verify** tables visible the way **CLD** will consume (REST catalog / integration); attendees vs **instructor-only** for shared bronze—state which model in the guide.
-3. **Lab starts here (Snowflake)**: **`snow sql`** / worksheets / notebooks following `snowflake/lab/*.sql`—**catalog integration (REST)** → **CLD** → **Dynamic Iceberg Tables** → **SiS** (bronze already exists; no PyIceberg steps in this phase unless appendix).
+1. **Prerequisites / infra** (documented): Snowflake account, S3, IAM/policies, catalog reachable from Snowflake (**Polaris** URL **or** **Glue Iceberg REST** at `https://glue.<region>.amazonaws.com/iceberg` + SIGv4 role per [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426)), `snow` + `uv`, PAT / external-volume automation (**sfutils-pat**, **sfutils-extvolumes**) as needed.
+2. **Prereq: bronze ready** (still before “lab starts with CLD”): **Fork A**: Polaris + **`task bronze:preload`** (PyIceberg) **and/or** Glue jobs + Polaris registration **or Fork B**: Glue / S3 Tables data + **catalog integration** wired for **`LINKED_CATALOG`** — **verify** `DESCRIBE CATALOG INTEGRATION` + linked DB sees tables; attendees vs **instructor-only** — state which fork in the guide.
+3. **Lab starts here (Snowflake)**: **`snow sql`** / notebooks — **`CREATE CATALOG INTEGRATION`** (Polaris **or** **AWS_GLUE** REST per fork) → **`CREATE DATABASE … LINKED_CATALOG`** → **DTs** → **SiS**.
 
-**Bronze writer scope**: **Default** — **PyIceberg** against **Polaris REST** + S3. **Optional** — **AWS Glue** (Spark) to write Iceberg to S3 **only if** you document and test the **CLD-visible catalog** story (Glue-only vs **Glue + Polaris REST** hybrid per Snowflake/AWS docs). **Out of scope for v1** — DuckDB as writer to a non-Horizon external REST catalog unless you expand scope after validation.
+**Bronze writer / catalog scope**: **Default** — **PyIceberg** + **Polaris REST** + S3. **AWS Glue** — (1) as **Spark writer** to S3 (with Polaris or Glue REST for CLD), and/or (2) as **Glue Iceberg REST catalog** for **`LINKED_CATALOG`** per [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) / Snowflake docs. **Out of scope for v1** — DuckDB as bronze writer.
 
 **Generator reuse**: Reuse `packages/generator/` event records as the **row source** for preload (export to Parquet/Arrow and append via PyIceberg).
 
@@ -369,7 +375,7 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 
 **SFGuide Phase 4 — Conclusion and full validation**
 
-- **Conclusion And Resources** + **Related Resources**: Snowflake Iceberg docs, [Apache Iceberg](https://iceberg.apache.org/), [AWS Glue Iceberg](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-format-iceberg.html), [hirc-duckdb-demo](https://github.com/kameshsampath/hirc-duckdb-demo), **[walkthrough video](https://youtu.be/DObaF-Fk1_A)**, optional legacy repo link if you publish a “companion” narrative.
+- **Conclusion And Resources** + **Related Resources**: Snowflake Iceberg docs, [Apache Iceberg](https://iceberg.apache.org/), [AWS Glue Iceberg](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-format-iceberg.html), [Snowflake + Glue / S3 Tables gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426), [hirc-duckdb-demo](https://github.com/kameshsampath/hirc-duckdb-demo), **[walkthrough video](https://youtu.be/DObaF-Fk1_A)**, optional legacy repo link if you publish a “companion” narrative.
 - Full create-sfguide checklist; no `Duration:` tags.
 - **Commit**; ready to copy into a Snowflake-Labs/sfguides fork.
 
@@ -412,9 +418,9 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 
 ### 2. Add Snowflake lab artifacts (new primary path)
 
-- New directory e.g. `snowflake/lab/` with ordered SQL (or Snowflake project) scripts, aligned step-for-step with the sfguide. **Assume bronze is already on S3 in Polaris** (prereq); **do not** start `snowflake/lab/*.sql` with PyIceberg—**first scripts are Snowflake-only** and open with **catalog link / CLD**:
-  1. Placeholders: role, warehouse, storage integration / external volume, **catalog integration (REST)** to **Polaris** (bronze catalog) per [catalog integration REST](https://docs.snowflake.com/sql-reference/sql/create-catalog-integration-rest).
-  2. **CLD**: catalog-linked database on that integration; verify `SHOW ICEBERG TABLES` / namespaces match `balloon_pops` (or your bronze naming).
+- New directory e.g. `snowflake/lab/` with ordered SQL (or Snowflake project) scripts, aligned step-for-step with the sfguide. **Assume bronze already landed on S3** and visible via the **catalog integration** you chose (prereq)—**Polaris** fork **or** **Glue `ICEBERG_REST` / `AWS_GLUE`** fork per [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426). **Do not** start `snowflake/lab/*.sql` with PyIceberg—**first scripts are Snowflake-only**:
+  1. Placeholders: role, warehouse, **external volume / storage** if not using vended-only path, **`CREATE CATALOG INTEGRATION`** (**REST** to **Polaris** *or* **Glue Iceberg REST** with `CATALOG_API_TYPE = AWS_GLUE` per docs + gist), `DESCRIBE CATALOG INTEGRATION` for trust policy values.
+  2. **CLD**: `CREATE DATABASE … LINKED_CATALOG = ( CATALOG = '<integration_name>' );` — verify `SHOW ICEBERG TABLES` / namespaces match lab naming (`balloon_pops` or glue namespace).
   3. **Silver/gold**: `CREATE DYNAMIC ICEBERG TABLE` per analytical slice, mirroring former RisingWave semantics (from `polaris-forge-setup/templates/source.sql.j2`—**copy the relevant snippets into `snowflake/lab/` comments or a short `REFERENCE.md` before removing that folder**). Reuse column names from the preserved schema excerpt (ex-`docs/iceberg_schema_design.md`) for dashboard compatibility.
   4. Optional: short script for **refresh / monitor** dynamic tables (`SYSTEM$…` or `INFORMATION_SCHEMA` per current docs).
 - Single **parameter file** or README table: `CATALOG_INTEGRATION_NAME`, `LINKED_DB_NAME`, `EXTERNAL_VOLUME_NAME`, `BRONZE_NAMESPACE`, S3 bucket/prefix if needed for volume—not committed secrets.
@@ -439,7 +445,7 @@ Add a dedicated **Setup** subsection (in the sfguide and root README) covering w
 ### 5. Documentation
 
 - **Primary**: `{id}/{id}.md` per **create-sfguide** under `sfguides/<id>/` (author field filled when publishing; categories: quickstart + data engineering unless you choose another approved product category).
-- **Root README**: Prerequisites, clone, env vars, links to sfguide, **[Iceberg + Snowflake walkthrough (YouTube)](https://youtu.be/DObaF-Fk1_A)**, **`lab/bronze-landing-zone.md`**, and [hirc-duckdb-demo](https://github.com/kameshsampath/hirc-duckdb-demo) for Horizon IRC; **Snowflake Notebooks** + **Streamlit in Snowflake** for in-account SQL and game viz; no MkDocs site.
+- **Root README**: Prerequisites, clone, env vars, links to sfguide, **[Iceberg + Snowflake walkthrough (YouTube)](https://youtu.be/DObaF-Fk1_A)**, **[Glue / S3 Tables + Snowflake gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426)**, **`lab/bronze-landing-zone.md`**, and [hirc-duckdb-demo](https://github.com/kameshsampath/hirc-duckdb-demo) for Horizon IRC; **Snowflake Notebooks** + **Streamlit in Snowflake** for in-account SQL and game viz; no MkDocs site.
 - **Business continuity**: One sfguide **Related Resources** bullet linking to Snowflake docs (replication / DR)—no over-claims.
 
 ### 6. CI
