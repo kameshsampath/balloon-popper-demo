@@ -12,7 +12,7 @@ This repository is **transitioning** from the original **RisingWave + k3d + Pola
 | SFGuide extraction | [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) |
 | Plan | [plans/snowflake_stack_refactor_97a1b8ee.plan.md](plans/snowflake_stack_refactor_97a1b8ee.plan.md) |
 
-**Prerequisites (Snowflake / bronze track):** Python **3.12+**; CLIs **`aws`**, **`snow`**, **`task`**, **`envsubst`** (gettext), **`jq`**, **[Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)** (`cortex`), and **[uv](https://github.com/astral-sh/uv)**. AWS CLI **2.34+** for `aws s3tables`. Configure **`AWS_PROFILE`** (see `.env.example`). From the repo root run **`task check-tools`** to verify everything is on your `PATH` (Windows, Linux, macOS).
+**Prerequisites (Snowflake / bronze track):** Python **3.12+**; CLIs **`aws`**, **`snow`**, **`task`**, **`envsubst`** (gettext), **`jq`**, **[Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)** (`cortex`), and **[uv](https://github.com/astral-sh/uv)**. **Recommended:** **[direnv](https://direnv.net/)** (matches this repo’s [`.envrc`](.envrc)), **`curl`**, and **`openssl`**. AWS CLI **2.34+** for `aws s3tables`. Configure **`AWS_PROFILE`** (see `.env.example`). From the repo root run **`task check-tools`** to verify everything is on your `PATH` (Windows, Linux, macOS).
 
 ## Legacy demo (deprecated)
 

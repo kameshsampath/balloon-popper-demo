@@ -61,7 +61,30 @@ TOOLS: tuple[ToolSpec, ...] = (
     ),
 )
 
-WARNINGS_ONLY: tuple[ToolSpec, ...] = (
+# Strongly suggested for this repo’s .envrc / downloads / TLS; does not fail check-tools.
+RECOMMENDED: tuple[ToolSpec, ...] = (
+    ToolSpec(
+        "direnv",
+        ["direnv", "version"],
+        "https://direnv.net/docs/installation.html",
+        note="Auto-loads .env / .envrc when you cd into the repo.",
+    ),
+    ToolSpec(
+        "curl",
+        ["curl", "--version"],
+        "https://curl.se/download.html",
+        note="Install scripts, health checks, and copy-paste flows from docs.",
+    ),
+    ToolSpec(
+        "openssl",
+        ["openssl", "version"],
+        "https://wiki.openssl.org/index.php/Binaries",
+        note="TLS clients and common crypto one-liners.",
+    ),
+)
+
+# Only if you still run legacy k3d / generator tasks from the root Taskfile.
+LEGACY_OPTIONAL: tuple[ToolSpec, ...] = (
     ToolSpec(
         "git",
         ["git", "--version"],
@@ -132,8 +155,12 @@ def main() -> int:
         if not _check_one(spec, optional=False):
             ok = False
 
-    print("\nOptional:\n")
-    for spec in WARNINGS_ONLY:
+    print("\nRecommended (lab comfort; install if WARN):\n")
+    for spec in RECOMMENDED:
+        _check_one(spec, optional=True)
+
+    print("\nOptional (legacy stack only):\n")
+    for spec in LEGACY_OPTIONAL:
         _check_one(spec, optional=True)
 
     print()

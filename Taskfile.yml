@@ -14,7 +14,7 @@ vars:
 
 tasks:
   check-tools:
-    desc: Verify lab CLIs on PATH (aws, snow, task, envsubst, jq, cortex, uv); optional git
+    desc: Verify lab CLIs on PATH (required + recommended direnv/curl/openssl + legacy optional)
     cmds:
       - python3 tools/check_lab_prereqs.py
 
