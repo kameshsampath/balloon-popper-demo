@@ -312,13 +312,20 @@ def s3tables_setup_cmd(
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
-    tb_name = os.environ.get("BRONZE_S3TABLES_BUCKET_NAME")
+    tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
     if not tb_name:
-        print(
-            "error: set BRONZE_S3TABLES_BUCKET_NAME (3-63 chars, [0-9a-z-])",
-            file=sys.stderr,
+        if not dry_run:
+            print(
+                "error: set BRONZE_S3TABLES_BUCKET_NAME (3-63 chars, [0-9a-z-]) "
+                "or LAB_USERNAME to derive it",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        bucket_plan_label = (
+            "<unset — set LAB_USERNAME or BRONZE_S3TABLES_BUCKET_NAME for a real run>"
         )
-        raise SystemExit(1)
+    else:
+        bucket_plan_label = tb_name
     ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
     profile = os.environ["AWS_PROFILE"]
     root = repo_root()
@@ -328,7 +335,7 @@ def s3tables_setup_cmd(
     if dry_run:
         click.echo("[dry-run] s3tables-setup plan:")
         click.echo(f"  profile={profile} region={region}")
-        click.echo(f"  table_bucket_name={tb_name!r} namespace={ns!r}")
+        click.echo(f"  table_bucket_name={bucket_plan_label!r} namespace={ns!r}")
         click.echo("[dry-run] (read-only) list-table-buckets completed")
     else:
         ensure_aws_config_dir(root)
@@ -347,7 +354,7 @@ def s3tables_setup_cmd(
         if table_bucket_arn:
             click.echo(f"  table bucket: already exists arn={table_bucket_arn}")
         else:
-            click.echo(f"  table bucket: would create name={tb_name!r}")
+            click.echo(f"  table bucket: would create name={bucket_plan_label!r}")
         click.echo(f"  namespace: would ensure {ns!r}")
         for t in TABLES:
             click.echo(f"  table: would ensure {ns}.{t} (ICEBERG)")
