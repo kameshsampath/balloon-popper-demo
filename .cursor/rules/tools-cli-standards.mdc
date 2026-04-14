@@ -1,0 +1,46 @@
+---
+description: Python CLIs under tools/ — entrypoints, env, Click, cross-platform
+globs: tools/**/*.py,tools/**/*.md
+alwaysApply: false
+---
+
+# `tools/` CLI and helper scripts
+
+When adding or editing anything under **`tools/`**, keep behavior and style aligned with the existing CLIs (`check_lab_prereqs.py`, `bronze-preload/bronze_cli.py`, `bronze-preload/load_sample.py`).
+
+## Invocation
+
+- Prefer **`uv run python tools/...`** (or paths documented in **`.taskfiles/bronze.yml`** / **Taskfile.yml**) so dependencies match **`pyproject.toml`**.
+- New learner-facing steps should be reachable via **`task`** where practical, with the same command also documented in **`tools/bronze-preload/README.md`** or **`lab/`** as today.
+
+## Python layout
+
+- Start executable modules with **`#!/usr/bin/env python3`**, the project **copyright + Apache-2.0** license header, and a one-line **module docstring** (purpose, main deps, key env vars).
+- Use **`from __future__ import annotations`**, **type hints**, and **`main() -> int`** (or **`None`** for pure Click) for scripts meant to be run directly.
+- Prefer **`if __name__ == "__main__": raise SystemExit(main())`** when `main` returns an exit code; Click apps may use **`cli()`** as the entry and **`raise SystemExit(...)`** only on failure paths that need a non-zero code.
+
+## User-facing CLI (Click)
+
+- Use **`click`** for multi-command or option-heavy tools; expose **`@click.group()`** with **`show_envvar=True`** on options that mirror **`os.environ`** (e.g. **`AWS_PROFILE`**, **`AWS_REGION`**).
+- After parsing, copy explicit non-empty options into **`os.environ`** (see **`apply_overrides`** in `bronze_cli.py`) so subprocesses and **`envvar=`** resolution stay consistent.
+- Add **`--dry-run`** (or equivalent) for any command that writes files, calls mutating AWS APIs, or changes remote state; dry-run should print a clear plan or resolved config without side effects.
+
+## Errors and output
+
+- Send failures and “how to fix” messages to **`sys.stderr`**; use **`print(..., file=sys.stderr)`** or **`click.echo(..., err=True)`** as appropriate.
+- User-facing errors: short **`error: ...`** lines; avoid dumping raw tracebacks for expected validation failures.
+
+## Cross-platform and process
+
+- **No `shell=True`** for subprocess unless there is a strong reason; pass **`list[str]`** argv.
+- Prefer **`pathlib.Path`** for repo-relative paths; resolve repo root once (see **`repo_root`** in `bronze_aws.py`) instead of hard-coding **`..`** chains from CWD assumptions.
+- Keep **`check_lab_prereqs.py`–style** tools **stdlib-only** unless there is a compelling reason (that script is invoked as plain **`python3 tools/...`** from Task).
+
+## AWS and secrets
+
+- Require **`AWS_PROFILE`** (or documented equivalent) before calling AWS; do not log access keys or session tokens.
+- Subprocess **`aws`** only when the lab already expects the AWS CLI (e.g. **`s3tables`**, **`sts`**); prefer **`boto3`** for structured APIs where the repo already uses it.
+
+## After changes
+
+- If you add a new script or command, update **`tools/bronze-preload/README.md`** (or the relevant **`lab/*.md`**) and **`task`** definitions so **`task check-tools`** and docs stay truthful.
