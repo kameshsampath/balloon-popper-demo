@@ -144,6 +144,6 @@ WIP in **this repo** may use a draft frontmatter flag or top-of-file note; **pub
 
 - [x] Extraction map covers all `docs/*.md` and key templates
 - [x] [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) holds MV ↔ DT porting notes
-- [ ] Reviewer sign-off on map (human gate)
-- [ ] `author` frontmatter formatted per Snowflake Quickstarts (names above)
-- [ ] After sign-off: Phase 2 scaffold `sfguides/<id>/<id>.md` (start **incremental** updates per table above)
+- [x] Reviewer sign-off on map (human gate)
+- [x] `author` frontmatter formatted per Snowflake Quickstarts (names above)
+- [x] After sign-off: Phase 2 scaffold `sfguides/<id>/<id>.md` (start **incremental** updates per table above)

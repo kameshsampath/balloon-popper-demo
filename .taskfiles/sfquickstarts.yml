@@ -1,0 +1,40 @@
+# https://taskfile.dev
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+#
+# Copy this repo's Quickstart markdown into a local sfquickstarts checkout.
+# Default destination matches a typical Snowflake-Labs/sfquickstarts layout.
+version: "3"
+
+vars:
+  SFQUICKSTARTS_SRC: /Users/ksampath/git-sfc/Snowflake-Labs/sfquickstarts/site/sfguides/src
+  SFGUIDE_ID: lakehouse-iceberg-production-pipelines
+
+tasks:
+  sync-guide:
+    desc: Rsync one guide folder (sfguides/<id>/) into sfquickstarts src/<id>/ (--delete only inside that folder)
+    cmds:
+      - rsync -av --delete "{{.TASKFILE_DIR}}/../sfguides/{{.SFGUIDE_ID}}/" "{{.SFQUICKSTARTS_SRC}}/{{.SFGUIDE_ID}}/"
+
+  sync-guide-dry-run:
+    desc: Dry-run for sync-guide (no writes)
+    cmds:
+      - rsync -avn --delete "{{.TASKFILE_DIR}}/../sfguides/{{.SFGUIDE_ID}}/" "{{.SFQUICKSTARTS_SRC}}/{{.SFGUIDE_ID}}/"
+
+  sync-sfguides:
+    desc: Rsync all children of sfguides/ into sfquickstarts src/ (excludes repo-only docs; NO --delete — safer when src has other guides)
+    cmds:
+      - rsync -av
+        --exclude=EXTRACTION_MAP.md
+        --exclude=README.md
+        "{{.TASKFILE_DIR}}/../sfguides/"
+        "{{.SFQUICKSTARTS_SRC}}/"
+
+  sync-sfguides-dry-run:
+    desc: Dry-run for sync-sfguides (no writes)
+    cmds:
+      - rsync -avn
+        --exclude=EXTRACTION_MAP.md
+        --exclude=README.md
+        "{{.TASKFILE_DIR}}/../sfguides/"
+        "{{.SFQUICKSTARTS_SRC}}/"

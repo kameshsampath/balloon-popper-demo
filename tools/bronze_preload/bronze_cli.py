@@ -527,6 +527,254 @@ def s3tables_setup_cmd(
     click.echo(f"Wrote {tables_list_path}")
 
 
+@cli.command("cleanup")
+@click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id for derived BRONZE_S3TABLES_BUCKET_NAME / GLUE_DATABASE when unset.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Glue database to clean up (default balloon_pops or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--s3tables-bucket",
+    envvar="BRONZE_S3TABLES_BUCKET_NAME",
+    show_envvar=True,
+    help="S3 Tables bucket name to clean up (or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--s3tables-namespace",
+    envvar="S3TABLES_NAMESPACE",
+    show_envvar=True,
+    help="S3 Tables namespace to clean up (default balloon_pops).",
+)
+@click.option(
+    "--yes",
+    is_flag=True,
+    help="Skip interactive confirmation for destructive cleanup.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print cleanup plan only; no deletes.",
+)
+def cleanup_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    s3tables_bucket: str | None,
+    s3tables_namespace: str | None,
+    yes: bool,
+    dry_run: bool,
+) -> None:
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_S3TABLES_BUCKET_NAME=s3tables_bucket,
+        S3TABLES_NAMESPACE=s3tables_namespace,
+    )
+    require_aws_profile()
+    region = resolve_region()
+    derive_bronze_resource_names()
+    profile = os.environ["AWS_PROFILE"]
+    glue_db = os.environ.get("GLUE_DATABASE", "balloon_pops")
+    ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
+    tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
+
+    session = boto3.Session(profile_name=profile, region_name=region)
+    glue = session.client("glue")
+
+    glue_tables: list[str] = []
+    glue_exists = True
+    try:
+        paginator = glue.get_paginator("get_tables")
+        for page in paginator.paginate(DatabaseName=glue_db):
+            for t in page.get("TableList", []):
+                name = t.get("Name")
+                if isinstance(name, str) and name:
+                    glue_tables.append(name)
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code", "")
+        if code in ("EntityNotFoundException", "DatabaseNotFoundException"):
+            glue_exists = False
+        else:
+            raise
+
+    table_bucket_arn = ""
+    s3tables_present = False
+    s3tables_tables: list[str] = []
+    if tb_name:
+        require_aws_cli_s3tables()
+        buckets = aws_json(profile, region, ["s3tables", "list-table-buckets", "--no-paginate"])
+        for b in buckets.get("tableBuckets") or []:
+            if b.get("name") == tb_name:
+                table_bucket_arn = b.get("arn") or ""
+                s3tables_present = True
+                break
+        if table_bucket_arn:
+            cp = subprocess.run(
+                [
+                    "aws",
+                    "s3tables",
+                    "list-tables",
+                    "--table-bucket-arn",
+                    table_bucket_arn,
+                    "--namespace",
+                    ns,
+                    "--profile",
+                    profile,
+                    "--region",
+                    region,
+                    "--output",
+                    "json",
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if cp.returncode == 0:
+                listed = json.loads(cp.stdout or "{}")
+                for t in listed.get("tables") or []:
+                    name = t.get("name")
+                    if isinstance(name, str) and name:
+                        s3tables_tables.append(name)
+            else:
+                click.echo(
+                    f"  note: could not list S3 tables for namespace {ns!r}; "
+                    "cleanup will still try namespace and bucket deletes"
+                )
+
+    click.echo("Cleanup plan — bronze resources")
+    click.echo(f"  profile={profile} region={region}")
+    click.echo(f"  Glue database={glue_db!r} exists={glue_exists} tables={len(glue_tables)}")
+    if glue_tables:
+        click.echo("    Glue tables to delete:")
+        for name in glue_tables:
+            click.echo(f"      • {name}")
+    if tb_name:
+        click.echo(f"  S3 Tables bucket={tb_name!r} namespace={ns!r} present={s3tables_present}")
+        if table_bucket_arn:
+            click.echo(f"    table_bucket_arn={table_bucket_arn}")
+            click.echo(f"    S3 Tables to delete={len(s3tables_tables)}")
+            for name in s3tables_tables:
+                click.echo(f"      • {ns}.{name}")
+        else:
+            click.echo("    bucket not found; S3 Tables delete steps will be skipped")
+    else:
+        click.echo("  S3 Tables bucket not set; skipping S3 Tables cleanup")
+    click.echo("  Note: This cleanup removes Glue/S3 Tables metadata only; it does not delete S3 warehouse data.")
+
+    if dry_run:
+        click.echo("[dry-run] No deletes executed.")
+        return
+
+    if not yes:
+        click.confirm(
+            "Proceed with cleanup of the resources above?",
+            default=False,
+            abort=True,
+        )
+
+    if table_bucket_arn:
+        for name in s3tables_tables:
+            click.echo(f"Deleting S3 table {ns}.{name} ...")
+            cp = subprocess.run(
+                [
+                    "aws",
+                    "s3tables",
+                    "delete-table",
+                    "--table-bucket-arn",
+                    table_bucket_arn,
+                    "--namespace",
+                    ns,
+                    "--name",
+                    name,
+                    "--profile",
+                    profile,
+                    "--region",
+                    region,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if cp.returncode != 0:
+                print(cp.stderr or cp.stdout, file=sys.stderr)
+                raise SystemExit(cp.returncode or 1)
+
+        click.echo(f"Deleting S3 namespace {ns!r} ...")
+        cp = subprocess.run(
+            [
+                "aws",
+                "s3tables",
+                "delete-namespace",
+                "--table-bucket-arn",
+                table_bucket_arn,
+                "--namespace",
+                ns,
+                "--profile",
+                profile,
+                "--region",
+                region,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if cp.returncode != 0:
+            print(cp.stderr or cp.stdout, file=sys.stderr)
+            raise SystemExit(cp.returncode or 1)
+
+        click.echo(f"Deleting S3 table bucket {tb_name!r} ...")
+        cp = subprocess.run(
+            [
+                "aws",
+                "s3tables",
+                "delete-table-bucket",
+                "--table-bucket-arn",
+                table_bucket_arn,
+                "--profile",
+                profile,
+                "--region",
+                region,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if cp.returncode != 0:
+            print(cp.stderr or cp.stdout, file=sys.stderr)
+            raise SystemExit(cp.returncode or 1)
+
+    if glue_exists:
+        for name in glue_tables:
+            click.echo(f"Deleting Glue table {glue_db}.{name} ...")
+            glue.delete_table(DatabaseName=glue_db, Name=name)
+        click.echo(f"Deleting Glue database {glue_db!r} ...")
+        glue.delete_database(Name=glue_db)
+
+    click.echo("Bronze cleanup completed.")
+
+
 def main() -> None:
     cli()
 

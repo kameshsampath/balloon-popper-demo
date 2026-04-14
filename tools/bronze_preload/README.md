@@ -49,6 +49,10 @@ task bronze:s3tables-setup
 task bronze:load
 # or
 task bronze:all
+
+# later (teardown metadata resources only)
+task bronze:cleanup-dry-run
+task bronze:cleanup
 ```
 
 ## Two AWS surfaces (by design)
@@ -66,12 +70,15 @@ Entry points are registered in the root **`pyproject.toml`** under **`[project.s
 | `uv run bronze-cli glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` (add `--dry-run` for a plan) |
 | `uv run bronze-cli s3tables-setup` | `aws s3tables` create bucket / namespace / five tables (`--dry-run` lists plan, read-only) |
 | `uv run bronze-cli render-iam` | Substitute `${VAR}` in policy template → `.aws-config/` (`--dry-run` prints JSON only) |
+| `uv run bronze-cli cleanup` | Delete Glue tables/database + S3 Tables namespace/table bucket (`--dry-run` first; requires confirmation or `--yes`) |
 | `uv run load-bronze-sample` | PyIceberg append sample rows |
 
-**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:load`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`.
+**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:load`, `task bronze:cleanup`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`, `task bronze:cleanup-dry-run`.
 
 Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-warehouse` / `BRONZE_WAREHOUSE`, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
 `uv run bronze-cli glue-setup --aws-profile prod --bronze-warehouse s3://my/prefix/`
+
+`cleanup` removes Glue/S3 Tables metadata only. It does **not** delete objects in your general-purpose S3 warehouse path (`BRONZE_WAREHOUSE`).
 
 ## Relationship to `packages/generator`
 

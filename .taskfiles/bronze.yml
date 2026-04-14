@@ -45,6 +45,16 @@ tasks:
     cmds:
       - uv run load-bronze-sample
 
+  cleanup:
+    desc: Delete bronze metadata resources (Glue tables/database + S3 Tables namespace/bucket); use with care
+    cmds:
+      - "{{.BRONZE_CLI}} cleanup --yes"
+
+  cleanup-dry-run:
+    desc: Preview bronze cleanup plan only (no deletes)
+    cmds:
+      - "{{.BRONZE_CLI}} cleanup --dry-run"
+
   all:
     desc: glue-setup, s3tables-setup, then load (render-iam is separate — run first if attaching new IAM)
     deps:

@@ -35,6 +35,8 @@ Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (inclu
 | `task bronze:s3tables-setup` | **`aws s3tables`** — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
 | `task bronze:s3tables-setup-dry-run` | Preview S3 Tables setup (read-only list; no creates) |
 | `task bronze:load` | **`load_sample.py`** — PyIceberg appends sample rows into Glue Iceberg tables on **`BRONZE_WAREHOUSE`** |
+| `task bronze:cleanup-dry-run` | Preview bronze cleanup plan (no deletes) |
+| `task bronze:cleanup` | Delete Glue tables/database + S3 Tables namespace/bucket metadata (asks confirmation unless `--yes`) |
 | `task bronze:all` | `glue-setup` → `s3tables-setup` → `load` |
 
 ### Glue + S3 warehouse vs S3 Tables (two surfaces)
@@ -57,6 +59,7 @@ Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** I
 5. **REST catalog**: either **Polaris** (reachable from Snowflake, not only `localhost`) or **Glue Iceberg REST** (`https://glue.<region>.amazonaws.com/iceberg`, `CATALOG_API_TYPE = AWS_GLUE`, SIGv4 — see [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) and Snowflake docs).
 6. **Load**: `task bronze:load` (or `task bronze:all` from a clean slate).
 7. **Verify**: Glue / S3 Tables lists tables above; optional Snowflake `DESCRIBE CATALOG INTEGRATION` smoke.
+8. **Cleanup (optional end-of-lab)**: `task bronze:cleanup-dry-run` then `task bronze:cleanup` when you want to remove workshop metadata resources.
 
 ## Snowflake handoff
 
