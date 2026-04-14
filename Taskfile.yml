@@ -4,6 +4,10 @@
 
 version: "3"
 
+includes:
+  bronze:
+    taskfile: .taskfiles/bronze.yml
+
 vars:
   IMAGE_REGISTRY: k3d-registry.localhost:5001
   IMAGE_NAME: balloon-pop-generator
