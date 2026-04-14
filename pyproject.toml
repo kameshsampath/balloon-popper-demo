@@ -22,6 +22,10 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "click>=8.1.8",
     "boto3>=1.35",
+    # Snowflake CLI in the project venv so learners need not install `snow` globally
+    # (`.envrc` prepends `.venv/bin` after `uv sync`).
+    "snowflake-cli>=3.16",
+    "sfutils-extvolumes",
 ]
 
 [project.scripts]
@@ -33,13 +37,6 @@ load-bronze-sample = "tools.bronze_preload.load_sample:main"
 packages = ["tools"]
 
 [dependency-groups]
-# Optional: Snowflake-Labs external volume + S3/IAM helpers (`to_aws_name`, SQL identifiers, CLI).
-# Installs `snowflake-cli`; use only when you need `sfutils-extvolumes` alongside this repo.
-#   uv sync --group extvolumes
-#   uv run --group extvolumes sfutils-extvolumes --help
-extvolumes = [
-    "sfutils-extvolumes",
-]
 dev = [
     "ansible>=11.2.0",
     "ansible-dev-tools>=25.2.1",

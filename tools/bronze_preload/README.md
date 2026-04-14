@@ -11,16 +11,14 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 - **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
 - **`uv`** and repo dependencies: `uv sync`.
 
-## Optional: Snowflake external volumes ([sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes))
+## Snowflake CLI and external volumes
 
-This repo’s bronze path uses **local** name rules in `bronze_aws.py` (Glue slug length 20, S3 Tables bucket slug length 24, then `-balloon-s3tables`). That is **not identical** to every helper in Snowflake-Labs tooling (for example `to_aws_name` there has **no 24-character cap**), so we keep our slugs here until you deliberately align and test.
+After **`uv sync`**, **`snow`** (Snowflake CLI **≥3.16**) and **`sfutils-extvolumes`** live in **`.venv/bin`** — [`.envrc`](../../.envrc) prepends that directory so you usually do **not** need a separate global Snowflake CLI install for this repo.
 
-When you want the **external volume** CLI and shared naming helpers (`to_aws_name`, `to_sql_identifier`, IAM/S3 helpers) in the same venv, install the optional group (pulls **`snowflake-cli`**, which is intentionally **not** part of the default lab install):
+- **`snow --version`** / SQL: use the venv’s `snow` (or **`uv run snow …`** from any cwd).
+- **External volumes** ([Snowflake-Labs/sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes)): **`sfutils-extvolumes --help`** for the bundled CLI; naming helpers (`to_aws_name`, etc.) live in that package.
 
-```bash
-uv sync --group extvolumes
-uv run --group extvolumes sfutils-extvolumes --help
-```
+This repo’s bronze path still uses **local** name rules in `bronze_aws.py` (Glue slug length 20, S3 Tables bucket slug length 24, then `-balloon-s3tables`). That is **not identical** to every helper in `sfutils-extvolumes` (e.g. `to_aws_name` has **no** that 24-character cap)—do not assume parity until you align and test.
 
 ## Environment
 

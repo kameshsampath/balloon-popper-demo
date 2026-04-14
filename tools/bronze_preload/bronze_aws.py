@@ -59,8 +59,8 @@ def sanitize_lab_slug_glue(lab: str) -> str:
 def sanitize_lab_slug_bucket(lab: str) -> str:
     """Lowercase hyphen slug for S3 Tables bucket prefix; max 24 chars (workshop collision guard).
 
-    Similar intent to ``sfutils_extvolumes.extvolume.to_aws_name`` (optional dep group
-    ``extvolumes``); that helper does not apply this length cap—do not assume parity.
+    Similar intent to ``sfutils_extvolumes.extvolume.to_aws_name`` (installed with this
+    repo); that helper does not apply this length cap—do not assume parity.
     """
     u = lab.lower().replace("_", "-")
     u = re.sub(r"[^a-z0-9-]+", "-", u)

@@ -29,6 +29,7 @@ TOOLS: tuple[ToolSpec, ...] = (
         "snow",
         ["snow", "--version"],
         "https://docs.snowflake.com/developer-guide/snowflake-cli/installation/installation",
+        note="Provided by this repo's venv (snowflake-cli); run `uv sync` and use direnv or activate .venv.",
     ),
     ToolSpec(
         "task",
