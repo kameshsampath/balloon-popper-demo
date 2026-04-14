@@ -8,7 +8,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables + optional Snow
 
 | Check | How |
 |--------|-----|
-| Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Confirm `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE`, and other vars for the steps you will run. |
+| Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Confirm `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE`, and other vars for the steps you will run. For a **shared workshop AWS account**, set **`LAB_USERNAME`** and leave **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** unset so names derive per participant (see `.env.example`). |
 | Python | `python --version` shows **3.12+** |
 | uv | `uv --version` works |
 | AWS CLI | `aws --version` — for S3 Tables steps, **v2.34+** (`aws s3tables help`) |
@@ -25,7 +25,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables + optional Snow
 **Goal:** Generated JSON lands in `.aws-config/` and substitutes variables.
 
 1. `export AWS_PROFILE=...` and `export AWS_REGION=...`
-2. `export GLUE_DATABASE=balloon_pops` (or your DB name)
+2. `export GLUE_DATABASE=balloon_pops` (or your DB name), or set **`LAB_USERNAME`** and omit **`GLUE_DATABASE`** so **`task bronze:render-iam`** derives the same DB name as **`glue-setup`**
 3. `export BRONZE_S3_ARN=arn:aws:s3:::your-warehouse-bucket` (no trailing `/*`)
 4. Run: `task bronze:render-iam`
 5. **Expect:** `.aws-config/bronze-glue-writer-policy.rendered.json` exists; open it and confirm `Resource` ARNs contain your account/region/database (no literal `${...}` left unless you forgot `envsubst` deps — use `gettext`’s `envsubst`).
@@ -41,13 +41,14 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables + optional Snow
 1. Configure **`snow`** for the target account (connection / default as per Snowflake docs).
 2. `export AWS_PROFILE=...` `export AWS_REGION=...`
 3. `export BRONZE_EXTVOLUME_BUCKET=my-bronze-base` (or rely on default `balloon-bronze-warehouse`)
-4. Run: `task bronze:extvolume-dry-run`  
+4. Optional workshop collision guard: `export LAB_USERNAME=yourhandle` — dry-run/create pass **`--prefix`** to sfutils (letters/digits from the handle).
+5. Run: `task bronze:extvolume-dry-run`  
    **Expect:** Plan prints; no AWS/Snowflake mutations.
-5. Run: `task bronze:extvolume-create`  
-   **Expect:** Success output; note **actual S3 bucket name** (often `{prefix}-{bucket}`).
-6. Set warehouse for later steps, e.g.  
+6. Run: `task bronze:extvolume-create`  
+   **Expect:** Success output; note **actual S3 bucket name** (often `{prefix}-{bucket}` when prefix is set).
+7. Set warehouse for later steps, e.g.  
    `export BRONZE_WAREHOUSE=s3://<actual-bucket>/iceberg/`
-7. In Snowflake (worksheet or `snow sql`), confirm external volume exists (name pattern per sfutils README, e.g. `{PREFIX}_{BUCKET}_EXTERNAL_VOLUME`).
+8. In Snowflake (worksheet or `snow sql`), confirm external volume exists (name pattern per sfutils README, e.g. `{PREFIX}_{BUCKET}_EXTERNAL_VOLUME`).
 
 **Pass:** Bucket visible in S3 console; external volume exists and `sfutils-extvolumes verify` succeeds if you run it per upstream README.
 
@@ -60,7 +61,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables + optional Snow
 **Goal:** Glue catalog database exists with `LocationUri` = warehouse.
 
 1. `export BRONZE_WAREHOUSE=s3://<bucket>/<prefix>/` (must end with `/` or script normalizes — your bucket must exist and be writable by credentials used later in §6)
-2. Optional: `export GLUE_DATABASE=balloon_pops`
+2. Optional: `export GLUE_DATABASE=balloon_pops`, or set **`LAB_USERNAME`** and omit **`GLUE_DATABASE`** for a derived per-participant name
 3. Run: `task bronze:glue-setup`
 4. **Expect:** `.aws-config/glue-database.json` written.
 5. Verify:  

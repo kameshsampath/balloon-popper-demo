@@ -8,6 +8,8 @@ source "${SCRIPT_DIR}/lib.sh"
 require_aws_profile
 REGION="$(require_region)"
 export AWS_REGION="${REGION}"
+
+derive_bronze_resource_names
 export GLUE_DATABASE="${GLUE_DATABASE:-balloon_pops}"
 
 if [[ -z "${AWS_ACCOUNT_ID:-}" ]]; then

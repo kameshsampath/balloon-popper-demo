@@ -4,6 +4,8 @@ This document is the **detailed** prerequisite for the Snowflake lab: **Iceberg 
 
 **Phase 0 — environment:** copy [`.env.example`](../.env.example) to `.env`, fill in **AWS** and **bronze** variables (never commit `.env`). Extend `.env.example` as new phases add Snowflake CLI, PAT, or DuckDB IRC variables.
 
+**Shared AWS account / workshop:** set **`LAB_USERNAME`** (one id per participant) so Glue database, S3 Tables bucket, and `sfutils-extvolumes` bucket prefix default to unique values when **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** are not set. See comments in [`.env.example`](../.env.example). **`S3TABLES_NAMESPACE`** stays `balloon_pops` inside each participant’s table bucket unless you change it deliberately.
+
 **Manual QA:** follow [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md).
 
 The Quickstart **Setup** section should summarize steps here and link to this file. **Do not** make “load bronze” the first main Snowflake chapter—learners start Snowflake hands-on at **CLD**.
@@ -26,8 +28,8 @@ Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (inclu
 
 | Task | Purpose |
 |------|---------|
-| `task bronze:extvolume-dry-run` | Preview [sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes) **create** (S3 + IAM + Snowflake external volume); needs `snow` + `AWS_PROFILE` |
-| `task bronze:extvolume-create` | Run **`sfutils-extvolumes create`** — preferred way to create the **warehouse S3 bucket** (and Snowflake EV) when you already use Snowflake CLI |
+| `task bronze:extvolume-dry-run` | Preview [sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes) **create** (S3 + IAM + Snowflake external volume); needs `snow` + `AWS_PROFILE`; with **`LAB_USERNAME`**, passes **`--prefix`** so bucket names do not collide |
+| `task bronze:extvolume-create` | Run **`sfutils-extvolumes create`** — preferred way to create the **warehouse S3 bucket** (and Snowflake EV) when you already use Snowflake CLI; **`LAB_USERNAME`** adds the same **`--prefix`** |
 | `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (`envsubst`; needs `BRONZE_S3_ARN`) |
 | `task bronze:glue-setup` | `aws glue create-database` for **`GLUE_DATABASE`** (default `balloon_pops`) with `LocationUri` = **`BRONZE_WAREHOUSE`** |
 | `task bronze:s3tables-setup` | `aws s3tables` — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |

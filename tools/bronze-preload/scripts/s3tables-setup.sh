@@ -11,6 +11,8 @@ REPO_ROOT="$(repo_root)"
 export REPO_ROOT
 ensure_aws_config_dir
 
+derive_bronze_resource_names
+
 if ! aws s3tables help &>/dev/null; then
   echo "error: AWS CLI does not support 's3tables' commands. Upgrade to AWS CLI v2.34+ (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)." >&2
   exit 1

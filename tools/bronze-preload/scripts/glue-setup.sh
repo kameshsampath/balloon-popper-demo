@@ -11,6 +11,7 @@ REPO_ROOT="$(repo_root)"
 export REPO_ROOT
 ensure_aws_config_dir
 
+derive_bronze_resource_names
 GLUE_DATABASE="${GLUE_DATABASE:-balloon_pops}"
 WAREHOUSE="${BRONZE_WAREHOUSE:?Set BRONZE_WAREHOUSE to s3://bucket/prefix/ for Iceberg files}"
 
