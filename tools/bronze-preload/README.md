@@ -2,6 +2,8 @@
 
 Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg tables on **S3**, using the same logical names as the legacy RisingWave sinks (`balloon_pops.*`).
 
+**Manual test checklist:** [lab/bronze-landing-zone-MANUAL-TEST.md](../../lab/bronze-landing-zone-MANUAL-TEST.md).
+
 ## Prerequisites
 
 - **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
