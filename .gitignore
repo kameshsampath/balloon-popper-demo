@@ -30,3 +30,8 @@ __pycache__
 **/.ipynb_checkpoints/
 notebooks/*.ipynb
 !notebooks/workbook.ipynb
+
+# Bronze: local rendered IAM / snippets (real AWS via AWS_PROFILE); never commit secrets
+.aws-config/*
+!.aws-config/README.md
+!.aws-config/*.example

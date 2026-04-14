@@ -29,6 +29,10 @@ Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (inclu
 
 Tasks ship as **stubs** until wired; keep **secrets** in the environment / AWS profile, not in Task YAML.
 
+### Local config directory (`.aws-config/`)
+
+Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** IAM JSON, trust-policy fragments, or other outputs from bronze scripts—filled at **run time** from **environment variables** and **`AWS_PROFILE`**. The tree is **gitignored** except [`.aws-config/README.md`](../.aws-config/README.md) and optional `*.example` files. **Committed** policy **templates** with placeholders should live under **`lab/aws/`** (added when bronze tasks are implemented).
+
 ## Recommended order
 
 1. Pick **region** (AWS, S3, Snowflake aligned).
