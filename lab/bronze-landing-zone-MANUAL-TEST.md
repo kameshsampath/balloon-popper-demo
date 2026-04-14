@@ -103,7 +103,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 | Check | Command |
 |--------|---------|
 | Lint loader | `uv run ruff check tools/bronze-preload/load_sample.py` |
-| Task list | `task --list \| rg bronze` — shows `render-iam`, `glue-setup`, `s3tables-setup`, `load`, `all` |
+| Task list | `task --list \| rg bronze` — shows `render-iam`, `*-dry-run`, `glue-setup`, `s3tables-setup`, `load`, `all` |
 
 ---
 

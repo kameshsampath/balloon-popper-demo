@@ -480,6 +480,8 @@ source = { virtual = "." }
 dependencies = [
     { name = "ansible" },
     { name = "awscli-local" },
+    { name = "boto3" },
+    { name = "click" },
     { name = "cryptography" },
     { name = "jinja2" },
     { name = "mypy-boto3-glue" },
@@ -512,6 +514,8 @@ dev = [
 requires-dist = [
     { name = "ansible", specifier = ">=11.3.0" },
     { name = "awscli-local", specifier = ">=0.22.0" },
+    { name = "boto3", specifier = ">=1.35" },
+    { name = "click", specifier = ">=8.1.8" },
     { name = "cryptography", specifier = ">=44.0.0" },
     { name = "jinja2", specifier = ">=3.1.5" },
     { name = "mypy-boto3-glue", specifier = ">=1.37.0" },

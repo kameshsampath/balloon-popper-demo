@@ -47,14 +47,16 @@ task bronze:all
 1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load_sample.py`** create and append **Iceberg** tables your laptop can manage with **PyIceberg** (good for workshop data).
 2. **Amazon S3 Tables** (table bucket + namespace + empty ICEBERG tables) — `s3tables-setup` provisions the **S3 Tables** layout for **Snowflake Glue Iceberg REST** / analytics alignment; rows are not duplicated there automatically until you wire a writer to that catalog.
 
-## Scripts
+## CLI (Click; Windows / macOS / Linux)
 
-| Script | Role |
+| Command | Role |
 |--------|------|
-| `scripts/glue-setup.sh` | `aws glue create-database` + dump `.aws-config/glue-database.json` |
-| `scripts/s3tables-setup.sh` | `aws s3tables` create bucket / namespace / five tables |
-| `scripts/render-iam.sh` | `envsubst` policy template → `.aws-config/` |
-| `load_sample.py` | PyIceberg append sample rows |
+| `uv run python tools/bronze-preload/bronze_cli.py glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` (add `--dry-run` for a plan) |
+| `uv run python tools/bronze-preload/bronze_cli.py s3tables-setup` | `aws s3tables` create bucket / namespace / five tables (`--dry-run` lists plan, read-only) |
+| `uv run python tools/bronze-preload/bronze_cli.py render-iam` | Substitute `${VAR}` in policy template → `.aws-config/` (`--dry-run` prints JSON only) |
+| `load_sample.py` | PyIceberg append sample rows (unchanged entrypoint) |
+
+**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`.
 
 ## Relationship to `packages/generator`
 

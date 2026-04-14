@@ -4,24 +4,41 @@
 #
 # Namespace: task bronze:<task>
 # Requires real AWS: set AWS_PROFILE (and usually AWS_REGION or configure region on the profile).
-
 version: "3"
+
+vars:
+  BRONZE_CLI: uv run python tools/bronze-preload/bronze_cli.py
 
 tasks:
   render-iam:
     desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs BRONZE_S3_ARN, AWS_PROFILE; optional AWS_ACCOUNT_ID)
     cmds:
-      - bash tools/bronze-preload/scripts/render-iam.sh
+      - "{{.BRONZE_CLI}} render-iam"
+
+  render-iam-dry-run:
+    desc: Print resolved policy JSON only (no write; Task include does not forward `--` args reliably)
+    cmds:
+      - "{{.BRONZE_CLI}} render-iam --dry-run"
 
   glue-setup:
     desc: Create Glue database for Iceberg (needs AWS_PROFILE, BRONZE_WAREHOUSE=s3://bucket/prefix/)
     cmds:
-      - bash tools/bronze-preload/scripts/glue-setup.sh
+      - "{{.BRONZE_CLI}} glue-setup"
+
+  glue-setup-dry-run:
+    desc: Preview Glue setup (read-only get-database when possible; no writes)
+    cmds:
+      - "{{.BRONZE_CLI}} glue-setup --dry-run"
 
   s3tables-setup:
     desc: Create S3 table bucket + balloon_pops namespace + five ICEBERG tables (needs AWS_PROFILE, BRONZE_S3TABLES_BUCKET_NAME; AWS CLI 2.34+)
     cmds:
-      - bash tools/bronze-preload/scripts/s3tables-setup.sh
+      - "{{.BRONZE_CLI}} s3tables-setup"
+
+  s3tables-setup-dry-run:
+    desc: Preview S3 Tables setup (read-only list; no creates / no .aws-config writes)
+    cmds:
+      - "{{.BRONZE_CLI}} s3tables-setup --dry-run"
 
   load:
     desc: PyIceberg sample rows into Glue Iceberg tables (needs AWS_PROFILE, BRONZE_WAREHOUSE; run after glue-setup)

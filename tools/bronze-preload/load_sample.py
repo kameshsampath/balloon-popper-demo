@@ -31,7 +31,7 @@ def _ts(hour: int = 12) -> datetime:
 
 
 def _sanitize_glue_slug(lab: str) -> str:
-    """Match tools/bronze-preload/scripts/lib.sh sanitize_lab_slug_glue: [a-z0-9_], max 20."""
+    """Match ``bronze_aws.sanitize_lab_slug_glue``: [a-z0-9_], max 20."""
     u = lab.lower()
     u = re.sub(r"[^a-z0-9_]+", "_", u)
     u = re.sub(r"_+", "_", u).strip("_")

@@ -24,13 +24,16 @@ Replace `balloon_pops` with your **Glue catalog / S3 Tables namespace** if it di
 
 ## Automation (`task bronze:…`)
 
-Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`). Use a **real** AWS account: set **`AWS_PROFILE`** (and usually **`AWS_REGION`**). See [tools/bronze-preload/README.md](../tools/bronze-preload/README.md) for full env vars.
+Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`). Implementation is **Python + Click** ([`tools/bronze-preload/bronze_cli.py`](../tools/bronze-preload/bronze_cli.py)) so the same commands work on **Windows, Linux, and macOS** (still requires **AWS CLI** on `PATH` for `s3tables` and for `sts` in `render-iam`). Use a **real** AWS account: set **`AWS_PROFILE`** (and usually **`AWS_REGION`**). See [tools/bronze-preload/README.md](../tools/bronze-preload/README.md) for full env vars.
 
 | Task | Purpose |
 |------|---------|
-| `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (`envsubst`; needs `BRONZE_S3_ARN`) |
-| `task bronze:glue-setup` | `aws glue create-database` for **`GLUE_DATABASE`** (default `balloon_pops`) with `LocationUri` = **`BRONZE_WAREHOUSE`** |
-| `task bronze:s3tables-setup` | `aws s3tables` — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
+| `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (needs `BRONZE_S3_ARN`) |
+| `task bronze:render-iam-dry-run` | Print substituted policy JSON only (no file write) |
+| `task bronze:glue-setup` | Create Glue database for **`GLUE_DATABASE`** with `LocationUri` = **`BRONZE_WAREHOUSE`** |
+| `task bronze:glue-setup-dry-run` | Preview Glue setup (read-only **GetDatabase**; no create / no local JSON) |
+| `task bronze:s3tables-setup` | **`aws s3tables`** — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
+| `task bronze:s3tables-setup-dry-run` | Preview S3 Tables setup (read-only list; no creates) |
 | `task bronze:load` | **`load_sample.py`** — PyIceberg appends sample rows into Glue Iceberg tables on **`BRONZE_WAREHOUSE`** |
 | `task bronze:all` | `glue-setup` → `s3tables-setup` → `load` |
 
@@ -43,7 +46,7 @@ Keep **secrets** out of Task YAML; use **`.aws-config/`** for generated policy J
 
 ### Local config directory (`.aws-config/`)
 
-Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** IAM JSON, trust-policy fragments, or other outputs from bronze scripts—filled at **run time** from **environment variables** and **`AWS_PROFILE`**. The tree is **gitignored** except [`.aws-config/README.md`](../.aws-config/README.md) and optional `*.example` files. **Committed** policy **templates** with placeholders should live under **`lab/aws/`** (added when bronze tasks are implemented).
+Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** IAM JSON, trust-policy fragments, or other outputs from the bronze CLI—filled at **run time** from **environment variables** and **`AWS_PROFILE`**. The tree is **gitignored** except [`.aws-config/README.md`](../.aws-config/README.md) and optional `*.example` files. **Committed** policy **templates** with placeholders should live under **`lab/aws/`** (added when bronze tasks are implemented).
 
 ## Recommended order
 
