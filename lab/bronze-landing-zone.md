@@ -18,16 +18,22 @@ Replace `balloon_pops` with your **Glue catalog / S3 Tables namespace** if it di
 
 ## Automation (`task bronze:…`)
 
-Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`):
+Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`). Use a **real** AWS account: set **`AWS_PROFILE`** (and usually **`AWS_REGION`**). See [tools/bronze-preload/README.md](../tools/bronze-preload/README.md) for full env vars.
 
 | Task | Purpose |
 |------|---------|
-| `task bronze:glue-setup` | Glue database, job parameters, IAM **pointers** (implement `aws` CLI / scripts) |
-| `task bronze:s3tables-setup` | S3 bucket / S3 Tables catalog steps (implement CLI or CloudFormation wrappers) |
-| `task bronze:load` | Land bronze rows (PyIceberg / Glue job — wire to [tools/bronze-preload](../tools/bronze-preload/README.md)) |
-| `task bronze:all` | Runs the three steps in order |
+| `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (`envsubst`; needs `BRONZE_S3_ARN`) |
+| `task bronze:glue-setup` | `aws glue create-database` for **`GLUE_DATABASE`** (default `balloon_pops`) with `LocationUri` = **`BRONZE_WAREHOUSE`** |
+| `task bronze:s3tables-setup` | `aws s3tables` — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
+| `task bronze:load` | **`load_sample.py`** — PyIceberg appends sample rows into Glue Iceberg tables on **`BRONZE_WAREHOUSE`** |
+| `task bronze:all` | `glue-setup` → `s3tables-setup` → `load` |
 
-Tasks ship as **stubs** until wired; keep **secrets** in the environment / AWS profile, not in Task YAML.
+### Glue + S3 warehouse vs S3 Tables (two surfaces)
+
+- **Glue Data Catalog + S3** — `glue-setup` and **`bronze:load`** populate **Iceberg** metadata + files for the five logical tables (workshop-friendly).
+- **Amazon S3 Tables** — `s3tables-setup` creates the **table bucket / namespace / ICEBERG table** objects for Snowflake **Glue Iceberg REST** alignment; they are **not** auto-filled by `load_sample.py` (add a Glue-REST writer later if you want one copy only).
+
+Keep **secrets** out of Task YAML; use **`.aws-config/`** for generated policy JSON (see [.aws-config/README.md](../.aws-config/README.md)).
 
 ### Local config directory (`.aws-config/`)
 

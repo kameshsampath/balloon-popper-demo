@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BronzeWarehouseS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "${BRONZE_S3_ARN}",
+        "${BRONZE_S3_ARN}/*"
+      ]
+    },
+    {
+      "Sid": "GlueCatalogForBronzeDb",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateDatabase",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:CreateTable",
+        "glue:UpdateTable",
+        "glue:DeleteTable"
+      ],
+      "Resource": [
+        "arn:aws:glue:${AWS_REGION}:${AWS_ACCOUNT_ID}:catalog",
+        "arn:aws:glue:${AWS_REGION}:${AWS_ACCOUNT_ID}:database/${GLUE_DATABASE}",
+        "arn:aws:glue:${AWS_REGION}:${AWS_ACCOUNT_ID}:table/${GLUE_DATABASE}/*"
+      ]
+    },
+    {
+      "Sid": "S3TablesOptional",
+      "Effect": "Allow",
+      "Action": [
+        "s3tables:CreateTableBucket",
+        "s3tables:GetTableBucket",
+        "s3tables:ListTableBuckets",
+        "s3tables:CreateNamespace",
+        "s3tables:GetNamespace",
+        "s3tables:ListNamespaces",
+        "s3tables:CreateTable",
+        "s3tables:GetTable",
+        "s3tables:ListTables"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

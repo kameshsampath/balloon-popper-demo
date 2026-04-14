@@ -3,28 +3,33 @@
 # Licensed under the Apache License, Version 2.0
 #
 # Namespace: task bronze:<task>
-# Wire these to aws CLI, scripts, and tools/bronze-preload as the lab matures.
+# Requires real AWS: set AWS_PROFILE (and usually AWS_REGION or configure region on the profile).
 
 version: "3"
 
 tasks:
-  glue-setup:
-    desc: AWS Glue prerequisites (database, job params); replace echo with aws/cli scripts
+  render-iam:
+    desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs BRONZE_S3_ARN, AWS_PROFILE; optional AWS_ACCOUNT_ID)
     cmds:
-      - echo "TODO implement Glue setup (e.g. aws glue create-database …). See lab/bronze-landing-zone.md"
+      - bash tools/bronze-preload/scripts/render-iam.sh
+
+  glue-setup:
+    desc: Create Glue database for Iceberg (needs AWS_PROFILE, BRONZE_WAREHOUSE=s3://bucket/prefix/)
+    cmds:
+      - bash tools/bronze-preload/scripts/glue-setup.sh
 
   s3tables-setup:
-    desc: S3 bucket and S3 Tables / catalog registration; replace echo with aws or CFN
+    desc: Create S3 table bucket + balloon_pops namespace + five ICEBERG tables (needs AWS_PROFILE, BRONZE_S3TABLES_BUCKET_NAME; AWS CLI 2.34+)
     cmds:
-      - echo "TODO implement S3 Tables setup. See lab/bronze-landing-zone.md"
+      - bash tools/bronze-preload/scripts/s3tables-setup.sh
 
   load:
-    desc: Load bronze Iceberg data (PyIceberg or Glue job)
+    desc: PyIceberg sample rows into Glue Iceberg tables (needs AWS_PROFILE, BRONZE_WAREHOUSE; run after glue-setup)
     cmds:
-      - echo "TODO wire to tools/bronze-preload (uv run …). See tools/bronze-preload/README.md"
+      - uv run python tools/bronze-preload/load_sample.py
 
   all:
-    desc: Run glue-setup, s3tables-setup, then load in order
+    desc: glue-setup, s3tables-setup, then load (render-iam is separate — run first if attaching new IAM)
     deps:
       - glue-setup
       - s3tables-setup

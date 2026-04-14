@@ -1,19 +1,56 @@
-# Bronze preload (PyIceberg / Glue)
+# Bronze preload (AWS + PyIceberg)
 
-Land **synthetic or generated** balloon game events into **Iceberg** on **S3** using the same **REST catalog** (e.g. Apache Polaris) Snowflake will **catalog-link**.
+Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg tables on **S3**, using the same logical names as the legacy RisingWave sinks (`balloon_pops.*`).
 
-## Inputs (environment)
+## Prerequisites
 
-Typical variables (names may change when the script is implemented):
+- **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
+- **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
+- **`uv`** and repo dependencies: `uv sync`.
 
-- `REST_CATALOG_URI` — Polaris or compatible Iceberg REST base URL
-- `AWS_REGION`, bucket/prefix for warehouse
-- Catalog / namespace matching **`balloon_pops`** tables in [lab/bronze-landing-zone.md](../../lab/bronze-landing-zone.md)
+## Environment
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AWS_PROFILE` | yes | Credential profile for real AWS |
+| `AWS_REGION` | recommended | Overrides profile default region |
+| `BRONZE_WAREHOUSE` | yes for `load` | `s3://your-bucket/prefix/` — Iceberg warehouse root on **general-purpose S3** |
+| `GLUE_DATABASE` | no | Default `balloon_pops` |
+| `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`) |
+| `S3TABLES_NAMESPACE` | no | Default `balloon_pops` |
+| `BRONZE_S3_ARN` | for `render-iam` | e.g. `arn:aws:s3:::your-warehouse-bucket` |
+
+## Tasks (from repo root)
+
+```bash
+export AWS_PROFILE=your-profile
+export AWS_REGION=us-west-2
+export BRONZE_WAREHOUSE=s3://my-bronze-bucket/iceberg/
+export BRONZE_S3_ARN=arn:aws:s3:::my-bronze-bucket
+export BRONZE_S3TABLES_BUCKET_NAME=my-lab-table-bucket-001
+
+task bronze:render-iam    # optional: writes .aws-config/bronze-glue-writer-policy.rendered.json
+task bronze:glue-setup
+task bronze:s3tables-setup
+task bronze:load
+# or
+task bronze:all
+```
+
+## Two AWS surfaces (by design)
+
+1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load_sample.py`** create and append **Iceberg** tables your laptop can manage with **PyIceberg** (good for workshop data).
+2. **Amazon S3 Tables** (table bucket + namespace + empty ICEBERG tables) — `s3tables-setup` provisions the **S3 Tables** layout for **Snowflake Glue Iceberg REST** / analytics alignment; rows are not duplicated there automatically until you wire a writer to that catalog.
+
+## Scripts
+
+| Script | Role |
+|--------|------|
+| `scripts/glue-setup.sh` | `aws glue create-database` + dump `.aws-config/glue-database.json` |
+| `scripts/s3tables-setup.sh` | `aws s3tables` create bucket / namespace / five tables |
+| `scripts/render-iam.sh` | `envsubst` policy template → `.aws-config/` |
+| `load_sample.py` | PyIceberg append sample rows |
 
 ## Relationship to `packages/generator`
 
-Reuse event shapes from `packages/generator` (player, balloon_color, score, …) so downstream **Dynamic Iceberg Table** SQL matches [polaris-forge-setup/templates/source.sql.j2](../../polaris-forge-setup/templates/source.sql.j2) semantics.
-
-## Next step
-
-Implement a small Python entrypoint (e.g. `uv run` from repo root) and invoke it from `task bronze:load`.
+Event shapes mirror [packages/common/](../../packages/common) `GameEvent` / `GAME_CONFIG` for future alignment with full synthetic loads.
