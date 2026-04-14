@@ -1,6 +1,8 @@
 # https://taskfile.dev
 # Copyright 2024-Present Kamesh Sampath
 # Licensed under the Apache License, Version 2.0
+#
+# Snowflake lab path: task bronze:*, task check-tools. Local k8s / kubectl flows removed.
 
 version: "3"
 
@@ -8,48 +10,16 @@ includes:
   bronze:
     taskfile: .taskfiles/bronze.yml
 
-vars:
-  IMAGE_REGISTRY: k3d-registry.localhost:5001
-  IMAGE_NAME: balloon-pop-generator
-
 tasks:
   check-tools:
-    desc: Verify lab CLIs on PATH (required + recommended direnv/curl/openssl + legacy optional)
+    desc: Verify lab CLIs on PATH (required + recommended direnv/curl/openssl + optional git)
     cmds:
       - python3 tools/check_lab_prereqs.py
 
-  build-generator:
-    dir: generator
-    desc: build the generator image and push to local registry
-    cmds:
-      - >-
-        docker build --no-cache --push -t {{.IMAGE_REGISTRY}}/{{.IMAGE_NAME}} .
-    silent: false
-
   default:
+    desc: List available tasks (start with task check-tools)
     cmds:
-      - task: build-generator
-
-  generator-stop:
-    silent: true
-    desc:  scale down the generator pod
-    cmds:
-      - >-
-        kubectl scale deployment -n default balloon-game-data-generator --replicas 0
-
-  generator-start:
-    silent: true
-    desc: scale up the generator pod
-    cmds:
-      - >-
-        kubectl scale deployment -n default balloon-game-data-generator --replicas 1
-
-  generator-restart:
-    silent: true
-    cmds:
-      - task: generator-stop
-      - sleep .3
-      - task: generator-start
+      - task --list
 
   dashboard-local:
     silent: true
@@ -62,28 +32,8 @@ tasks:
 
   generator-local:
     silent: true
-    desc: run the data generator  locally
+    desc: run the data generator locally (Python; no cluster)
     aliases:
       - generator
     cmds:
       - uv run --package=generator generator
-
-  create-test-topic:
-    silent: false
-    cmds:
-      - >-
-        cat <<EOF | kubectl apply -f - 
-          apiVersion: kafka.strimzi.io/v1beta2
-          kind: KafkaTopic 
-          metadata:
-            labels:
-              strimzi.io/cluster: my-cluster
-            name: test
-            namespace: kafka
-        spec:
-          config:
-            retention.ms: 7200000
-            segment.bytes: 1073741824
-          partitions: 1
-          replicas: 1
-        EOF

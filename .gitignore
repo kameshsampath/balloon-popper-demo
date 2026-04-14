@@ -16,7 +16,6 @@ bin/**
 !bin/.gitkeep
 !bin/*.py
 !bin/*.sh
-kubectl
 .task
 work/**
 !work/.gitkeep

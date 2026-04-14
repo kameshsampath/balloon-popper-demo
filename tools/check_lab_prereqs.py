@@ -83,25 +83,12 @@ RECOMMENDED: tuple[ToolSpec, ...] = (
     ),
 )
 
-# Only if you still run legacy k3d / generator tasks from the root Taskfile.
-LEGACY_OPTIONAL: tuple[ToolSpec, ...] = (
+OPTIONAL: tuple[ToolSpec, ...] = (
     ToolSpec(
         "git",
         ["git", "--version"],
         "https://git-scm.com/downloads",
         note="Version control.",
-    ),
-    ToolSpec(
-        "docker",
-        ["docker", "--version"],
-        "https://docs.docker.com/get-docker/",
-        note="Legacy k3d / generator tasks in this Taskfile.",
-    ),
-    ToolSpec(
-        "kubectl",
-        ["kubectl", "version", "--client=true"],
-        "https://kubernetes.io/docs/tasks/tools/",
-        note="Legacy generator / Kafka tasks.",
     ),
 )
 
@@ -159,8 +146,8 @@ def main() -> int:
     for spec in RECOMMENDED:
         _check_one(spec, optional=True)
 
-    print("\nOptional (legacy stack only):\n")
-    for spec in LEGACY_OPTIONAL:
+    print("\nOptional:\n")
+    for spec in OPTIONAL:
         _check_one(spec, optional=True)
 
     print()

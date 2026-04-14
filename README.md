@@ -1,6 +1,6 @@
 # Balloon popper → Snowflake lakehouse lab (in progress)
 
-This repository is **transitioning** from the original **RisingWave + k3d + Polaris** streaming demo to a **Snowflake** quickstart-style lab (**Iceberg**, catalog-linked bronze, **Dynamic Iceberg Tables**, **Streamlit in Snowflake**). Legacy trees (`k8s/`, `polaris-forge-setup/`, `docs/`, `mkdocs.yaml`) remain **for now** so [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) and [snowflake/lab/REFERENCE.md](snowflake/lab/REFERENCE.md) can keep pointing at them until the **companion-repo-delete** phase.
+This repository is **transitioning** from the original **RisingWave + k3d + Polaris** streaming demo to a **Snowflake** quickstart-style lab (**Iceberg**, catalog-linked bronze, **Dynamic Iceberg Tables**, **Streamlit in Snowflake**). The supported path is **AWS Glue** bronze on S3, **Snowflake** for catalog / CLD / DTs, and **DuckDB** only where the guide calls for local read-only checks. Legacy trees (`k8s/`, `polaris-forge-setup/`, `docs/`, `mkdocs.yaml`) remain **for now** so [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) and [snowflake/lab/REFERENCE.md](snowflake/lab/REFERENCE.md) can keep pointing at them until the **companion-repo-delete** phase.
 
 ## Where to start (new lab path)
 
@@ -16,7 +16,7 @@ This repository is **transitioning** from the original **RisingWave + k3d + Pola
 
 ## Legacy demo (deprecated)
 
-The sections below describe the **old** k3d / RisingWave / MkDocs flow. GitHub Pages **docs workflow** and **cluster `bin/*.sh` helpers** have been removed; do not rely on `bin/cleanup.sh`.
+The sections below describe the **old** k3d / RisingWave / MkDocs flow. The root **Taskfile** no longer defines **kubectl** / **docker** cluster tasks (Glue + Snowflake + DuckDB is the supported path). GitHub Pages **docs workflow** and **cluster `bin/*.sh` helpers** have been removed; do not rely on `bin/cleanup.sh`.
 
 - **HTML docs** — the MkDocs publish workflow was removed; use markdown under [`docs/`](docs/) locally until content is migrated.
 - **Polaris cleanup** — if you still run Ansible from `polaris-forge-setup/`, use `ansible-playbook` with the playbooks there (see that folder’s README if present).
