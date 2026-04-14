@@ -40,6 +40,8 @@ isProject: false
 
 **Source of truth**: [`plans/snowflake_stack_refactor_97a1b8ee.plan.md`](plans/snowflake_stack_refactor_97a1b8ee.plan.md).
 
+**Repo vs `~/.cursor/plans`**: Keep the plan **in the repo** (`plans/`) so it versions with the branch, shows up in PRs, and travels with clones. **`~/.cursor/plans/`** is machine-local and usually **not** git-tracked—use it only as an **optional mirror** (or a one-line stub pointing here) if you like Cursor Plans UI; otherwise **repo-only is enough**.
+
 # Snowflake lab refactor (simplified)
 
 ## Goal
