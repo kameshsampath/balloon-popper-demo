@@ -1,12 +1,12 @@
 ---
 name: Snowflake Stack Refactor
-overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phased work: extraction map, bronze landing doc + preload, SQL lab, sfguide in four commits, repo carve-out. Tooling: sfutils-pat, sfutils-extvolumes, snow CLI >3.16, modular Taskfile."
+overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phased work: extraction map, bronze landing doc + preload, SQL lab, sfguide in four commits, repo carve-out. Tooling: sfutils-pat, sfutils-extvolumes, snow CLI >3.16; modular Taskfile with `.taskfiles/` includes and `bronze:*` tasks (Glue CLI, S3 Tables, data load)."
 todos:
   - id: sfguide-phase-1-map
     content: "Author + id; extraction map from docs/templates; commit under sfguides/"
     status: pending
   - id: phase-bronze-landing-zone
-    content: "lab/bronze-landing-zone.md + tools/bronze-preload + Taskfile; include explicit Glue DB + table names bronze creates; Glue IRC per gist if needed; test; commit"
+    content: "lab/bronze-landing-zone.md + tools/bronze-preload + .taskfiles/ modular tasks (bronze:*); include explicit Glue DB + table names; Glue IRC per gist if needed; test; commit"
     status: pending
   - id: companion-repo-delete
     content: "After map + lifts, delete polaris-forge-setup, k8s, mkdocs, old docs, cluster bin, GH Pages workflow; tighten .gitignore"
@@ -33,7 +33,7 @@ todos:
     content: "pyproject: sfutils-pat, sfutils-extvolumes, snowflake-cli>3.16, preload deps; uv lock; drop docs workflow if unused"
     status: pending
   - id: taskfile-lab-modular
-    content: "Taskfile: bronze, polaris, PAT, ext volumes, snow sql/streamlit; document in README"
+    content: "Root Taskfile.yml includes .taskfiles/*.yml; namespace bronze: (aws glue setup via CLI, S3 Tables create/bind, bronze data load), plus polaris/PAT/extvol/snow; document task names in README + bronze doc"
     status: pending
 isProject: false
 ---
@@ -53,12 +53,13 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 ## Order
 
 1. **SFGuide Phase 1** — extraction map from existing [`docs/`](docs/) and templates; commit before large deletes.
-2. **`phase-bronze-landing-zone`** — [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md), `tools/bronze-preload/`, Taskfile tasks; **commit** before **`companion-repo-delete`**.
+2. **`phase-bronze-landing-zone`** — [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md), `tools/bronze-preload/`, modular **`.taskfiles/`** + root [`Taskfile.yml`](Taskfile.yml); **commit** before **`companion-repo-delete`**.
 3. **`companion-repo-delete`** — remove obsolete trees (see below).
 4. **`snowflake-sql-lab`** + **sfguide Phases 2–4** — SQL, notebooks, SiS, guide body and conclusion.
 
 ## Bronze (prerequisite only)
 
+- **Modular `bronze` tasks**: Add **Task** definitions under **`.taskfiles/`** (included from root [`Taskfile.yml`](Taskfile.yml)) using the **`bronze:`** namespace. Cover, in **documented order** (with optional `bronze:all` or similar orchestration): **(1)** AWS **Glue**–related setup driven by **`aws` CLI** (database, job/script deploy parameters, IAM hints or pointers—keep secrets out of tasks), **(2)** **S3 Tables** catalog/bucket/table creation or registration steps the lab requires, **(3)** **bronze data loading** (e.g. call `uv run` / `tools/bronze-preload` or Glue job trigger). The sfguide and [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md) should cite **`task bronze:<name>`** for each learner-facing step. Prefer **idempotent** or clearly documented **reset** behavior for workshop reruns.
 - **Glue visibility in the guide**: In **Prerequisites** (or the Setup subsection that covers loading bronze), add a short **“What gets created in AWS Glue”** block: **Glue database name** (or catalog namespace) and an **explicit list of every Iceberg table** the bronze path registers in the **Glue Data Catalog** / **S3 Tables** surface (names only—no secrets). Match whatever `CATALOG_NAME` / `LINKED_CATALOG` will expose in Snowflake. Repeat the same list in [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md) as the detailed source of truth; keep sfguide copy concise.
 - **Doc**: [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md) — S3, IAM, bucket policy, REST catalog **reachable from Snowflake**, preload, verify.
 - **Default path**: **Polaris** + **PyIceberg** → same warehouse layout Snowflake will **catalog-link**.
@@ -82,7 +83,7 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 
 Before delete: lift **schema / column** notes from [`docs/iceberg_schema_design.md`](docs/iceberg_schema_design.md) and template SQL into `snowflake/lab/` or a short `schema.md`.
 
-Remove: [`polaris-forge-setup/`](polaris-forge-setup/), [`k8s/`](k8s/), [`config/cluster-config.yaml`](config/cluster-config.yaml), [`bin/setup.sh`](bin/setup.sh) / [`bin/cleanup.sh`](bin/cleanup.sh), [`mkdocs.yaml`](mkdocs.yaml), [`docs/`](docs/), Polaris-only notebooks, [`.github/workflows/docs.yml`](.github/workflows/docs.yml) unless replaced. Keep: [`plans/`](plans/), [`packages/`](packages/), pyproject/uv, modular [`Taskfile.yml`](Taskfile.yml), `snowflake/lab/`, `sfguides/`, new `lab/` + `tools/bronze-preload/`.
+Remove: [`polaris-forge-setup/`](polaris-forge-setup/), [`k8s/`](k8s/), [`config/cluster-config.yaml`](config/cluster-config.yaml), [`bin/setup.sh`](bin/setup.sh) / [`bin/cleanup.sh`](bin/cleanup.sh), [`mkdocs.yaml`](mkdocs.yaml), [`docs/`](docs/), Polaris-only notebooks, [`.github/workflows/docs.yml`](.github/workflows/docs.yml) unless replaced. Keep: [`plans/`](plans/), [`packages/`](packages/), pyproject/uv, modular [`Taskfile.yml`](Taskfile.yml) + **`.taskfiles/`**, `snowflake/lab/`, `sfguides/`, new `lab/` + `tools/bronze-preload/`.
 
 ## README
 
