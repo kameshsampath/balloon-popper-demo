@@ -22,6 +22,7 @@ from .bronze_aws import (
     require_aws_profile,
     resolve_aws_account_id,
     resolve_region,
+    sanitize_lab_slug_bucket,
 )
 
 TABLES = (
@@ -31,6 +32,52 @@ TABLES = (
     "balloon_colored_pops",
     "color_performance_trends",
 )
+
+
+def _echo_s3tables_dry_run_plan(
+    *,
+    profile: str,
+    region: str,
+    tb_name: str,
+    ns: str,
+    table_bucket_arn: str,
+    tables: tuple[str, ...],
+) -> None:
+    """Human-oriented summary after a read-only list-table-buckets call."""
+    click.echo("")
+    click.echo("Dry run — S3 Tables setup")
+    click.echo("(read-only: list-table-buckets only; no creates; nothing under .aws-config/)")
+    click.echo("")
+    click.echo("  Session")
+    click.echo(f"    AWS profile     {profile}")
+    click.echo(f"    Region          {region}")
+    click.echo("")
+    click.echo("  AWS call used for this preview")
+    click.echo("    aws s3tables list-table-buckets --no-paginate")
+    click.echo("")
+    click.echo("  What a real run would target")
+    if tb_name:
+        click.echo(f"    Table bucket    {tb_name}")
+        if table_bucket_arn:
+            click.echo("    In this account  already present")
+            click.echo(f"                      {table_bucket_arn}")
+        else:
+            click.echo("    In this account  not listed — would create a new table bucket with this name")
+    else:
+        click.echo("    Table bucket    (not set — cannot create until you name it)")
+        click.echo("    Set either")
+        click.echo("      LAB_USERNAME           workshop id; repo derives the bucket name, e.g.")
+        example_lab = "workshop01"
+        ex_bucket = f"{sanitize_lab_slug_bucket(example_lab)}-balloon-s3tables"
+        click.echo(f"                         LAB_USERNAME={example_lab}")
+        click.echo(f"                         → BRONZE_S3TABLES_BUCKET_NAME={ex_bucket}")
+        click.echo("      BRONZE_S3TABLES_BUCKET_NAME   explicit global name ([a-z0-9-], 3–63 chars)")
+        click.echo("    (The bucket list above is still shown so you can see what already exists.)")
+    click.echo(f"    Namespace       {ns}")
+    click.echo("    ICEBERG tables  (would run create-table for each if missing)")
+    for t in tables:
+        click.echo(f"                      • {ns}.{t}")
+    click.echo("")
 
 
 def apply_overrides(**env: str | None) -> None:
@@ -290,7 +337,7 @@ def glue_setup_cmd(
 @click.option(
     "--dry-run",
     is_flag=True,
-    help="Print plan (and read-only list); no creates and no files under .aws-config/.",
+    help="Print a readable plan (after read-only list-table-buckets); no creates or .aws-config/ writes.",
 )
 def s3tables_setup_cmd(
     aws_profile: str | None,
@@ -313,31 +360,20 @@ def s3tables_setup_cmd(
     region = resolve_region()
     derive_bronze_resource_names()
     tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
-    if not tb_name:
-        if not dry_run:
-            print(
-                "error: set BRONZE_S3TABLES_BUCKET_NAME (3-63 chars, [0-9a-z-]) "
-                "or LAB_USERNAME to derive it",
-                file=sys.stderr,
-            )
-            raise SystemExit(1)
-        bucket_plan_label = (
-            "<unset — set LAB_USERNAME or BRONZE_S3TABLES_BUCKET_NAME for a real run>"
+    if not tb_name and not dry_run:
+        print(
+            "error: set BRONZE_S3TABLES_BUCKET_NAME (3-63 chars, [0-9a-z-]) "
+            "or LAB_USERNAME to derive it",
+            file=sys.stderr,
         )
-    else:
-        bucket_plan_label = tb_name
+        raise SystemExit(1)
     ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
     profile = os.environ["AWS_PROFILE"]
     root = repo_root()
     require_aws_cli_s3tables()
 
     data = aws_json(profile, region, ["s3tables", "list-table-buckets", "--no-paginate"])
-    if dry_run:
-        click.echo("[dry-run] s3tables-setup plan:")
-        click.echo(f"  profile={profile} region={region}")
-        click.echo(f"  table_bucket_name={bucket_plan_label!r} namespace={ns!r}")
-        click.echo("[dry-run] (read-only) list-table-buckets completed")
-    else:
+    if not dry_run:
         ensure_aws_config_dir(root)
         list_path = root / ".aws-config/s3tables-list-table-buckets.json"
         list_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -351,14 +387,14 @@ def s3tables_setup_cmd(
     out_json_path = root / ".aws-config/s3tables-create-table-bucket.json"
 
     if dry_run:
-        if table_bucket_arn:
-            click.echo(f"  table bucket: already exists arn={table_bucket_arn}")
-        else:
-            click.echo(f"  table bucket: would create name={bucket_plan_label!r}")
-        click.echo(f"  namespace: would ensure {ns!r}")
-        for t in TABLES:
-            click.echo(f"  table: would ensure {ns}.{t} (ICEBERG)")
-        click.echo("[dry-run] No writes to .aws-config/ in dry-run mode.")
+        _echo_s3tables_dry_run_plan(
+            profile=profile,
+            region=region,
+            tb_name=tb_name,
+            ns=ns,
+            table_bucket_arn=table_bucket_arn,
+            tables=TABLES,
+        )
         return
 
     if table_bucket_arn:
