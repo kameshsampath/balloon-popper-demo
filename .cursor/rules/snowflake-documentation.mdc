@@ -1,0 +1,17 @@
+---
+description: Use Snowflake official docs for SQL and product references
+alwaysApply: true
+---
+
+# Snowflake documentation
+
+When answering or writing anything about Snowflake SQL, features, products, syntax, behavior, limits, or release notes:
+
+- Treat [docs.snowflake.com](https://docs.snowflake.com) as the canonical source.
+- Prefer citing or aligning with current official documentation rather than blogs, forums, or memory alone.
+- For SQL: use documented syntax, keywords, and semantics from [docs.snowflake.com](https://docs.snowflake.com).
+- For product or feature explanations: ground statements in what [docs.snowflake.com](https://docs.snowflake.com) describes.
+
+If docs are ambiguous or unavailable for a topic, say so explicitly instead of inventing behavior.
+
+For **Iceberg tables and catalog integration** in this repo, also use the curated Snowflake URLs in the `iceberg-snowflake-aws-references` project rule in addition to browsing [docs.snowflake.com](https://docs.snowflake.com).

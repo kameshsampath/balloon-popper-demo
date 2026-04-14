@@ -1,0 +1,27 @@
+---
+description: Task authoring — mirror work/snow-utils for CLI, summaries, completions
+globs: Taskfile.yml,.taskfiles/**/*.yml
+alwaysApply: false
+---
+
+# Task authoring: `work/snow-utils` reference
+
+When adding or changing [Task](https://taskfile.dev) definitions in this repo (`Taskfile.yml`, included files under `.taskfiles/`, and similar), use the **snow-utils** checkout at this path as the **primary** style reference:
+
+`/Users/ksampath/mylabs/iceberg/balloon-popper-demo/work/snow-utils`
+
+Repo-relative: **`work/snow-utils`**. Read `Taskfile.yml` (and any included taskfiles), scripts, and docs there. Copy CLI patterns, help text (`desc` / `summary`), and completion wiring from that tree. If it is missing or empty, fall back to [Snowflake-Labs/snow-utils](https://github.com/Snowflake-Labs/snow-utils).
+
+## CLI patterns
+
+- Mirror **`work/snow-utils`**: for example top-level `dir: "{{.TASKFILE_DIR}}"`, `dotenv`, shared **`vars`** / **`env`**, namespaced tasks (`pat:create`, `snow:sql`), **`deps`**, passing CLI args via **`vars`** with `default ""` and **`--`** where appropriate, and sectioned comments—unless this repo already conflicts, then extend consistently.
+
+## Task help: `desc` and `summary`
+
+- Match **`work/snow-utils`**: use **`desc`** for the short line in `task --list` / `task --list-all`, and add a multiline **`summary`** where tasks need **`task <name> --summary`** long-form help (examples, env vars, options). Tone and structure (headers, examples blocks) should read like that Taskfile.
+
+## Completions
+
+- If **`work/snow-utils`** defines completion install tasks, scripts, or docs, follow those. If not yet present there, use the same approach you would add to **`work/snow-utils`** first (for example [Task shell completion](https://taskfile.dev/installation/#setup-completions) via `task --completion <shell>`), keeping naming and discoverability consistent with that repo.
+
+If **`work/snow-utils`** layout differs from this project, translate the **intent** (discoverability, consistent CLI, documented tasks) rather than copying paths blindly.

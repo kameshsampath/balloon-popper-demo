@@ -1,0 +1,31 @@
+---
+description: Canonical doc links for Iceberg, Snowflake Iceberg/catalogs, and AWS in this lab
+alwaysApply: true
+---
+
+# Iceberg, Snowflake, and AWS reference links
+
+When this project touches **Apache Iceberg**, **Snowflake Iceberg or catalog integration**, or **AWS (S3 Tables, Glue, IAM, Lake Formation)**, prefer the links below over ad hoc sources. Use them to verify APIs, configuration steps, and product behavior.
+
+## Apache Iceberg
+
+- [REST Catalog API (spec)](https://iceberg.apache.org/spec/#rest-catalog-api)
+- [AWS integration](https://iceberg.apache.org/docs/latest/aws/)
+
+## Snowflake documentation
+
+- [Iceberg tables](https://docs.snowflake.com/en/user-guide/tables-iceberg)
+- [CREATE CATALOG INTEGRATION](https://docs.snowflake.com/en/sql-reference/sql/create-catalog-integration)
+- [Catalog integration with vended credentials](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-vended-credentials)
+- [Catalog integration with REST (Glue)](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue)
+
+## AWS documentation
+
+- [S3 Tables getting started (tutorial — create bucket)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-getting-started.html#s1-tables-tutorial-create-bucket)
+- [What is AWS Glue?](https://docs.aws.amazon.com/glue/latest/dg/what-is-glue.html)
+- [IAM roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)
+- [S3 Tables with Glue (integrating Glue endpoint)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-integrating-glue-endpoint.html)
+- [What is AWS Lake Formation?](https://docs.aws.amazon.com/lake-formation/latest/dg/what-is-lake-formation.html)
+- [S3 Tables API reference](https://docs.aws.amazon.com/AmazonS3/latest/API/API_s3tables.html)
+
+For general Snowflake SQL and features not covered above, still follow the Snowflake documentation project rule ([docs.snowflake.com](https://docs.snowflake.com)).
