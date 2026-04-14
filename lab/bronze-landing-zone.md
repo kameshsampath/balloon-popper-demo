@@ -22,6 +22,8 @@ Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (inclu
 
 | Task | Purpose |
 |------|---------|
+| `task bronze:extvolume-dry-run` | Preview [sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes) **create** (S3 + IAM + Snowflake external volume); needs `snow` + `AWS_PROFILE` |
+| `task bronze:extvolume-create` | Run **`sfutils-extvolumes create`** — preferred way to create the **warehouse S3 bucket** (and Snowflake EV) when you already use Snowflake CLI |
 | `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (`envsubst`; needs `BRONZE_S3_ARN`) |
 | `task bronze:glue-setup` | `aws glue create-database` for **`GLUE_DATABASE`** (default `balloon_pops`) with `LocationUri` = **`BRONZE_WAREHOUSE`** |
 | `task bronze:s3tables-setup` | `aws s3tables` — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
@@ -42,8 +44,8 @@ Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** I
 ## Recommended order
 
 1. Pick **region** (AWS, S3, Snowflake aligned).
-2. **S3** bucket + encryption + prefix layout for Iceberg warehouse.
-3. **IAM** for writers (PyIceberg / Glue role) and bucket policy for Snowflake **storage integration** / **external volume** where needed.
+2. **S3 warehouse bucket** — either create manually or run **`task bronze:extvolume-create`** ([sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes)) so the bucket (and Snowflake **external volume**) match the DT lab path; set **`BRONZE_WAREHOUSE`** to `s3://<bucket>/iceberg/` (see CLI output / `{prefix}-{bucket}` naming). sfutils enables **versioning** on that bucket.
+3. **IAM** for writers (PyIceberg / Glue role) and bucket policy for Snowflake **storage integration** / **external volume** where needed (sfutils creates role/policy for the volume path; extend with **`task bronze:render-iam`** if you need the lab template too).
 4. **Glue** path: run `task bronze:glue-setup` then `task bronze:s3tables-setup` (or your CFN equivalent).
 5. **REST catalog**: either **Polaris** (reachable from Snowflake, not only `localhost`) or **Glue Iceberg REST** (`https://glue.<region>.amazonaws.com/iceberg`, `CATALOG_API_TYPE = AWS_GLUE`, SIGv4 — see [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) and Snowflake docs).
 6. **Load**: `task bronze:load` (or `task bronze:all` from a clean slate).

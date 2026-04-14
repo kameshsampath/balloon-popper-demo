@@ -7,6 +7,7 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 - **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
 - **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
 - **`uv`** and repo dependencies: `uv sync`.
+- **Optional — Snowflake-backed bucket + external volume:** this repo depends on [Snowflake-Labs/sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes). Use **`task bronze:extvolume-create`** (or `bronze:extvolume-dry-run`) when you want **`sfutils-extvolumes create`** to provision the **S3 bucket**, IAM role/policy, and **Snowflake external volume** in one step (requires **`snow`** CLI configured). Then point **`BRONZE_WAREHOUSE`** at `s3://<created-bucket>/iceberg/` using the tool’s naming rules (`{prefix}-{bucket}` by default).
 
 ## Environment
 
@@ -19,15 +20,24 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 | `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`) |
 | `S3TABLES_NAMESPACE` | no | Default `balloon_pops` |
 | `BRONZE_S3_ARN` | for `render-iam` | e.g. `arn:aws:s3:::your-warehouse-bucket` |
+| `BRONZE_EXTVOLUME_BUCKET` | for `extvolume-*` | Base name passed to `sfutils-extvolumes create --bucket` (default `balloon-bronze-warehouse`) |
 
 ## Tasks (from repo root)
 
 ```bash
 export AWS_PROFILE=your-profile
 export AWS_REGION=us-west-2
+export BRONZE_S3TABLES_BUCKET_NAME=my-lab-table-bucket-001
+
+# Optional first — create S3 + Snowflake external volume (see sfutils-extvolumes README for names):
+# export BRONZE_EXTVOLUME_BUCKET=balloon-bronze-warehouse
+# task bronze:extvolume-dry-run
+# task bronze:extvolume-create
+# export BRONZE_WAREHOUSE=s3://<username>-balloon-bronze-warehouse/iceberg/
+# export BRONZE_S3_ARN=arn:aws:s3:::<username>-balloon-bronze-warehouse
+
 export BRONZE_WAREHOUSE=s3://my-bronze-bucket/iceberg/
 export BRONZE_S3_ARN=arn:aws:s3:::my-bronze-bucket
-export BRONZE_S3TABLES_BUCKET_NAME=my-lab-table-bucket-001
 
 task bronze:render-iam    # optional: writes .aws-config/bronze-glue-writer-policy.rendered.json
 task bronze:glue-setup

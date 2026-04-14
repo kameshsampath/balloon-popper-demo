@@ -8,6 +8,16 @@
 version: "3"
 
 tasks:
+  extvolume-dry-run:
+    desc: Preview S3 + IAM + Snowflake external volume (sfutils-extvolumes; needs snow + AWS_PROFILE)
+    cmds:
+      - uv run sfutils-extvolumes create --bucket "${BRONZE_EXTVOLUME_BUCKET:-balloon-bronze-warehouse}" --dry-run
+
+  extvolume-create:
+    desc: Create S3 bucket + IAM + Snowflake external volume via sfutils-extvolumes (set BRONZE_EXTVOLUME_BUCKET base name; then set BRONZE_WAREHOUSE=s3://<full-bucket>/iceberg/)
+    cmds:
+      - uv run sfutils-extvolumes create --bucket "${BRONZE_EXTVOLUME_BUCKET:-balloon-bronze-warehouse}"
+
   render-iam:
     desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs BRONZE_S3_ARN, AWS_PROFILE; optional AWS_ACCOUNT_ID)
     cmds:
