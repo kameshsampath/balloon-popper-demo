@@ -58,6 +58,9 @@ task bronze:all
 
 **Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`.
 
+Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-warehouse` / `BRONZE_WAREHOUSE`, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
+`uv run python tools/bronze-preload/bronze_cli.py glue-setup --aws-profile prod --bronze-warehouse s3://my/prefix/`
+
 ## Relationship to `packages/generator`
 
 Event shapes mirror [packages/common/](../../packages/common) `GameEvent` / `GAME_CONFIG` for future alignment with full synthetic loads.

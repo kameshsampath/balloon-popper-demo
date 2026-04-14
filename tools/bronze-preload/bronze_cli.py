@@ -33,6 +33,13 @@ TABLES = (
 )
 
 
+def apply_overrides(**env: str | None) -> None:
+    """Copy non-empty Click option values into ``os.environ`` (after ``envvar`` resolution)."""
+    for key, val in env.items():
+        if val is not None and val != "":
+            os.environ[key] = val
+
+
 @click.group()
 def cli() -> None:
     """Bronze landing: Glue DB, S3 Tables bucket/tables, IAM policy render (requires AWS CLI + credentials)."""
@@ -40,11 +47,63 @@ def cli() -> None:
 
 @cli.command("render-iam")
 @click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--aws-account-id",
+    envvar="AWS_ACCOUNT_ID",
+    show_envvar=True,
+    help="12-digit account id (optional; default from STS if unset).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id for derived GLUE_DATABASE / bucket names when those env vars are unset.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--bronze-s3-arn",
+    envvar="BRONZE_S3_ARN",
+    show_envvar=True,
+    help="Warehouse bucket ARN for policy Resource (e.g. arn:aws:s3:::my-bucket).",
+)
+@click.option(
     "--dry-run",
     is_flag=True,
     help="Print resolved env + rendered JSON to stdout; do not write files.",
 )
-def render_iam_cmd(dry_run: bool) -> None:
+def render_iam_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    aws_account_id: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    bronze_s3_arn: str | None,
+    dry_run: bool,
+) -> None:
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        AWS_ACCOUNT_ID=aws_account_id,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_S3_ARN=bronze_s3_arn,
+    )
     require_aws_profile()
     region = resolve_region()
     os.environ.setdefault("AWS_REGION", region)
@@ -85,11 +144,55 @@ def render_iam_cmd(dry_run: bool) -> None:
 
 @cli.command("glue-setup")
 @click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id for derived GLUE_DATABASE when unset.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--bronze-warehouse",
+    envvar="BRONZE_WAREHOUSE",
+    show_envvar=True,
+    help="Iceberg warehouse URI (s3://bucket/prefix/).",
+)
+@click.option(
     "--dry-run",
     is_flag=True,
     help="Show plan (uses read-only Glue GetDatabase); no create and no glue-database.json.",
 )
-def glue_setup_cmd(dry_run: bool) -> None:
+def glue_setup_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    bronze_warehouse: str | None,
+    dry_run: bool,
+) -> None:
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_WAREHOUSE=bronze_warehouse,
+    )
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
@@ -149,11 +252,63 @@ def glue_setup_cmd(dry_run: bool) -> None:
 
 @cli.command("s3tables-setup")
 @click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id for derived BRONZE_S3TABLES_BUCKET_NAME / GLUE_DATABASE when unset.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Optional Glue database name before LAB_USERNAME derivation.",
+)
+@click.option(
+    "--s3tables-bucket",
+    envvar="BRONZE_S3TABLES_BUCKET_NAME",
+    show_envvar=True,
+    help="Globally unique S3 table bucket name ([0-9a-z-]{3,63}).",
+)
+@click.option(
+    "--s3tables-namespace",
+    envvar="S3TABLES_NAMESPACE",
+    show_envvar=True,
+    help="Namespace inside the table bucket (default balloon_pops).",
+)
+@click.option(
     "--dry-run",
     is_flag=True,
     help="Print plan (and read-only list); no creates and no files under .aws-config/.",
 )
-def s3tables_setup_cmd(dry_run: bool) -> None:
+def s3tables_setup_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    s3tables_bucket: str | None,
+    s3tables_namespace: str | None,
+    dry_run: bool,
+) -> None:
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_S3TABLES_BUCKET_NAME=s3tables_bucket,
+        S3TABLES_NAMESPACE=s3tables_namespace,
+    )
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
