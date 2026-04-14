@@ -9,6 +9,7 @@ description = "A balloon game demo show how realtime analytics works with Iceber
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "common",
     "mypy-boto3-glue>=1.37.0",
     "ansible>=11.3.0",
     "awscli-local>=0.22.0",

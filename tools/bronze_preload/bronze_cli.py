@@ -7,31 +7,55 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 import boto3
 import click
 from botocore.exceptions import ClientError
 
 from .bronze_aws import (
+    apply_cleanup_context_from_aws_config,
     aws_json,
     derive_bronze_resource_names,
     ensure_aws_config_dir,
+    ensure_bronze_s3_arn_for_policy,
+    ensure_bronze_warehouse_s3_bucket,
     envsubst,
     repo_root,
     require_aws_cli_s3tables,
     require_aws_profile,
+    resolve_bronze_warehouse,
     resolve_aws_account_id,
     resolve_region,
     sanitize_lab_slug_bucket,
 )
+from .bronze_tables import BRONZE_GLUE_TABLES as TABLES
 
-TABLES = (
-    "leaderboard",
-    "balloon_color_stats",
-    "realtime_scores",
-    "balloon_colored_pops",
-    "color_performance_trends",
-)
+
+def _read_text_strip(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    return path.read_text(encoding="utf-8").strip()
+
+
+def _s3tables_cli_ok() -> bool:
+    cp = subprocess.run(
+        ["aws", "s3tables", "help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return cp.returncode == 0
+
+
+def _resolve_s3tables_table_bucket_arn(profile: str, region: str, tb_name: str) -> str:
+    if not tb_name or not _s3tables_cli_ok():
+        return ""
+    data = aws_json(profile, region, ["s3tables", "list-table-buckets", "--no-paginate"])
+    for b in data.get("tableBuckets") or []:
+        if b.get("name") == tb_name:
+            return (b.get("arn") or "").strip()
+    return ""
 
 
 def _echo_s3tables_dry_run_plan(
@@ -87,6 +111,22 @@ def apply_overrides(**env: str | None) -> None:
             os.environ[key] = val
 
 
+def _load_repo_dotenv() -> None:
+    """Load ``<repo>/.env`` so ``task`` / ``uv run`` see the same vars as direnv (``override=False``)."""
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+    path = repo_root() / ".env"
+    if not path.is_file():
+        return
+    try:
+        load_dotenv(path, override=False)
+    except OSError:
+        # Unreadable .env (permissions / sandbox): rely on the parent environment only.
+        return
+
+
 @click.group()
 def cli() -> None:
     """Bronze landing: Glue DB, S3 Tables bucket/tables, IAM policy render (requires AWS CLI + credentials)."""
@@ -115,7 +155,7 @@ def cli() -> None:
     "--lab-username",
     envvar="LAB_USERNAME",
     show_envvar=True,
-    help="Workshop id for derived GLUE_DATABASE / bucket names when those env vars are unset.",
+    help="Workshop id; derives GLUE_DATABASE, S3 Tables bucket, and warehouse bucket when unset.",
 )
 @click.option(
     "--glue-database",
@@ -124,10 +164,10 @@ def cli() -> None:
     help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
 )
 @click.option(
-    "--bronze-s3-arn",
-    envvar="BRONZE_S3_ARN",
+    "--bronze-bucket-name",
+    envvar="BRONZE_BUCKET_NAME",
     show_envvar=True,
-    help="Warehouse bucket ARN for policy Resource (e.g. arn:aws:s3:::my-bucket).",
+    help="Warehouse bucket (same as glue-setup); IAM uses arn:aws:s3:::<bucket> derived automatically.",
 )
 @click.option(
     "--dry-run",
@@ -140,7 +180,7 @@ def render_iam_cmd(
     aws_account_id: str | None,
     lab_username: str | None,
     glue_database: str | None,
-    bronze_s3_arn: str | None,
+    bronze_bucket_name: str | None,
     dry_run: bool,
 ) -> None:
     apply_overrides(
@@ -149,7 +189,7 @@ def render_iam_cmd(
         AWS_ACCOUNT_ID=aws_account_id,
         LAB_USERNAME=lab_username,
         GLUE_DATABASE=glue_database,
-        BRONZE_S3_ARN=bronze_s3_arn,
+        BRONZE_BUCKET_NAME=bronze_bucket_name,
     )
     require_aws_profile()
     region = resolve_region()
@@ -162,12 +202,8 @@ def render_iam_cmd(
     if not os.environ.get("AWS_ACCOUNT_ID"):
         os.environ["AWS_ACCOUNT_ID"] = resolve_aws_account_id(profile, region)
 
-    if not os.environ.get("BRONZE_S3_ARN"):
-        print(
-            "error: set BRONZE_S3_ARN (e.g. arn:aws:s3:::your-warehouse-bucket) for policy rendering",
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
+    arn = ensure_bronze_s3_arn_for_policy()
+    click.echo(f"info: BRONZE_S3_ARN={arn} (derived from BRONZE_BUCKET_NAME for policy template)")
 
     root = repo_root()
     template_path = root / "lab/aws/bronze-glue-writer-policy.json"
@@ -178,7 +214,13 @@ def render_iam_cmd(
         click.echo("[dry-run] Would write:")
         click.echo(f"  {out_path}")
         click.echo("[dry-run] Effective substitutions:")
-        for k in ("AWS_REGION", "AWS_ACCOUNT_ID", "GLUE_DATABASE", "BRONZE_S3_ARN"):
+        for k in (
+            "AWS_REGION",
+            "AWS_ACCOUNT_ID",
+            "GLUE_DATABASE",
+            "BRONZE_BUCKET_NAME",
+            "BRONZE_S3_ARN",
+        ):
             click.echo(f"  {k}={os.environ.get(k, '')}")
         click.echo("[dry-run] Rendered policy JSON:")
         click.echo(out_text)
@@ -206,7 +248,7 @@ def render_iam_cmd(
     "--lab-username",
     envvar="LAB_USERNAME",
     show_envvar=True,
-    help="Workshop id for derived GLUE_DATABASE when unset.",
+    help="Workshop id; derives GLUE_DATABASE, BRONZE_S3TABLES_BUCKET_NAME, and BRONZE_BUCKET_NAME when unset (see bronze_aws).",
 )
 @click.option(
     "--glue-database",
@@ -215,22 +257,22 @@ def render_iam_cmd(
     help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
 )
 @click.option(
-    "--bronze-warehouse",
-    envvar="BRONZE_WAREHOUSE",
+    "--bronze-bucket-name",
+    envvar="BRONZE_BUCKET_NAME",
     show_envvar=True,
-    help="Iceberg warehouse URI (s3://bucket/prefix/).",
+    help="General-purpose S3 warehouse bucket; created by glue-setup if missing. With LAB_USERNAME, default or prefix is applied for collision safety.",
 )
 @click.option(
     "--dry-run",
     is_flag=True,
-    help="Show plan (uses read-only Glue GetDatabase); no create and no glue-database.json.",
+    help="Show plan (read-only Glue GetDatabase + S3 HeadBucket); no S3/Glue creates and no .aws-config glue writes.",
 )
 def glue_setup_cmd(
     aws_profile: str | None,
     aws_region: str | None,
     lab_username: str | None,
     glue_database: str | None,
-    bronze_warehouse: str | None,
+    bronze_bucket_name: str | None,
     dry_run: bool,
 ) -> None:
     apply_overrides(
@@ -238,24 +280,26 @@ def glue_setup_cmd(
         AWS_REGION=aws_region,
         LAB_USERNAME=lab_username,
         GLUE_DATABASE=glue_database,
-        BRONZE_WAREHOUSE=bronze_warehouse,
+        BRONZE_BUCKET_NAME=bronze_bucket_name,
     )
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
     glue_db = os.environ.get("GLUE_DATABASE", "balloon_pops")
-    warehouse = os.environ.get("BRONZE_WAREHOUSE")
-    if not warehouse:
-        print(
-            "error: set BRONZE_WAREHOUSE to s3://bucket/prefix/ for Iceberg files",
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
+    warehouse = resolve_bronze_warehouse()
     profile = os.environ["AWS_PROFILE"]
     root = repo_root()
     out_json_path = root / ".aws-config/glue-database.json"
 
     session = boto3.Session(profile_name=profile, region_name=region)
+    s3_client = session.client("s3")
+    warehouse_bucket = (os.environ.get("BRONZE_BUCKET_NAME") or "").strip()
+    wh_bucket_status = ensure_bronze_warehouse_s3_bucket(
+        s3_client,
+        bucket=warehouse_bucket,
+        region=region,
+        dry_run=dry_run,
+    )
     glue = session.client("glue")
 
     exists = False
@@ -270,6 +314,8 @@ def glue_setup_cmd(
     if dry_run:
         click.echo("[dry-run] glue-setup:")
         click.echo(f"  profile={profile} region={region}")
+        click.echo(f"  BRONZE_BUCKET_NAME={os.environ.get('BRONZE_BUCKET_NAME', '')}")
+        click.echo(f"  warehouse_s3_bucket={wh_bucket_status}")
         click.echo(f"  database={glue_db!r} LocationUri={warehouse!r}")
         click.echo(f"  exists={exists}")
         click.echo(f"  would write: {out_json_path}")
@@ -277,6 +323,9 @@ def glue_setup_cmd(
             click.echo("  action: would call glue.create_database")
         else:
             click.echo("  action: would only refresh get-database JSON")
+        click.echo("")
+        click.echo("Summary — derived Iceberg warehouse (Glue LocationUri)")
+        click.echo(f"  {warehouse}")
         return
 
     ensure_aws_config_dir(root)
@@ -295,6 +344,13 @@ def glue_setup_cmd(
     resp = glue.get_database(Name=glue_db)
     out_json_path.write_text(json.dumps(resp, indent=2, default=str), encoding="utf-8")
     click.echo(f"Wrote {out_json_path}")
+    warehouse_txt = root / ".aws-config/bronze-warehouse-uri.txt"
+    warehouse_txt.write_text(warehouse + "\n", encoding="utf-8")
+    click.echo(f"Wrote {warehouse_txt}")
+    click.echo("")
+    click.echo("Summary — derived Iceberg warehouse (Glue LocationUri)")
+    click.echo(f"  BRONZE_BUCKET_NAME={os.environ.get('BRONZE_BUCKET_NAME', '')}")
+    click.echo(f"  warehouse_uri={warehouse}")
 
 
 @cli.command("s3tables-setup")
@@ -314,7 +370,7 @@ def glue_setup_cmd(
     "--lab-username",
     envvar="LAB_USERNAME",
     show_envvar=True,
-    help="Workshop id for derived BRONZE_S3TABLES_BUCKET_NAME / GLUE_DATABASE when unset.",
+    help="Workshop id; derives GLUE_DATABASE, S3 Tables bucket, and general S3 warehouse bucket when unset.",
 )
 @click.option(
     "--glue-database",
@@ -339,6 +395,15 @@ def glue_setup_cmd(
     is_flag=True,
     help="Print a readable plan (after read-only list-table-buckets); no creates or .aws-config/ writes.",
 )
+@click.option(
+    "--enable-s3tables-bucket-suffix",
+    "enable_s3tables_bucket_suffix",
+    is_flag=True,
+    default=False,
+    envvar="BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX",
+    show_envvar=True,
+    help="Append epoch millis to BRONZE_S3TABLES_BUCKET_NAME (testing; env is truthy like 1/true/yes).",
+)
 def s3tables_setup_cmd(
     aws_profile: str | None,
     aws_region: str | None,
@@ -347,6 +412,7 @@ def s3tables_setup_cmd(
     s3tables_bucket: str | None,
     s3tables_namespace: str | None,
     dry_run: bool,
+    enable_s3tables_bucket_suffix: bool,
 ) -> None:
     apply_overrides(
         AWS_PROFILE=aws_profile,
@@ -356,6 +422,8 @@ def s3tables_setup_cmd(
         BRONZE_S3TABLES_BUCKET_NAME=s3tables_bucket,
         S3TABLES_NAMESPACE=s3tables_namespace,
     )
+    if enable_s3tables_bucket_suffix:
+        os.environ["BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX"] = "1"
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
@@ -525,6 +593,233 @@ def s3tables_setup_cmd(
         raise SystemExit(tl.returncode or 1)
     tables_list_path.write_text(tl.stdout or "{}", encoding="utf-8")
     click.echo(f"Wrote {tables_list_path}")
+    last_name_path = root / ".aws-config/bronze-s3tables-last-bucket-name.txt"
+    last_name_path.write_text(
+        (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip() + "\n",
+        encoding="utf-8",
+    )
+    click.echo(
+        f"S3 table bucket name (cleanup / reuse) -> {last_name_path} "
+        "(one line; for cleanup after millis suffix, unset "
+        "BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX and point BRONZE_S3TABLES_BUCKET_NAME here)"
+    )
+
+
+@cli.command("snowflake-summary")
+@click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id; same derivation rules as glue-setup / s3tables-setup.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--bronze-bucket-name",
+    envvar="BRONZE_BUCKET_NAME",
+    show_envvar=True,
+    help="Warehouse S3 bucket (must resolve after LAB_USERNAME rules for warehouse exports).",
+)
+@click.option(
+    "--s3tables-bucket",
+    envvar="BRONZE_S3TABLES_BUCKET_NAME",
+    show_envvar=True,
+    help="S3 Tables table-bucket name (optional; derived with LAB_USERNAME).",
+)
+@click.option(
+    "--s3tables-namespace",
+    envvar="S3TABLES_NAMESPACE",
+    show_envvar=True,
+    help="S3 Tables namespace inside the table bucket (default balloon_pops).",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Emit one JSON object instead of human-oriented copy/paste text.",
+)
+def snowflake_summary_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    bronze_bucket_name: str | None,
+    s3tables_bucket: str | None,
+    s3tables_namespace: str | None,
+    as_json: bool,
+) -> None:
+    """Print resolved bronze AWS names/URIs/ARNs for Snowflake catalog integration / CLD prep.
+
+    Read-only (STS + optional S3 Tables list-table-buckets). Does not write ``.aws-config/``.
+    Aligns with ``lab/bronze-landing-zone.md`` Glue Iceberg REST host pattern; confirm
+    ``CREATE CATALOG INTEGRATION`` fields against current Snowflake documentation.
+    """
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_BUCKET_NAME=bronze_bucket_name,
+        BRONZE_S3TABLES_BUCKET_NAME=s3tables_bucket,
+        S3TABLES_NAMESPACE=s3tables_namespace,
+    )
+    require_aws_profile()
+    region = resolve_region()
+    os.environ.setdefault("AWS_REGION", region)
+    derive_bronze_resource_names()
+    glue_db = os.environ.get("GLUE_DATABASE", "balloon_pops")
+    os.environ["GLUE_DATABASE"] = glue_db
+    profile = os.environ["AWS_PROFILE"]
+    account = resolve_aws_account_id(profile, region)
+
+    bucket = (os.environ.get("BRONZE_BUCKET_NAME") or "").strip()
+    if not bucket:
+        print(
+            "error: set BRONZE_BUCKET_NAME or LAB_USERNAME so the warehouse bucket resolves "
+            "(same requirement as glue-setup).",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
+
+    warehouse = resolve_bronze_warehouse()
+    s3_bucket_arn = ensure_bronze_s3_arn_for_policy()
+    s3_objects_arn = f"{s3_bucket_arn}/*"
+    glue_rest = f"https://glue.{region}.amazonaws.com/iceberg"
+    glue_db_arn = f"arn:aws:glue:{region}:{account}:database/{glue_db}"
+    glue_catalog_arn = f"arn:aws:glue:{region}:{account}:catalog"
+
+    tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
+    ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
+    table_bucket_arn = _resolve_s3tables_table_bucket_arn(profile, region, tb_name)
+
+    root = repo_root()
+    cfg = root / ".aws-config"
+    file_warehouse = _read_text_strip(cfg / "bronze-warehouse-uri.txt")
+    file_tb_arn = _read_text_strip(cfg / "s3tables-table-bucket-arn.txt")
+
+    fq_tables = [f"{glue_db}.{t}" for t in TABLES]
+    fq_s3tables = [f"{ns}.{t}" for t in TABLES] if tb_name else []
+
+    payload: dict[str, object] = {
+        "aws_profile": profile,
+        "aws_region": region,
+        "aws_account_id": account,
+        "glue_database": glue_db,
+        "glue_database_arn": glue_db_arn,
+        "glue_catalog_arn": glue_catalog_arn,
+        "glue_iceberg_rest_uri": glue_rest,
+        "bronze_bucket_name": bucket,
+        "iceberg_warehouse_uri": warehouse,
+        "bronze_s3_bucket_arn": s3_bucket_arn,
+        "bronze_s3_objects_arn": s3_objects_arn,
+        "glue_iceberg_tables": list(TABLES),
+        "glue_fully_qualified_tables": fq_tables,
+        "bronze_s3tables_bucket_name": tb_name or None,
+        "s3tables_namespace": ns if tb_name else None,
+        "s3tables_table_bucket_arn": table_bucket_arn or None,
+        "s3tables_fully_qualified_tables": fq_s3tables or None,
+        "dotenv_snippet": {
+            "AWS_REGION": region,
+            "AWS_ACCOUNT_ID": account,
+            "GLUE_DATABASE": glue_db,
+            "BRONZE_BUCKET_NAME": bucket,
+            "BRONZE_WAREHOUSE": warehouse,
+            "BRONZE_S3TABLES_BUCKET_NAME": tb_name or "",
+            "S3TABLES_NAMESPACE": ns,
+        },
+        "aws_config_files": {
+            "bronze_warehouse_uri_txt": file_warehouse,
+            "s3tables_table_bucket_arn_txt": file_tb_arn,
+        },
+    }
+
+    if as_json:
+        click.echo(json.dumps(payload, indent=2))
+        return
+
+    click.echo("")
+    click.echo("Bronze → Snowflake / CLD quick reference (read-only; no writes)")
+    click.echo(f"  AWS_PROFILE={profile}  AWS_REGION={region}  AWS_ACCOUNT_ID={account}")
+    click.echo("")
+    click.echo("--- Shell exports (warehouse / Glue identifiers) ---")
+    click.echo(f"export AWS_REGION={region!s}")
+    click.echo(f"export AWS_ACCOUNT_ID={account!s}")
+    click.echo(f"export GLUE_DATABASE={glue_db!s}")
+    click.echo(f"export BRONZE_BUCKET_NAME={bucket!s}")
+    click.echo(f"export BRONZE_WAREHOUSE={warehouse!s}")
+    click.echo("")
+    click.echo("--- ARNs / URIs often needed next to Snowflake SQL / IAM ---")
+    click.echo(f"export BRONZE_S3_BUCKET_ARN={s3_bucket_arn!s}")
+    click.echo(f"export BRONZE_S3_OBJECTS_ARN={s3_objects_arn!s}")
+    click.echo(f"export GLUE_DATABASE_ARN={glue_db_arn!s}")
+    click.echo(f"export GLUE_CATALOG_ARN={glue_catalog_arn!s}")
+    click.echo(f"export GLUE_ICEBERG_REST_URI={glue_rest!s}")
+    click.echo("")
+    click.echo("--- Iceberg table names (Glue Data Catalog database above) ---")
+    click.echo(" ".join(TABLES))
+    click.echo("")
+    click.echo("Fully qualified (for checklists):")
+    for line in fq_tables:
+        click.echo(f"  {line}")
+    click.echo("")
+    if tb_name:
+        click.echo("--- S3 Tables (optional; control-plane bucket + namespace) ---")
+        click.echo(f"export BRONZE_S3TABLES_BUCKET_NAME={tb_name!s}")
+        click.echo(f"export S3TABLES_NAMESPACE={ns!s}")
+        if table_bucket_arn:
+            click.echo(f"export S3TABLES_TABLE_BUCKET_ARN={table_bucket_arn!s}")
+        else:
+            click.echo(
+                "# S3TABLES_TABLE_BUCKET_ARN: (not found via list-table-buckets — "
+                "create with task bronze:s3tables-setup or fix name/region/profile)"
+            )
+        click.echo("")
+        click.echo("Logical tables in namespace (empty until you load elsewhere):")
+        for line in fq_s3tables:
+            click.echo(f"  {line}")
+        click.echo("")
+    else:
+        click.echo(
+            "--- S3 Tables: BRONZE_S3TABLES_BUCKET_NAME unset "
+            "(set LAB_USERNAME or BRONZE_S3TABLES_BUCKET_NAME to include) ---"
+        )
+        click.echo("")
+
+    click.echo("--- On-disk artifacts from prior bronze tasks (if present) ---")
+    p_wh = cfg / "bronze-warehouse-uri.txt"
+    p_arn = cfg / "s3tables-table-bucket-arn.txt"
+    if file_warehouse:
+        click.echo(f"  {p_wh}: {file_warehouse}")
+    else:
+        click.echo(f"  {p_wh}: (missing — run task bronze:glue-setup)")
+    if file_tb_arn:
+        click.echo(f"  {p_arn}: {file_tb_arn}")
+    else:
+        click.echo(f"  {p_arn}: (missing — run task bronze:s3tables-setup after naming bucket)")
+    click.echo("")
+    click.echo(
+        "Hint: paste `GLUE_ICEBERG_REST_URI` / ARNs into notes or IAM alongside "
+        "`CREATE CATALOG INTEGRATION` / `LINKED_CATALOG` per Snowflake docs; "
+        "Snowflake-side `API_AWS_IAM_USER_ARN` + external id come from "
+        "`DESCRIBE CATALOG INTEGRATION` (not shown here)."
+    )
+    click.echo("")
 
 
 @cli.command("cleanup")
@@ -574,6 +869,13 @@ def s3tables_setup_cmd(
     is_flag=True,
     help="Print cleanup plan only; no deletes.",
 )
+@click.option(
+    "--no-aws-config",
+    "cleanup_no_aws_config",
+    is_flag=True,
+    default=False,
+    help="Do not overlay targets from <repo>/.aws-config/ (use env / LAB_USERNAME only).",
+)
 def cleanup_cmd(
     aws_profile: str | None,
     aws_region: str | None,
@@ -583,7 +885,20 @@ def cleanup_cmd(
     s3tables_namespace: str | None,
     yes: bool,
     dry_run: bool,
+    cleanup_no_aws_config: bool,
 ) -> None:
+    """Remove Glue database/tables and S3 Tables control-plane resources.
+
+    Does **not** delete or empty **``BRONZE_BUCKET_NAME``** (the general-purpose warehouse
+    bucket, for example ``<slug>-balloon-bronze``): Iceberg files under ``s3://…/iceberg/``
+    stay until you remove them in S3 separately.
+
+    By default, after name derivation, overlays **``GLUE_DATABASE``**, **``BRONZE_BUCKET_NAME``**
+    (warehouse host from LocationUri), and **``BRONZE_S3TABLES_BUCKET_NAME``** from the
+    repo **``.aws-config/``** files written by **``glue-setup``** / **``s3tables-setup``**
+    so teardown matches the last local run (not ``~/.aws-config``). Passing **``--glue-database``**
+    or **``--s3tables-bucket``** skips the on-disk hint for that target only.
+    """
     apply_overrides(
         AWS_PROFILE=aws_profile,
         AWS_REGION=aws_region,
@@ -595,6 +910,21 @@ def cleanup_cmd(
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
+    if not cleanup_no_aws_config:
+        root = repo_root()
+        skip_glue = glue_database is not None and str(glue_database).strip() != ""
+        skip_tb = s3tables_bucket is not None and str(s3tables_bucket).strip() != ""
+        applied = apply_cleanup_context_from_aws_config(
+            root,
+            skip_glue_database_from_file=skip_glue,
+            skip_s3tables_bucket_from_file=skip_tb,
+        )
+        for key in ("GLUE_DATABASE", "BRONZE_BUCKET_NAME", "BRONZE_S3TABLES_BUCKET_NAME"):
+            if key in applied:
+                click.echo(
+                    f"info: cleanup {key}={applied[key]!r} "
+                    f"(from {root / '.aws-config'}/ — last bronze run in this repo)"
+                )
     profile = os.environ["AWS_PROFILE"]
     glue_db = os.environ.get("GLUE_DATABASE", "balloon_pops")
     ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
@@ -681,7 +1011,12 @@ def cleanup_cmd(
             click.echo("    bucket not found; S3 Tables delete steps will be skipped")
     else:
         click.echo("  S3 Tables bucket not set; skipping S3 Tables cleanup")
-    click.echo("  Note: This cleanup removes Glue/S3 Tables metadata only; it does not delete S3 warehouse data.")
+    wh_bucket = (os.environ.get("BRONZE_BUCKET_NAME") or "").strip()
+    click.echo(f"  Warehouse bucket BRONZE_BUCKET_NAME={wh_bucket!r} — never deleted or emptied by this command.")
+    click.echo(
+        "  Note: Glue + S3 Tables control-plane deletes only. "
+        "Objects under s3://<BRONZE_BUCKET_NAME>/iceberg/ are unchanged; empty that prefix in S3 if you want a hard reset."
+    )
 
     if dry_run:
         click.echo("[dry-run] No deletes executed.")
@@ -772,10 +1107,11 @@ def cleanup_cmd(
         click.echo(f"Deleting Glue database {glue_db!r} ...")
         glue.delete_database(Name=glue_db)
 
-    click.echo("Bronze cleanup completed.")
+    click.echo("Bronze cleanup completed (warehouse bucket untouched).")
 
 
 def main() -> None:
+    _load_repo_dotenv()
     cli()
 
 

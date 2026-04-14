@@ -6,52 +6,16 @@ import asyncio
 import json
 import os
 import random
-from datetime import datetime, timezone
-
 from aiokafka import AIOKafkaProducer
 from dotenv import load_dotenv
+from common.game_generator import BalloonGameGenerator
 from common.log.logger import get_logger
-from common.stream.models import GAME_CONFIG, GameEvent
+from common.stream.models import GameEvent
 
 load_dotenv()
 
 
 logger = get_logger("balloon_game_producer")
-
-
-class BalloonGameGenerator:
-    def __init__(self, bonus_probability: float):
-        self.bonus_probability = bonus_probability
-        self.cartoon_characters = list(GAME_CONFIG.character_favorites.keys())
-        self.balloon_colors = list(GAME_CONFIG.colors.keys())
-
-    def generate_pop(self, player_name) -> GameEvent:
-        player_character = random.choice(self.cartoon_characters)
-
-        if random.random() < self.bonus_probability:
-            balloon_color = random.choice(
-                GAME_CONFIG.character_favorites[player_character]
-            )
-        else:
-            balloon_color = random.choice(self.balloon_colors)
-
-        is_favorite_hit = balloon_color in GAME_CONFIG.character_favorites.get(
-            player_character, []
-        )
-        logger.debug(f"Player Bonus {player_character} ? {is_favorite_hit}")
-
-        score = GAME_CONFIG.colors.get(balloon_color, 0)
-        if is_favorite_hit:
-            score = score * 2
-
-        event = GameEvent(
-            player=player_name,
-            balloon_color=balloon_color,
-            score=score,
-            favorite_color_bonus=is_favorite_hit,
-            event_ts=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        )
-        return event
 
 
 class AsyncBalloonPopProducer:
@@ -70,7 +34,7 @@ class AsyncBalloonPopProducer:
         )
         self.topic = topic
         self.delay = delay
-        self.generator = BalloonGameGenerator(generator_config["bonus_probability"])
+        self.generator = BalloonGameGenerator(generator_config["bonus_probability"], rng=random.Random())
         logger.info(f"Generator config {generator_config}")
         self.player_pool = [
             self.generate_player_name() for _ in range(generator_config["num_players"])

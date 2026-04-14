@@ -9,12 +9,25 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 | Check | How |
 |--------|-----|
 | Host CLIs | `task check-tools` — **required:** **aws**, **snow**, **task**, **envsubst**, **jq**, **cortex**, **uv**; **recommended:** **direnv**, **curl**, **openssl**; **optional:** **git** ([README](../README.md)) |
-| Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Confirm `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE`, and other vars for the steps you will run. For a **shared workshop AWS account**, set **`LAB_USERNAME`** and leave **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** unset so names derive per participant (see `.env.example`). |
+| Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Set **`AWS_PROFILE`**, **`AWS_REGION`**, and for workshops **`LAB_USERNAME`** (leave both bucket vars empty for **`<bucket_slug>-balloon-bronze`** / **`<bucket_slug>-balloon-s3tables`**; see `.env.example`). |
 | Python | `python --version` shows **3.12+** |
 | uv | `uv --version` works |
 | AWS CLI | `aws --version` — for S3 Tables steps, **v2.34+** (`aws s3tables help`) |
 | Profile | `export AWS_PROFILE=<profile>` (real account, not LocalStack for this plan) |
 | Region | `export AWS_REGION=<region>` (or region set on the profile) |
+
+### Env vars and usage
+
+| Variable | Required for | Used by | Notes |
+|----------|---------------|---------|-------|
+| `AWS_PROFILE` | all phases | all bronze tasks/CLI | Real AWS account profile |
+| `AWS_REGION` | all phases | all bronze tasks/CLI | Must match service availability (S3 Tables region support) |
+| `BRONZE_BUCKET_NAME` | sections 2, 4, 5 | `bronze:glue-setup`, `bronze:load`, `bronze:all` | With **`LAB_USERNAME`**: omit for **`<slug>-balloon-bronze`**, or set a suffix → **`<slug>-<suffix>`**. Without **`LAB_USERNAME`**, set the full global bucket name. |
+| `GLUE_DATABASE` | optional | `glue-setup`, `load`, cleanup | If unset and `LAB_USERNAME` is set, CLI derives one |
+| `LAB_USERNAME` | optional but recommended in workshops | derivation logic in bronze CLI | Avoids participant collisions; derives DB + S3 Tables bucket defaults |
+| `BRONZE_S3TABLES_BUCKET_NAME` | section 3 | `s3tables-setup`, cleanup | With **`LAB_USERNAME`**: omit for **`<slug>-balloon-s3tables`**, or set a suffix → **`<slug>-<suffix>`**. Without **`LAB_USERNAME`**, set the full globally unique table-bucket name. |
+| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | section 3 | `s3tables-setup` (derivation) | Optional `1`/`true`/… → append **`-<epoch_millis>`**; after setup use **`.aws-config/bronze-s3tables-last-bucket-name.txt`** and unset this before cleanup with **`BRONZE_S3TABLES_BUCKET_NAME`**. |
+| `S3TABLES_NAMESPACE` | optional | `s3tables-setup`, cleanup | Defaults to `balloon_pops` |
 
 **Record (not in git):** account id, chosen bucket names.
 
@@ -26,7 +39,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 1. `export AWS_PROFILE=...` and `export AWS_REGION=...`
 2. `export GLUE_DATABASE=balloon_pops` (or your DB name), or set **`LAB_USERNAME`** and omit **`GLUE_DATABASE`** so **`task bronze:render-iam`** derives the same DB name as **`glue-setup`**
-3. `export BRONZE_S3_ARN=arn:aws:s3:::your-warehouse-bucket` (no trailing `/*`)
+3. Set **`BRONZE_BUCKET_NAME`** (or **`LAB_USERNAME`** with empty bucket for derived defaults) so **`render-iam`** can fill the policy **`Resource`** ARNs from the resolved warehouse bucket.
 4. Run: `task bronze:render-iam`
 5. **Expect:** `.aws-config/bronze-glue-writer-policy.rendered.json` exists; open it and confirm `Resource` ARNs contain your account/region/database (no literal `${...}` left unless you forgot `envsubst` deps — use `gettext`’s `envsubst`).
 
@@ -38,30 +51,33 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 **Goal:** Glue catalog database exists with `LocationUri` = warehouse.
 
-1. `export BRONZE_WAREHOUSE=s3://<bucket>/<prefix>/` (must end with `/` or script normalizes — your bucket must exist and be writable by credentials used later in §4)
-2. Optional: `export GLUE_DATABASE=balloon_pops`, or set **`LAB_USERNAME`** and omit **`GLUE_DATABASE`** for a derived per-participant name
-3. Run: `task bronze:glue-setup`
-4. **Expect:** `.aws-config/glue-database.json` written.
-5. Verify:  
-   `aws glue get-database --profile "$AWS_PROFILE" --region "$AWS_REGION" --name "${GLUE_DATABASE:-balloon_pops}"`
+1. Set warehouse bucket naming:
+   - **Workshop (`LAB_USERNAME`):** omit **`BRONZE_BUCKET_NAME`** for default **`<bucket_slug>-balloon-bronze`**, or set a short suffix (CLI prefixes with **`<bucket_slug>-`**). Run **`task bronze:glue-setup-dry-run`** first if you need the exact resolved bucket name before creating it in S3.
+   - **Solo account:** `export BRONZE_BUCKET_NAME=<your-global-bucket-name>`
+2. Ensure that warehouse bucket already exists and is accessible by your credentials (required before Glue and load).  
+   If **`BRONZE_BUCKET_NAME`** is not exported in your shell (common with **`LAB_USERNAME`** only in `.env`), run **`task bronze:glue-setup-dry-run`** and use the printed **`BRONZE_BUCKET_NAME=`** value for **`aws s3api head-bucket --bucket <that-name> ...`** (and create that bucket first if needed).
+3. Optional: `export GLUE_DATABASE=balloon_pops`, or set **`LAB_USERNAME`** and omit **`GLUE_DATABASE`** for a derived per-participant name
+4. Run: `task bronze:glue-setup`
+5. **Expect:** `.aws-config/glue-database.json` and `.aws-config/bronze-warehouse-uri.txt` written; console ends with **Summary — derived Iceberg warehouse** showing `s3://<bucket>/iceberg/`.
+6. Verify:  
+   `aws glue get-database --profile "$AWS_PROFILE" --region "$AWS_REGION" --name "${GLUE_DATABASE:-${LAB_USERNAME}_balloon_pops}"`
 
-**Pass:** `Database` shows `Name` = `balloon_pops` (or your override) and `LocationUri` matches `BRONZE_WAREHOUSE`.
+**Pass:** `Database` shows `Name` equal to your **`GLUE_DATABASE`** (e.g. `<glue_slug>_balloon_pops` when **`LAB_USERNAME`** is set and **`GLUE_DATABASE`** was omitted) and `LocationUri` is `s3://<your-bucket>/iceberg/` (same as `cat .aws-config/bronze-warehouse-uri.txt`).
 
 ---
 
 ## 3. S3 Tables control plane (`bronze:s3tables-setup`)
 
-**Goal:** Table bucket + namespace `balloon_pops` + five `ICEBERG` tables.
+**Goal:** Table bucket + namespace `balloon_pops` + one `ICEBERG` table `balloon_game_events`.
 
-1. Pick a **globally unique** table bucket name:  
-   `export BRONZE_S3TABLES_BUCKET_NAME=<unique-63-chars-lowercase-hyphen>`
+1. **Workshop (`LAB_USERNAME`):** omit **`BRONZE_S3TABLES_BUCKET_NAME`** for default **`<bucket_slug>-balloon-s3tables`**, or set a short suffix (CLI prefixes with **`<bucket_slug>-`**). **Solo account:** `export BRONZE_S3TABLES_BUCKET_NAME=<unique-63-chars-lowercase-hyphen>` (globally unique).
 2. Optional: `export S3TABLES_NAMESPACE=balloon_pops`
-3. Run: `task bronze:s3tables-setup`
-4. **Expect:** `.aws-config/s3tables-table-bucket-arn.txt` and `.aws-config/s3tables-tables-list.json`
-5. Verify: open `s3tables-tables-list.json` — tables include  
-   `leaderboard`, `balloon_color_stats`, `realtime_scores`, `balloon_colored_pops`, `color_performance_trends`
+3. Run: `task bronze:s3tables-setup` (optional: `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX=1` or `uv run bronze-cli s3tables-setup --enable-s3tables-bucket-suffix` for a unique **`-<epoch_millis>`** suffix after stuck deletes)
+4. **Expect:** `.aws-config/s3tables-table-bucket-arn.txt`, `.aws-config/s3tables-tables-list.json`, and **`.aws-config/bronze-s3tables-last-bucket-name.txt`** (final table-bucket name for cleanup)
+5. Verify: open `s3tables-tables-list.json` — tables include **`balloon_game_events`**
+6. **AWS Console (optional):** [Verify S3 Tables in the AWS Console](bronze-landing-zone.md#verify-s3-tables-in-the-aws-console) — **S3 Tables** → **Table buckets**; screenshot **`bronze-s3tables-list.png`** ([lab/images/README.md](images/README.md)).
 
-**Pass:** Five tables listed under namespace `balloon_pops` (or your `S3TABLES_NAMESPACE`).
+**Pass:** **`balloon_game_events`** listed under namespace `balloon_pops` (or your `S3TABLES_NAMESPACE`).
 
 **If CLI errors:** Confirm region supports S3 Tables and IAM includes `s3tables:*` as needed; upgrade AWS CLI.
 
@@ -69,33 +85,48 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 ## 4. PyIceberg sample load (`bronze:load`)
 
-**Goal:** Glue Data Catalog Iceberg tables on **general S3** receive sample rows (separate from S3 Tables empty tables unless you later unify).
+**Goal:** Glue Data Catalog Iceberg **`balloon_game_events`** on **general S3** receives a prebuilt seed dataset (separate from the S3 Tables empty shell unless you later unify).
 
-1. Same `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE` as §2 (bucket writable by this principal).
+1. Same `AWS_PROFILE`, `AWS_REGION`, and `BRONZE_BUCKET_NAME` as section 2 (bucket writable by this principal).
 2. Optional: `export GLUE_DATABASE=balloon_pops`
 3. Run: `task bronze:load`
-4. **Expect:** Console prints `OK: appended sample rows...`
+4. **Expect:** Console prints `info: generator mode` (default) or `info: synthetic mode`, then `loaded … row(s)` for **`balloon_game_events`** and `OK: dataset …` with `events=…` plus timing summary
 
 **Verify (pick one or more):**
 
-- `aws glue get-tables --database-name "${GLUE_DATABASE:-balloon_pops}" --profile "$AWS_PROFILE" --region "$AWS_REGION" --query 'TableList[*].Name' --output text` — includes the five table names.
-- `aws s3 ls "s3://<bucket>/<prefix>/" --profile "$AWS_PROFILE"` — shows `metadata/` / `data/` style prefixes under the warehouse path after writes.
+- **AWS Console (recommended for learners):** follow [Verify bronze load in the AWS Console](bronze-landing-zone.md#verify-bronze-load-in-the-aws-console) in **`lab/bronze-landing-zone.md`** — Glue **Data catalog** (database + **`balloon_game_events`** + Iceberg table details) and S3 **`iceberg/`** prefix. Screenshot filenames: [lab/images/README.md](images/README.md); copy PNGs into **`sfguides/lakehouse-iceberg-production-pipelines/assets/`** for the quickstart ([assets/README.md](../sfguides/lakehouse-iceberg-production-pipelines/assets/README.md)).
+- **CLI:** `aws glue get-tables --database-name "${GLUE_DATABASE:-balloon_pops}" --profile "$AWS_PROFILE" --region "$AWS_REGION" --query 'TableList[*].Name' --output text` — includes **`balloon_game_events`**.
+- **CLI:** `aws s3 ls "s3://${BRONZE_BUCKET_NAME}/iceberg/" --profile "$AWS_PROFILE"` — shows `metadata/` / `data/` style prefixes under the warehouse path after writes.
 
-**Pass:** Five Iceberg tables in Glue; S3 objects present for at least one table.
+**Pass:** Iceberg table **`balloon_game_events`** in Glue; S3 objects present under the warehouse; console walk-through matches **`GLUE_DATABASE`** and **`BRONZE_BUCKET_NAME`** if you use the UI path above.
 
-**Common failures:** AccessDenied on S3 → IAM for this principal; Glue create table denied → Glue + S3 IAM paths; wrong `BRONZE_WAREHOUSE` → fix URI and re-run (may need to drop Glue tables if partially created).
+**Optional extension:** If learners have time, run `task bronze:load-more` to append a second prebuilt batch, then re-run downstream transforms to observe updates beyond the seed dataset. `task generator-local` can still be used as an advanced optional path for extra event production.
+
+**Common failures:** AccessDenied on S3 → IAM for this principal; Glue create table denied → Glue + S3 IAM paths; wrong `BRONZE_BUCKET_NAME` → fix bucket name and re-run (may need to drop Glue tables if partially created).
 
 ---
 
 ## 5. Orchestrated run (`bronze:all`)
 
-**Goal:** Ordered glue → s3tables → load.
+**Goal:** Strictly ordered glue → s3tables → load.
 
-1. Set all required env vars from §2–4 (`BRONZE_WAREHOUSE`, `BRONZE_S3TABLES_BUCKET_NAME`, etc.).
+1. Set all required env vars from sections 2–4 (`BRONZE_BUCKET_NAME`, `BRONZE_S3TABLES_BUCKET_NAME`, etc.).
 2. Run: `task bronze:all`
-3. **Expect:** Each step completes; same checks as §2–4.
+3. **Expect:** Each step completes; same checks as sections 2–4.
 
-**Pass:** Same as §2–4 combined.
+**Pass:** Same as sections 2–4 combined.
+
+---
+
+## 5b. Optional — Snowflake CLD prep sheet (`bronze:snowflake-summary`)
+
+**Goal:** Read-only summary of resolved ARNs, Glue REST URI, and table names (no AWS writes).
+
+1. Same env as section 2 (`AWS_PROFILE`, `AWS_REGION`, and workshop or explicit bucket names).
+2. Run: `task bronze:snowflake-summary` (human-oriented) or `task bronze:snowflake-summary-json` (single JSON object).
+3. **Expect:** Exit **0**; output includes `GLUE_ICEBERG_REST_URI`, S3 / Glue ARNs, and **`balloon_game_events`**.
+
+**Pass:** Output is coherent with the buckets and `GLUE_DATABASE` you used in sections 2–4 (useful notes before Snowflake catalog integration SQL).
 
 ---
 
@@ -108,10 +139,19 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 ---
 
-## 7. Teardown (optional lab reset)
+## 7. Cleanup (recommended after manual test)
 
-- **S3 Tables:** delete tables / namespace / table bucket via AWS console or CLI (no automated `task` yet — document what you used).
-- **Glue / S3 warehouse:** drop Glue tables + database if safe; empty or delete warehouse prefix (mind lifecycle rules).
+**Goal:** Remove bronze metadata resources created during testing.
+
+1. Preview what will be deleted: `task bronze:cleanup-dry-run`
+2. If the preview looks correct, run: `task bronze:cleanup`
+3. Verify cleanup:
+   - `aws glue get-database --profile "$AWS_PROFILE" --region "$AWS_REGION" --name "${GLUE_DATABASE:-balloon_pops}"` should return `EntityNotFoundException`
+   - `aws s3tables list-namespaces --table-bucket-arn "$(cat .aws-config/s3tables-table-bucket-arn.txt)" --region "$AWS_REGION"` should not list `balloon_pops`
+
+**Pass:** Glue database/tables and S3 Tables namespace/table-bucket resources used for this run are removed.
+
+**Note:** `bronze:cleanup` is destructive for **Glue + S3 Tables control plane** only. It does **not** delete **`BRONZE_BUCKET_NAME`** (for example **`<slug>-balloon-bronze`**) or objects under **`iceberg/`**; remove those in S3 separately if you want the warehouse empty. Use per-participant names (`LAB_USERNAME`) in shared accounts and run dry-run first.
 
 ---
 

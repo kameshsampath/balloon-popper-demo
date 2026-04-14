@@ -35,3 +35,6 @@ notebooks/*.ipynb
 .aws-config/*
 !.aws-config/README.md
 !.aws-config/*.example
+
+# Local-only helper scripts (do not commit)
+sync-sfquickstarts-local.sh

@@ -23,7 +23,7 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 | [setup.md](../docs/setup.md) | Mostly **omit**; replace with Snowflake + `snow` + AWS prereqs |
 | [local_cloud.md](../docs/local_cloud.md) | **Omit** or Related Resources “legacy stack” |
 | [catalog_setup.md](../docs/catalog_setup.md) | Polaris narrative → link **lab/bronze-landing-zone.md** |
-| [iceberg_schema_design.md](../docs/iceberg_schema_design.md) | Canonical **column / partition** specs for all five tables |
+| [iceberg_schema_design.md](../docs/iceberg_schema_design.md) | Legacy **column / partition** specs for old sink tables; raw bronze = **`balloon_game_events`** in **`source.sql.j2`** |
 | [implementing_data_pipeline.md](../docs/implementing_data_pipeline.md) | Pipeline **order** and verification ideas → DT + verify H2s |
 | [verifying_data_pipeline.md](../docs/verifying_data_pipeline.md) | Checklist style queries → post-DT validation |
 | [dashboards.md](../docs/dashboards.md) | SiS page grouping |
@@ -91,7 +91,7 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 - **Accounts:** AWS + Snowflake; assumed roles / permissions (pointer to [lab/aws/README.md](../lab/aws/README.md) for IAM render if needed).
 - **Local toolchain:** `uv` / `uv sync`; **`.envrc`** and `.venv/bin` on PATH; **`snow`** from `snowflake-cli`; **`task`**, **`task check-tools`** (`check-lab-prereqs`).
 - **Repo entrypoints:** `[project.scripts]` in [pyproject.toml](../pyproject.toml) (`bronze-cli`, `load-bronze-sample`, …) and **`task bronze:*`** — link [tools/bronze_preload/README.md](../tools/bronze_preload/README.md).
-- **Environment:** `.env.example` highlights (`AWS_PROFILE`, `BRONZE_WAREHOUSE`, `LAB_USERNAME`, …); no secrets in-repo.
+- **Environment:** `.env.example` highlights (`AWS_PROFILE`, `BRONZE_BUCKET_NAME`, `LAB_USERNAME`, …); no secrets in-repo.
 - Sources: [README.md](../README.md), [lab/bronze-landing-zone-MANUAL-TEST.md](../lab/bronze-landing-zone-MANUAL-TEST.md) for smoke order; [docs/setup.md](../docs/setup.md) only where still accurate (**omit** k8s/k3d).
 
 ### `## Bronze landing zone` (first hands-on chapter)
@@ -124,9 +124,9 @@ _Use ≤4 words per H2 title where Quickstarts style requires it; wording can me
 
 | Glue database (example) | Iceberg tables |
 |-------------------------|----------------|
-| `balloon_pops` | `leaderboard`, `balloon_color_stats`, `realtime_scores`, `balloon_colored_pops`, `color_performance_trends` |
+| `balloon_pops` | `balloon_game_events` (raw); aggregates modeled as Snowflake Dynamic Iceberg Tables |
 
-Align with [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) and [sink.sql.j2](../polaris-forge-setup/templates/sink.sql.j2).
+Align raw columns with [source.sql.j2](../polaris-forge-setup/templates/source.sql.j2). Legacy sink names in [sink.sql.j2](../polaris-forge-setup/templates/sink.sql.j2) / [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) are reference only for DT SQL parity.
 
 ## Incremental Quickstart delivery (validate while building)
 

@@ -1,12 +1,14 @@
 # Bronze preload (AWS + PyIceberg)
 
-Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg tables on **S3**, using the same logical names as the legacy RisingWave sinks (`balloon_pops.*`).
+Land **sample** raw balloon game events into a single **AWS Glue Data Catalog** Iceberg table on **S3** — **`balloon_game_events`**. Each row is one **JSON object** in string column **`event`** (Kafka **PLAIN JSON** shape: same keys as [``polaris-forge-setup/templates/source.sql.j2``](../../polaris-forge-setup/templates/source.sql.j2)). That mirrors streaming payloads; **Snowflake Dynamic Iceberg Tables** use **`PARSE_JSON`** / VARIANT-style paths over **`event`** to mirror the RisingWave MVs (see [snowflake/lab/REFERENCE.md](../../snowflake/lab/REFERENCE.md)). Aggregates are not written here.
+
+If you already created **`balloon_game_events`** with the older multi-column schema, **drop** that Glue table (or run **`bronze:cleanup`** then **`glue-setup`** + **`load`**) before loading this JSON layout—**`ensure_table`** does not evolve schemas in place.
 
 **Manual test checklist:** [lab/bronze-landing-zone-MANUAL-TEST.md](../../lab/bronze-landing-zone-MANUAL-TEST.md).
 
 ## Prerequisites
 
-- **Phase 0:** copy [`.env.example`](../../.env.example) to `.env` and set variables (see comments in the example file). Do not commit `.env`.
+- **Phase 0:** copy [`.env.example`](../../.env.example) to `.env` and set variables (see comments in the example file). Do not commit `.env`. **`bronze-cli`** loads **`<repo>/.env`** at startup (`override=False`), so **`task bronze:*`** sees **`BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX`** and other keys even when direnv is not active.
 - **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
 - **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
 - **`uv`** and repo dependencies: `uv sync`.
@@ -26,27 +28,31 @@ This repo’s bronze path still uses **local** name rules in `bronze_aws.py` (Gl
 |----------|----------|-------------|
 | `AWS_PROFILE` | yes | Credential profile for real AWS |
 | `AWS_REGION` | recommended | Overrides profile default region |
-| `LAB_USERNAME` | no | Workshop participant id; when set, defaults **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** if unset (see [`.env.example`](../../.env.example)) |
-| `BRONZE_WAREHOUSE` | yes for `load` | `s3://your-bucket/prefix/` — Iceberg warehouse root on **general-purpose S3** |
+| `LAB_USERNAME` | no | Workshop participant id; when set, you can leave **`BRONZE_BUCKET_NAME`** / **`BRONZE_S3TABLES_BUCKET_NAME`** empty for derived defaults (see [`.env.example`](../../.env.example)) |
+| `BRONZE_BUCKET_NAME` | yes for `glue-setup` / `load` | General-purpose S3 warehouse bucket; **`glue-setup` creates it if missing** (idempotent). With **`LAB_USERNAME`**, omit for **`<slug>-balloon-bronze`** or set a short suffix → **`<slug>-<suffix>`**; without **`LAB_USERNAME`**, set the full global name. Warehouse URI `s3://<bucket>/iceberg/` is printed after `glue-setup` and saved in `.aws-config/bronze-warehouse-uri.txt`. |
 | `GLUE_DATABASE` | no | Default `balloon_pops`, or `<glue_slug>_balloon_pops` when **`LAB_USERNAME`** is set and this var is unset |
-| `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`), or derived from **`LAB_USERNAME`** when unset |
+| `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`). With **`LAB_USERNAME`**, leave empty for **`<slug>-balloon-s3tables`** or set a suffix (same rules as **`BRONZE_BUCKET_NAME`**) |
+| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | no | If `1` / `true` / `yes` / `y` / `on`, appends **`-<epoch_millis>`** to the resolved table-bucket name (fresh suffix per CLI run—useful after AWS delete “transitional state” delays). **`s3tables-setup`** writes **`.aws-config/bronze-s3tables-last-bucket-name.txt`**; for **`bronze:cleanup`**, unset this var and set **`BRONZE_S3TABLES_BUCKET_NAME`** to that file’s line (or use **`uv run bronze-cli s3tables-setup --enable-s3tables-bucket-suffix`** for a one-off) |
 | `S3TABLES_NAMESPACE` | no | Default `balloon_pops` |
-| `BRONZE_S3_ARN` | for `render-iam` | e.g. `arn:aws:s3:::your-warehouse-bucket` |
+| `BRONZE_LOAD_DURATION_MINUTES` | no | Generator batch length when **not** using row/synthetic mode (default **5**; max **240**) |
+| `BRONZE_GENERATOR_DELAY` | no | Seconds between pops in generator mode (falls back to **`DELAY`**; default **1.0**, min **0.05**) |
+| `NUM_PLAYERS` | no | Player pool size for generator batch (default **12**) |
+| `BRONZE_SAMPLE_ROW_COUNT` | no | If set, forces **synthetic** mode: that many **raw** `GameEvent` rows appended to **`balloon_game_events`** (max **100000**); overridden by **`--duration-minutes`** on the CLI |
 
 ## Tasks (from repo root)
 
 ```bash
 export AWS_PROFILE=your-profile
 export AWS_REGION=us-west-2
+# Workshop: set LAB_USERNAME in .env and leave bucket vars empty, or solo:
+export BRONZE_BUCKET_NAME=my-bronze-bucket
 export BRONZE_S3TABLES_BUCKET_NAME=my-lab-table-bucket-001
-
-export BRONZE_WAREHOUSE=s3://my-bronze-bucket/iceberg/
-export BRONZE_S3_ARN=arn:aws:s3:::my-bronze-bucket
 
 task bronze:render-iam    # optional: writes .aws-config/bronze-glue-writer-policy.rendered.json
 task bronze:glue-setup
 task bronze:s3tables-setup
 task bronze:load
+task bronze:load-more   # optional: append additional rows for extended exercises
 # or
 task bronze:all
 
@@ -57,8 +63,8 @@ task bronze:cleanup
 
 ## Two AWS surfaces (by design)
 
-1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load-bronze-sample`** create and append **Iceberg** tables your laptop can manage with **PyIceberg** (good for workshop data).
-2. **Amazon S3 Tables** (table bucket + namespace + empty ICEBERG tables) — `s3tables-setup` provisions the **S3 Tables** layout for **Snowflake Glue Iceberg REST** / analytics alignment; rows are not duplicated there automatically until you wire a writer to that catalog.
+1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load-bronze-sample`** append Iceberg rows to **`balloon_game_events`** (column **`event`** = JSON text per pop). **Default:** simulate **`packages/generator`** pops for **5 minutes** at **`DELAY` / `BRONZE_GENERATOR_DELAY`** seconds per pop (same rate as Kafka). **Optional:** **`--row-count`** / **`BRONZE_SAMPLE_ROW_COUNT`** for a fast synthetic fill (`page_id` inside JSON is **0** until a real Kafka pipeline sets it).
+2. **Amazon S3 Tables** (table bucket + namespace + empty ICEBERG table **`balloon_game_events`**) — `s3tables-setup` provisions the **S3 Tables** layout for **Snowflake Glue Iceberg REST** / analytics alignment; rows are not duplicated there automatically until you wire a writer to that catalog.
 
 ## CLI (Click; Windows / macOS / Linux)
 
@@ -67,19 +73,24 @@ Entry points are registered in the root **`pyproject.toml`** under **`[project.s
 | `uv run …` | Role |
 |--------|------|
 | `uv run check-lab-prereqs` | Verify lab CLIs on `PATH` (same as `task check-tools`) |
-| `uv run bronze-cli glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` (add `--dry-run` for a plan) |
-| `uv run bronze-cli s3tables-setup` | `aws s3tables` create bucket / namespace / five tables (`--dry-run` lists plan, read-only) |
-| `uv run bronze-cli render-iam` | Substitute `${VAR}` in policy template → `.aws-config/` (`--dry-run` prints JSON only) |
+| `uv run bronze-cli glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` and `.aws-config/bronze-warehouse-uri.txt` (add `--dry-run` for a plan) |
+| `uv run bronze-cli s3tables-setup` | `aws s3tables` create bucket / namespace / **`balloon_game_events`** ICEBERG table (`--dry-run` lists plan, read-only) |
+| `uv run bronze-cli render-iam` | Substitute `${VAR}` in policy template → `.aws-config/`; sets **`BRONZE_S3_ARN`** from **`BRONZE_BUCKET_NAME`** internally (`--dry-run` prints JSON only) |
+| `uv run bronze-cli snowflake-summary` | Read-only: print exports / ARNs / Glue REST URI + table names for Snowflake catalog / CLD prep (`--json` for one object) |
 | `uv run bronze-cli cleanup` | Delete Glue tables/database + S3 Tables namespace/table bucket (`--dry-run` first; requires confirmation or `--yes`) |
-| `uv run load-bronze-sample` | PyIceberg append sample rows |
+| `uv run load-bronze-sample` | Append rows: default **generator** batch (`--duration-minutes M`, or env); **`--row-count N`** synthetic mode; **`--dataset more`** second batch |
 
-**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:load`, `task bronze:cleanup`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`, `task bronze:cleanup-dry-run`.
+**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:snowflake-summary`, `task bronze:snowflake-summary-json`, `task bronze:load`, `task bronze:cleanup`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`, `task bronze:cleanup-dry-run`.
 
-Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-warehouse` / `BRONZE_WAREHOUSE`, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
-`uv run bronze-cli glue-setup --aws-profile prod --bronze-warehouse s3://my/prefix/`
+For **`snowflake-summary`**, Task only forwards extra CLI flags after a bare `--` (see [Forward CLI arguments](https://taskfile.dev/usage/#forwarding-cli-arguments-to-commands)): `task bronze:snowflake-summary -- --json`. Prefer **`task bronze:snowflake-summary-json`** when you only need JSON.
+Use `task bronze:load-more` to append a second batch after `bronze:load`. Examples: `uv run load-bronze-sample --duration-minutes 15` (more pops), `uv run load-bronze-sample --row-count 500` (synthetic stress), `uv run load-bronze-sample --row-count 20` (smoke). With **Task**, pass flags after `--`: `task bronze:load -- --duration-minutes 20`.
 
-`cleanup` removes Glue/S3 Tables metadata only. It does **not** delete objects in your general-purpose S3 warehouse path (`BRONZE_WAREHOUSE`).
+Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-bucket-name` / `BRONZE_BUCKET_NAME` on **`glue-setup`** and **`render-iam`**, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
+`uv run bronze-cli glue-setup --aws-profile prod --bronze-bucket-name my-bucket`
+
+`cleanup` removes Glue/S3 Tables metadata only. It does **not** delete objects under `s3://<BRONZE_BUCKET_NAME>/iceberg/` in your warehouse bucket. By default **`bronze-cli cleanup`** re-reads **repo** **`.aws-config/glue-database.json`** and **`.aws-config/bronze-s3tables-last-bucket-name.txt`** (not **`~/.aws-config`**) so targets match the last **`glue-setup`** / **`s3tables-setup`**; pass **`--no-aws-config`** to use only env / **`LAB_USERNAME`** derivation.
 
 ## Relationship to `packages/generator`
 
-Event shapes mirror [packages/common/](../../packages/common) `GameEvent` / `GAME_CONFIG` for future alignment with full synthetic loads.
+[`common.game_generator.BalloonGameGenerator`](../../packages/common/src/common/game_generator.py) is shared with **`packages/generator`** (Kafka producer). **`load-bronze-sample`** replays the same pop logic in-process and appends each pop as one row in **`balloon_game_events`**. Use **`task generator-local`** when you need a live stream into Kafka.
+For denser data, increase **`BRONZE_LOAD_DURATION_MINUTES`** or lower **`BRONZE_GENERATOR_DELAY`**; for a fixed row count, use **`--row-count`** / **`BRONZE_SAMPLE_ROW_COUNT`**.

@@ -9,8 +9,8 @@ From the repo root, with a real AWS account:
 ```bash
 export AWS_PROFILE=your-profile
 export AWS_REGION=us-west-2
-export GLUE_DATABASE=balloon_pops
-export BRONZE_S3_ARN=arn:aws:s3:::your-warehouse-bucket   # no trailing slash
+export GLUE_DATABASE=balloon_pops   # optional with LAB_USERNAME (derived)
+export BRONZE_BUCKET_NAME=your-warehouse-bucket   # IAM ARN is derived: arn:aws:s3:::...
 
 task bronze:render-iam
 # Preview only: task bronze:render-iam -- --dry-run

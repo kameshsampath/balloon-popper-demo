@@ -10,54 +10,183 @@ vars:
   BRONZE_CLI: uv run bronze-cli
 
 tasks:
+  snowflake-summary:
+    desc: Print resolved bucket/db/ARNs and Glue REST URI for Snowflake catalog / CLD prep (read-only)
+    summary: |
+      Prints copy-paste friendly exports and ARNs from the same env rules as `glue-setup`
+      / `s3tables-setup`: region, account (STS), `GLUE_DATABASE`, warehouse URI, S3 ARNs,
+      Glue database + catalog ARNs, `https://glue.<region>.amazonaws.com/iceberg`, optional
+      S3 Tables table-bucket ARN (live list when AWS CLI supports `s3tables`), plus hints
+      from `.aws-config/*` if those files already exist.
+
+      Does not create or modify AWS resources.
+
+      JSON output: `task bronze:snowflake-summary-json`, or forward args after `--`:
+      `task bronze:snowflake-summary -- --json` (Task assigns `CLI_ARGS` only after `--`).
+      Direct CLI: `uv run bronze-cli snowflake-summary --json`
+
+      Env: `AWS_PROFILE`, `AWS_REGION`, and either `BRONZE_BUCKET_NAME` or `LAB_USERNAME`
+      (same as `glue-setup`). Optional `BRONZE_S3TABLES_BUCKET_NAME` / `LAB_USERNAME` for S3 Tables.
+    cmds:
+      - "{{.BRONZE_CLI}} snowflake-summary{{.CLI_ARGS}}"
+
+  snowflake-summary-json:
+    desc: Same as snowflake-summary with --json (no need to pass Task CLI_ARGS)
+    cmds:
+      - "{{.BRONZE_CLI}} snowflake-summary --json"
+
   render-iam:
-    desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs BRONZE_S3_ARN, AWS_PROFILE; optional AWS_ACCOUNT_ID)
+    desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs AWS_PROFILE; BRONZE_BUCKET_NAME or LAB_USERNAME)
+    summary: |
+      Renders the Bronze Glue writer IAM policy template into `.aws-config/` using
+      your current environment values.
+
+      Env:
+        AWS_PROFILE, AWS_REGION - required for AWS context.
+        BRONZE_BUCKET_NAME / LAB_USERNAME - same as glue-setup; policy ARN is always
+        derived as arn:aws:s3:::<bucket> (not a separate env var).
+        AWS_ACCOUNT_ID - optional; auto-discovered if omitted.
     cmds:
       - "{{.BRONZE_CLI}} render-iam"
 
   render-iam-dry-run:
     desc: Print resolved policy JSON only (no write; Task include does not forward `--` args reliably)
+    summary: |
+      Prints the fully resolved IAM policy JSON without writing files.
+
+      Use this to verify substitutions before `bronze:render-iam`.
+      Same flags/env as: uv run bronze-cli render-iam --dry-run
     cmds:
       - "{{.BRONZE_CLI}} render-iam --dry-run"
 
   glue-setup:
-    desc: Create Glue database for Iceberg (needs AWS_PROFILE, BRONZE_WAREHOUSE=s3://bucket/prefix/)
+    desc: Create Glue database for Iceberg (needs AWS_PROFILE, BRONZE_BUCKET_NAME)
+    summary: |
+      Creates the Bronze Glue database used by the lab's Iceberg tables.
+
+      Env:
+        AWS_PROFILE, AWS_REGION - required for AWS API calls.
+        BRONZE_BUCKET_NAME - general-purpose S3 warehouse bucket; created if it does not
+        exist. Glue LocationUri is s3://<bucket>/iceberg/. With LAB_USERNAME, default is
+        <bucket_slug>-balloon-bronze or the slug is prefixed onto a short name you provide.
+        After a successful run, the CLI prints this URI and writes .aws-config/bronze-warehouse-uri.txt.
     cmds:
       - "{{.BRONZE_CLI}} glue-setup"
 
   glue-setup-dry-run:
     desc: Preview Glue setup (read-only get-database when possible; no writes)
+    summary: |
+      Shows what `glue-setup` would do without creating or mutating resources.
+
+      Performs read-only checks when possible (for example, get-database).
+      Same flags/env as: uv run bronze-cli glue-setup --dry-run
     cmds:
       - "{{.BRONZE_CLI}} glue-setup --dry-run"
 
   s3tables-setup:
-    desc: Create S3 table bucket + balloon_pops namespace + five ICEBERG tables (needs AWS_PROFILE, BRONZE_S3TABLES_BUCKET_NAME; AWS CLI 2.34+)
+    desc: Create S3 table bucket + balloon_pops namespace + ICEBERG balloon_game_events (AWS_PROFILE; BRONZE_S3TABLES_BUCKET_NAME or LAB_USERNAME; AWS CLI 2.34+)
+    summary: |
+      Provisions Amazon S3 Tables control-plane objects for the lab: a table bucket,
+      namespace (default S3TABLES_NAMESPACE=balloon_pops), and one ICEBERG table
+      (``balloon_game_events``, aligned with the Glue bronze raw stream).
+
+      Env:
+        AWS_PROFILE, AWS_REGION — required for AWS API calls.
+        BRONZE_S3TABLES_BUCKET_NAME — globally unique table-bucket name; if unset and
+        LAB_USERNAME is set, the CLI derives <lab-slug>-balloon-s3tables (see bronze_aws).
+        BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX — optional; truthy values append -<epoch_millis>
+        for unique test names (see .env.example). After setup, .aws-config/bronze-s3tables-last-bucket-name.txt holds the final name for cleanup.
+        S3TABLES_NAMESPACE — optional; defaults to balloon_pops.
+
+      Same flags/env as: uv run bronze-cli s3tables-setup --help
     cmds:
       - "{{.BRONZE_CLI}} s3tables-setup"
 
   s3tables-setup-dry-run:
-    desc: Preview S3 Tables setup (read-only list; no creates / no .aws-config writes)
+    desc: Preview S3 Tables setup (read-only list; no creates / no .aws-config writes; bucket name optional on dry-run)
+    summary: |
+      Shows the S3 Tables plan without creating table buckets, namespaces, or tables.
+
+      Uses read-only list calls where available.
+      Bucket can be omitted on dry-run when `LAB_USERNAME` can derive a name.
+      Same flags/env as: uv run bronze-cli s3tables-setup --dry-run
     cmds:
       - "{{.BRONZE_CLI}} s3tables-setup --dry-run"
 
   load:
-    desc: PyIceberg sample rows into Glue Iceberg tables (needs AWS_PROFILE, BRONZE_WAREHOUSE; run after glue-setup)
+    desc: Load sample raw GameEvents into Glue Iceberg balloon_game_events (generator or --row-count)
+    summary: |
+      By default simulates ``packages/generator`` pops for BRONZE_LOAD_DURATION_MINUTES (5) at
+      DELAY/BRONZE_GENERATOR_DELAY seconds per pop, then appends each GameEvent as one row in
+      Glue Iceberg ``balloon_game_events``. For a fast random fill, set BRONZE_SAMPLE_ROW_COUNT
+      or run ``uv run load-bronze-sample --row-count N``.
+
+      Run this after `bronze:glue-setup` completes.
+      Env:
+        AWS_PROFILE, AWS_REGION - required for AWS credentials/context.
+        BRONZE_BUCKET_NAME / LAB_USERNAME - same rules as `bronze:glue-setup`; warehouse URI is
+        s3://<bucket>/iceberg/.
+        BRONZE_LOAD_DURATION_MINUTES, BRONZE_GENERATOR_DELAY, NUM_PLAYERS, BONUS_PROBABILITY - generator batch.
+        BRONZE_SAMPLE_ROW_COUNT - optional; forces synthetic mode (that many raw rows).
+
+      Forward CLI args after ``--`` (same as other bronze tasks), e.g.
+      ``task bronze:load -- --duration-minutes 15`` or ``task bronze:load -- --row-count 5000``.
     cmds:
-      - uv run load-bronze-sample
+      - uv run load-bronze-sample{{.CLI_ARGS}}
+
+  load-more:
+    desc: Append another batch (same generator vs synthetic rules as load; dataset=more)
+    summary: |
+      Appends a second batch (`--dataset more`) with a different RNG seed / time anchor.
+
+      Use this after `bronze:load` when learners want more rows to observe
+      downstream updates in DT/SiS.
+      Env:
+        AWS_PROFILE, AWS_REGION - required for AWS credentials/context.
+        BRONZE_BUCKET_NAME / LAB_USERNAME - same rules as `bronze:glue-setup`; warehouse URI is
+        s3://<bucket>/iceberg/.
+        Same volume env vars as `bronze:load`.
+
+      Optional: ``task bronze:load-more -- --duration-minutes 5`` (forwards to the CLI).
+    cmds:
+      - uv run load-bronze-sample --dataset more{{.CLI_ARGS}}
 
   cleanup:
-    desc: Delete bronze metadata resources (Glue tables/database + S3 Tables namespace/bucket); use with care
+    desc: Delete bronze metadata (Glue + S3 Tables); does NOT delete BRONZE_BUCKET_NAME warehouse bucket
+    summary: |
+      Deletes Bronze metadata resources created for the lab.
+
+      Targets Glue tables/database and S3 Tables namespace/table-bucket control plane.
+      By default the CLI overlays names from **repo** `.aws-config/glue-database.json` and
+      `.aws-config/bronze-s3tables-last-bucket-name.txt` (not `~/.aws-config`) so teardown matches
+      the last local `glue-setup` / `s3tables-setup`. Pass `--no-aws-config` after `--` to skip.
+      Does **not** delete or empty **BRONZE_BUCKET_NAME** (for example `<slug>-balloon-bronze`);
+      Iceberg files under `s3://…/iceberg/` remain until you remove them in S3.
+      This task runs with `--yes`; review with `bronze:cleanup-dry-run` first.
     cmds:
       - "{{.BRONZE_CLI}} cleanup --yes"
 
   cleanup-dry-run:
     desc: Preview bronze cleanup plan only (no deletes)
+    summary: |
+      Prints the Bronze cleanup plan and target resources without deleting anything.
+
+      Use this as a safe preflight before `bronze:cleanup`.
+      Same flags/env as: uv run bronze-cli cleanup --dry-run
     cmds:
       - "{{.BRONZE_CLI}} cleanup --dry-run"
 
   all:
     desc: glue-setup, s3tables-setup, then load (render-iam is separate — run first if attaching new IAM)
-    deps:
-      - glue-setup
-      - s3tables-setup
-      - load
+    summary: |
+      Runs the full Bronze bootstrap sequence in strict order:
+        1) `bronze:glue-setup`
+        2) `bronze:s3tables-setup`
+        3) `bronze:load`
+
+      `bronze:render-iam` is intentionally separate; run it first when policy output
+      or IAM attachments need to be refreshed.
+    cmds:
+      - task: glue-setup
+      - task: s3tables-setup
+      - task: load
