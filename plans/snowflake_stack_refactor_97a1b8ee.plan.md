@@ -6,7 +6,7 @@ todos:
     content: "Author + id; extraction map from docs/templates; commit under sfguides/"
     status: pending
   - id: phase-bronze-landing-zone
-    content: "lab/bronze-landing-zone.md + tools/bronze-preload + Taskfile (S3/IAM/Polaris+PyIceberg default); Glue IRC+LINKED_CATALOG per gist if needed; test; commit"
+    content: "lab/bronze-landing-zone.md + tools/bronze-preload + Taskfile; include explicit Glue DB + table names bronze creates; Glue IRC per gist if needed; test; commit"
     status: pending
   - id: companion-repo-delete
     content: "After map + lifts, delete polaris-forge-setup, k8s, mkdocs, old docs, cluster bin, GH Pages workflow; tighten .gitignore"
@@ -15,7 +15,7 @@ todos:
     content: "snowflake/lab/*.sql: integration → CREATE DATABASE … LINKED_CATALOG → DTs; align with sfguide Phase 3"
     status: pending
   - id: sfguide-phase-2-overview-setup
-    content: "sfguides/<id>/<id>.md: frontmatter, Overview, Setup (link bronze doc); first main H2 deferred to Phase 3; commit"
+    content: "sfguides/<id>/<id>.md: frontmatter, Overview, Setup; Prerequisites bronze subsection lists Glue database + every table created; link lab/bronze-landing-zone.md; first main H2 in Phase 3; commit"
     status: pending
   - id: snowflake-notebooks
     content: "Primary hands-on in Snowflake Notebooks; keep in sync with snowflake/lab"
@@ -59,6 +59,7 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 
 ## Bronze (prerequisite only)
 
+- **Glue visibility in the guide**: In **Prerequisites** (or the Setup subsection that covers loading bronze), add a short **“What gets created in AWS Glue”** block: **Glue database name** (or catalog namespace) and an **explicit list of every Iceberg table** the bronze path registers in the **Glue Data Catalog** / **S3 Tables** surface (names only—no secrets). Match whatever `CATALOG_NAME` / `LINKED_CATALOG` will expose in Snowflake. Repeat the same list in [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md) as the detailed source of truth; keep sfguide copy concise.
 - **Doc**: [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md) — S3, IAM, bucket policy, REST catalog **reachable from Snowflake**, preload, verify.
 - **Default path**: **Polaris** + **PyIceberg** → same warehouse layout Snowflake will **catalog-link**.
 - **Alternate path** (document when needed): **Glue Iceberg REST** — `CATALOG_SOURCE = ICEBERG_REST`, `CATALOG_API_TYPE = AWS_GLUE`, `CATALOG_URI = https://glue.<region>.amazonaws.com/iceberg`, SIGv4 + vended credentials or external volume per Snowflake docs; then **`CREATE DATABASE … LINKED_CATALOG = ( CATALOG = '<integration>' )`**. Patterns and IAM: [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426).
@@ -75,6 +76,7 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 - Layout: `sfguides/<id>/<id>.md` matching Snowflake-Labs/sfguides conventions.
 - Structure and checklist: follow your **create-sfguide** skill; skim **sfquickstarts** examples for tone.
 - **Setup** summarizes bronze + links **`lab/bronze-landing-zone.md`**; **first main H2 after Setup = CLD** (not bronze loading).
+- **Prerequisites / bronze load**: When bronze uses **Glue** (job, registration, or Glue IRC path), the module must **name every Glue table** (and database/namespace) learners will have after the step—so they can map Glue → `LINKED_CATALOG` → downstream SQL. If you also document a **Polaris-only** fork, add an analogous **REST catalog table list** there for parity.
 
 ## Repo carve-out (delete)
 
