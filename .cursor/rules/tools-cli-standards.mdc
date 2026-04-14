@@ -17,6 +17,7 @@ When adding or editing anything under **`tools/`**, keep behavior and style alig
 
 - The repo installs the **`tools`** package from the project root (Hatch **`[tool.hatch.build.targets.wheel]`** → **`packages = ["tools"]`** plus **`[build-system]`**). Subpackages under **`tools/`** must use **valid Python directory names** (underscores), e.g. **`bronze_preload/`**, so they are importable as **`tools.bronze_preload.…`**.
 - Add a **`[project.scripts]`** entry for each user-facing tool (**`uv run <script-name>`**). Use **kebab-case** script names and map them to **`tools.<subpackage>.<module>:<callable>`** (for example **`tools.check_lab_prereqs:main`**, **`tools.bronze_preload.bronze_cli:main`** for Click).
+- Heavy or Snowflake-specific extras (e.g. **`sfutils-extvolumes`** + **`snowflake-cli`**) belong in a **`[dependency-groups]`** optional group (this repo: **`extvolumes`**), not in default **`[project] dependencies`**, so **`uv sync`** stays lean for Glue-only labs. Document **`uv sync --group …`** in **`tools/bronze_preload/README.md`** when you add such a group.
 
 ## Python layout
 

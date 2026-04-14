@@ -33,6 +33,13 @@ load-bronze-sample = "tools.bronze_preload.load_sample:main"
 packages = ["tools"]
 
 [dependency-groups]
+# Optional: Snowflake-Labs external volume + S3/IAM helpers (`to_aws_name`, SQL identifiers, CLI).
+# Installs `snowflake-cli`; use only when you need `sfutils-extvolumes` alongside this repo.
+#   uv sync --group extvolumes
+#   uv run --group extvolumes sfutils-extvolumes --help
+extvolumes = [
+    "sfutils-extvolumes",
+]
 dev = [
     "ansible>=11.2.0",
     "ansible-dev-tools>=25.2.1",
@@ -51,6 +58,7 @@ dev = [
 
 [tool.uv.sources]
 common = { workspace = true }
+sfutils-extvolumes = { git = "https://github.com/Snowflake-Labs/sfutils-extvolumes.git" }
 
 [tool.uv.workspace]
 members = ["packages/*"]
