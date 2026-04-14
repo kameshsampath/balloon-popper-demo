@@ -16,7 +16,6 @@ dependencies = [
     "pyiceberg[s3fs]>=0.8.1",
     "pyjwt>=2.10.1",
     "python-dotenv>=1.0.1",
-    "sfutils-extvolumes",
 ]
 
 [dependency-groups]
@@ -38,7 +37,6 @@ dev = [
 
 [tool.uv.sources]
 common = { workspace = true }
-sfutils-extvolumes = { git = "https://github.com/Snowflake-Labs/sfutils-extvolumes.git" }
 
 [tool.uv.workspace]
 members = ["packages/*"]

@@ -10,7 +10,6 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 - **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
 - **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
 - **`uv`** and repo dependencies: `uv sync`.
-- **Optional — Snowflake-backed bucket + external volume:** this repo depends on [Snowflake-Labs/sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes). Use **`task bronze:extvolume-create`** (or `bronze:extvolume-dry-run`) when you want **`sfutils-extvolumes create`** to provision the **S3 bucket**, IAM role/policy, and **Snowflake external volume** in one step (requires **`snow`** CLI configured). With **`LAB_USERNAME`** set, the task passes **`--prefix`** so `{prefix}-{bucket}` names stay unique in shared accounts. Then point **`BRONZE_WAREHOUSE`** at `s3://<created-bucket>/iceberg/` using the tool’s output.
 
 ## Environment
 
@@ -18,13 +17,12 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 |----------|----------|-------------|
 | `AWS_PROFILE` | yes | Credential profile for real AWS |
 | `AWS_REGION` | recommended | Overrides profile default region |
-| `LAB_USERNAME` | no | Workshop participant id; when set, defaults **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** if unset, and **`extvolume-*`** adds **`--prefix`** (see [`.env.example`](../../.env.example)) |
+| `LAB_USERNAME` | no | Workshop participant id; when set, defaults **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** if unset (see [`.env.example`](../../.env.example)) |
 | `BRONZE_WAREHOUSE` | yes for `load` | `s3://your-bucket/prefix/` — Iceberg warehouse root on **general-purpose S3** |
 | `GLUE_DATABASE` | no | Default `balloon_pops`, or `<glue_slug>_balloon_pops` when **`LAB_USERNAME`** is set and this var is unset |
 | `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`), or derived from **`LAB_USERNAME`** when unset |
 | `S3TABLES_NAMESPACE` | no | Default `balloon_pops` |
 | `BRONZE_S3_ARN` | for `render-iam` | e.g. `arn:aws:s3:::your-warehouse-bucket` |
-| `BRONZE_EXTVOLUME_BUCKET` | for `extvolume-*` | Base name passed to `sfutils-extvolumes create --bucket` (default `balloon-bronze-warehouse`) |
 
 ## Tasks (from repo root)
 
@@ -32,13 +30,6 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 export AWS_PROFILE=your-profile
 export AWS_REGION=us-west-2
 export BRONZE_S3TABLES_BUCKET_NAME=my-lab-table-bucket-001
-
-# Optional first — create S3 + Snowflake external volume (see sfutils-extvolumes README for names):
-# export BRONZE_EXTVOLUME_BUCKET=balloon-bronze-warehouse
-# task bronze:extvolume-dry-run
-# task bronze:extvolume-create
-# export BRONZE_WAREHOUSE=s3://<username>-balloon-bronze-warehouse/iceberg/
-# export BRONZE_S3_ARN=arn:aws:s3:::<username>-balloon-bronze-warehouse
 
 export BRONZE_WAREHOUSE=s3://my-bronze-bucket/iceberg/
 export BRONZE_S3_ARN=arn:aws:s3:::my-bronze-bucket
@@ -63,7 +54,6 @@ task bronze:all
 | `scripts/glue-setup.sh` | `aws glue create-database` + dump `.aws-config/glue-database.json` |
 | `scripts/s3tables-setup.sh` | `aws s3tables` create bucket / namespace / five tables |
 | `scripts/render-iam.sh` | `envsubst` policy template → `.aws-config/` |
-| `scripts/extvolume-create.sh` / `extvolume-dry-run.sh` | Wrap **`sfutils-extvolumes create`** with optional **`LAB_USERNAME`** **`--prefix`** |
 | `load_sample.py` | PyIceberg append sample rows |
 
 ## Relationship to `packages/generator`

@@ -4,7 +4,7 @@ This document is the **detailed** prerequisite for the Snowflake lab: **Iceberg 
 
 **Phase 0 — environment:** copy [`.env.example`](../.env.example) to `.env`, fill in **AWS** and **bronze** variables (never commit `.env`). Extend `.env.example` as new phases add Snowflake CLI, PAT, or DuckDB IRC variables.
 
-**Shared AWS account / workshop:** set **`LAB_USERNAME`** (one id per participant) so Glue database, S3 Tables bucket, and `sfutils-extvolumes` bucket prefix default to unique values when **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** are not set. See comments in [`.env.example`](../.env.example). **`S3TABLES_NAMESPACE`** stays `balloon_pops` inside each participant’s table bucket unless you change it deliberately.
+**Shared AWS account / workshop:** set **`LAB_USERNAME`** (one id per participant) so Glue database and S3 Tables bucket name default to unique values when **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** are not set. See comments in [`.env.example`](../.env.example). **`S3TABLES_NAMESPACE`** stays `balloon_pops` inside each participant’s table bucket unless you change it deliberately.
 
 **Manual QA:** follow [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md).
 
@@ -28,8 +28,6 @@ Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (inclu
 
 | Task | Purpose |
 |------|---------|
-| `task bronze:extvolume-dry-run` | Preview [sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes) **create** (S3 + IAM + Snowflake external volume); needs `snow` + `AWS_PROFILE`; with **`LAB_USERNAME`**, passes **`--prefix`** so bucket names do not collide |
-| `task bronze:extvolume-create` | Run **`sfutils-extvolumes create`** — preferred way to create the **warehouse S3 bucket** (and Snowflake EV) when you already use Snowflake CLI; **`LAB_USERNAME`** adds the same **`--prefix`** |
 | `task bronze:render-iam` | Render `lab/aws/bronze-glue-writer-policy.json` → `.aws-config/*.rendered.json` (`envsubst`; needs `BRONZE_S3_ARN`) |
 | `task bronze:glue-setup` | `aws glue create-database` for **`GLUE_DATABASE`** (default `balloon_pops`) with `LocationUri` = **`BRONZE_WAREHOUSE`** |
 | `task bronze:s3tables-setup` | `aws s3tables` — table bucket **`BRONZE_S3TABLES_BUCKET_NAME`**, namespace **`balloon_pops`**, five **`ICEBERG`** tables (CLI **2.34+**) |
@@ -50,8 +48,8 @@ Use a repo-local **`.aws-config/`** directory (not `~/.aws`) for **generated** I
 ## Recommended order
 
 1. Pick **region** (AWS, S3, Snowflake aligned).
-2. **S3 warehouse bucket** — either create manually or run **`task bronze:extvolume-create`** ([sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes)) so the bucket (and Snowflake **external volume**) match the DT lab path; set **`BRONZE_WAREHOUSE`** to `s3://<bucket>/iceberg/` (see CLI output / `{prefix}-{bucket}` naming). sfutils enables **versioning** on that bucket.
-3. **IAM** for writers (PyIceberg / Glue role) and bucket policy for Snowflake **storage integration** / **external volume** where needed (sfutils creates role/policy for the volume path; extend with **`task bronze:render-iam`** if you need the lab template too).
+2. **S3 warehouse bucket** — create a general-purpose S3 bucket (console, IaC, or your org’s process), then set **`BRONZE_WAREHOUSE`** (`s3://<bucket>/<prefix>/`, often `…/iceberg/`) and **`BRONZE_S3_ARN`** to match that bucket.
+3. **IAM** for writers (PyIceberg / Glue role) and bucket policy for Snowflake **storage integration** / **external volume** where your Snowflake lab needs them; use **`task bronze:render-iam`** for the lab’s Glue-writer policy template when applicable.
 4. **Glue** path: run `task bronze:glue-setup` then `task bronze:s3tables-setup` (or your CFN equivalent).
 5. **REST catalog**: either **Polaris** (reachable from Snowflake, not only `localhost`) or **Glue Iceberg REST** (`https://glue.<region>.amazonaws.com/iceberg`, `CATALOG_API_TYPE = AWS_GLUE`, SIGv4 — see [gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) and Snowflake docs).
 6. **Load**: `task bronze:load` (or `task bronze:all` from a clean slate).

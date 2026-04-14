@@ -1,6 +1,6 @@
 ---
 name: Snowflake Stack Refactor
-overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phase 0: .env.example template. Then extraction map, bronze landing, SQL lab, sfguide phases, carve-out. Tooling: sfutils-pat, sfutils-extvolumes (git), snow CLI >3.16; modular Taskfile `bronze:*`."
+overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phase 0: .env.example template. Then extraction map, bronze landing, SQL lab, sfguide phases, carve-out. Tooling: sfutils-pat (when added), snow CLI >3.16; modular Taskfile `bronze:*`."
 todos:
   - id: phase-0-env-example
     content: "Phase 0: maintain root .env.example (AWS/bronze/Snowflake placeholders); doc cp→.env in lab README + manual test; extend as SQL/PAT phases land"
@@ -33,10 +33,10 @@ todos:
     content: "Conclusion And Resources + create-sfguide checklist; commit"
     status: pending
   - id: deps-ci
-    content: "pyproject: sfutils-pat, sfutils-extvolumes, snowflake-cli>3.16, preload deps; uv lock; drop docs workflow if unused"
+    content: "pyproject: sfutils-pat, snowflake-cli>3.16, preload deps; uv lock; drop docs workflow if unused"
     status: pending
   - id: taskfile-lab-modular
-    content: "Root Taskfile.yml includes .taskfiles/*.yml; namespace bronze: (aws glue setup via CLI, S3 Tables create/bind, bronze data load), plus polaris/PAT/extvol/snow; document task names in README + bronze doc"
+    content: "Root Taskfile.yml includes .taskfiles/*.yml; namespace bronze: (aws glue setup via CLI, S3 Tables create/bind, bronze data load), plus polaris/PAT/snow; document task names in README + bronze doc"
     status: pending
 isProject: false
 ---
@@ -75,7 +75,7 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 ## Snowflake lab artifacts
 
 - **`snowflake/lab/*.sql`**: placeholders → **`CREATE CATALOG INTEGRATION`** (REST) → **`CREATE DATABASE … LINKED_CATALOG`** → **`CREATE DYNAMIC ICEBERG TABLE`** chain; mirror former pipeline semantics from lifted schema/templates (copy snippets before deleting old paths).
-- **External volume** for DT outputs; **sfutils-pat** / **sfutils-extvolumes** in [`pyproject.toml`](pyproject.toml); **`snow` > 3.16** for `snow sql`, notebooks, streamlit.
+- **External volume** for DT outputs (document SQL / org process); **sfutils-pat** in [`pyproject.toml`](pyproject.toml) when wired; **`snow` > 3.16** for `snow sql`, notebooks, streamlit.
 - **SiS** as primary viz; reuse generator from [`packages/generator/`](packages/generator/) for preload rows.
 
 ## Sfguide

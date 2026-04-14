@@ -57,13 +57,6 @@ sanitize_lab_slug_bucket() {
   echo "$u"
 }
 
-# sfutils-extvolumes --prefix: letters and digits only (conservative).
-sanitize_lab_prefix_sfutils() {
-  local u="${LAB_USERNAME:-}"
-  u=$(echo "$u" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-20)
-  echo "$u"
-}
-
 # When LAB_USERNAME is set, default unique names for shared-account workshops.
 # Override any time by exporting GLUE_DATABASE / BRONZE_S3TABLES_BUCKET_NAME yourself.
 derive_bronze_resource_names() {

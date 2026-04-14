@@ -12,7 +12,7 @@ This repository is **transitioning** from the original **RisingWave + k3d + Pola
 | SFGuide extraction | [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) |
 | Plan | [plans/snowflake_stack_refactor_97a1b8ee.plan.md](plans/snowflake_stack_refactor_97a1b8ee.plan.md) |
 
-**Prerequisites (Snowflake / bronze track):** Python **3.12+**, [uv](https://github.com/astral-sh/uv), [Task](https://taskfile.dev), [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (2.34+ for `aws s3tables`), optional [Snowflake CLI](https://docs.snowflake.com/developer-guide/snowflake-cli/index) for `sfutils-extvolumes`. Configure **`AWS_PROFILE`** (see `.env.example`).
+**Prerequisites (Snowflake / bronze track):** Python **3.12+**, [uv](https://github.com/astral-sh/uv), [Task](https://taskfile.dev), [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (2.34+ for `aws s3tables`). Configure **`AWS_PROFILE`** (see `.env.example`). Add [Snowflake CLI](https://docs.snowflake.com/developer-guide/snowflake-cli/index) when you wire `snowflake/lab` SQL steps.
 
 ## Legacy demo (deprecated)
 
@@ -25,7 +25,6 @@ The sections below describe the **old** k3d / RisingWave / MkDocs flow. GitHub P
 
 - [Apache Iceberg](https://iceberg.apache.org/), [PyIceberg](https://py.iceberg.apache.org/)
 - [Snowflake + Glue S3 Tables gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) (catalog integration patterns)
-- [sfutils-extvolumes](https://github.com/Snowflake-Labs/sfutils-extvolumes) (S3 + external volume helper, dependency of this repo)
 
 ## License
 
