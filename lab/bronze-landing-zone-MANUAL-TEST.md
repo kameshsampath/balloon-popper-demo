@@ -8,6 +8,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables + optional Snow
 
 | Check | How |
 |--------|-----|
+| Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Confirm `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE`, and other vars for the steps you will run. |
 | Python | `python --version` shows **3.12+** |
 | uv | `uv --version` works |
 | AWS CLI | `aws --version` — for S3 Tables steps, **v2.34+** (`aws s3tables help`) |

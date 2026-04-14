@@ -1,7 +1,10 @@
 ---
 name: Snowflake Stack Refactor
-overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phased work: extraction map, bronze landing doc + preload, SQL lab, sfguide in four commits, repo carve-out. Tooling: sfutils-pat, sfutils-extvolumes, snow CLI >3.16; modular Taskfile with `.taskfiles/` includes and `bronze:*` tasks (Glue CLI, S3 Tables, data load)."
+overview: "Snowflake lab: bronze Iceberg on S3 (prereq) → catalog integration → CLD → Dynamic Iceberg Tables → Streamlit in Snowflake. Phase 0: .env.example template. Then extraction map, bronze landing, SQL lab, sfguide phases, carve-out. Tooling: sfutils-pat, sfutils-extvolumes (git), snow CLI >3.16; modular Taskfile `bronze:*`."
 todos:
+  - id: phase-0-env-example
+    content: "Phase 0: maintain root .env.example (AWS/bronze/Snowflake placeholders); doc cp→.env in lab README + manual test; extend as SQL/PAT phases land"
+    status: pending
   - id: sfguide-phase-1-map
     content: "Author + id; extraction map from docs/templates; commit under sfguides/"
     status: pending
@@ -54,6 +57,7 @@ One todo (or one sfguide sub-phase) at a time: implement, validate, **commit**, 
 
 ## Order
 
+0. **Phase 0 — env template** — keep [`.env.example`](../.env.example) current (AWS, bronze, Snowflake placeholders); learners copy to `.env` / use direnv; evolve alongside tasks and SQL phases.
 1. **SFGuide Phase 1** — extraction map from existing [`docs/`](docs/) and templates; commit before large deletes.
 2. **`phase-bronze-landing-zone`** — [`lab/bronze-landing-zone.md`](lab/bronze-landing-zone.md), `tools/bronze-preload/`, modular **`.taskfiles/`** + root [`Taskfile.yml`](Taskfile.yml); **commit** before **`companion-repo-delete`**.
 3. **`companion-repo-delete`** — remove obsolete trees (see below).

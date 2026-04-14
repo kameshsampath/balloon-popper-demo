@@ -6,6 +6,7 @@ Land **sample** balloon analytics rows into **AWS Glue Data Catalog** Iceberg ta
 
 ## Prerequisites
 
+- **Phase 0:** copy [`.env.example`](../../.env.example) to `.env` and set variables (see comments in the example file). Do not commit `.env`.
 - **AWS account** and **AWS CLI v2** (for `s3tables` commands, use **2.34+**).
 - **`AWS_PROFILE`** set to a profile with permissions for Glue, S3, and (if you run `bronze:s3tables-setup`) S3 Tables control plane. See [lab/aws/README.md](../../lab/aws/README.md) to render a starter policy into `.aws-config/`.
 - **`uv`** and repo dependencies: `uv sync`.
