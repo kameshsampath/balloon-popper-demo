@@ -13,6 +13,11 @@ vars:
   IMAGE_NAME: balloon-pop-generator
 
 tasks:
+  check-tools:
+    desc: Verify lab CLIs on PATH (aws, snow, task, envsubst, jq, cortex, uv); optional git
+    cmds:
+      - python3 tools/check_lab_prereqs.py
+
   build-generator:
     dir: generator
     desc: build the generator image and push to local registry

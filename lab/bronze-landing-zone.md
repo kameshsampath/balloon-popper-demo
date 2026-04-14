@@ -2,7 +2,7 @@
 
 This document is the **detailed** prerequisite for the Snowflake lab: **Iceberg bronze on S3** and a **REST catalog** Snowflake can use before **`CREATE DATABASE … LINKED_CATALOG`**.
 
-**Phase 0 — environment:** copy [`.env.example`](../.env.example) to `.env`, fill in **AWS** and **bronze** variables (never commit `.env`). Extend `.env.example` as new phases add Snowflake CLI, PAT, or DuckDB IRC variables.
+**Phase 0 — environment:** copy [`.env.example`](../.env.example) to `.env`, fill in **AWS** and **bronze** variables (never commit `.env`). Run **`task check-tools`** from the repo root to confirm **aws**, **snow**, **task**, **envsubst**, **jq**, **cortex**, **uv**, and related CLIs are on your `PATH`. Extend `.env.example` as new phases add Snowflake CLI, PAT, or DuckDB IRC variables.
 
 **Shared AWS account / workshop:** set **`LAB_USERNAME`** (one id per participant) so Glue database and S3 Tables bucket name default to unique values when **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** are not set. See comments in [`.env.example`](../.env.example). **`S3TABLES_NAMESPACE`** stays `balloon_pops` inside each participant’s table bucket unless you change it deliberately.
 

@@ -8,6 +8,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 | Check | How |
 |--------|-----|
+| Host CLIs | `task check-tools` — expects **aws**, **snow**, **task**, **envsubst**, **jq**, **cortex**, **uv** on `PATH` (see [README](../README.md)); optional **git**, **docker**, **kubectl** for legacy tasks |
 | Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Confirm `AWS_PROFILE`, `AWS_REGION`, `BRONZE_WAREHOUSE`, and other vars for the steps you will run. For a **shared workshop AWS account**, set **`LAB_USERNAME`** and leave **`GLUE_DATABASE`** / **`BRONZE_S3TABLES_BUCKET_NAME`** unset so names derive per participant (see `.env.example`). |
 | Python | `python --version` shows **3.12+** |
 | uv | `uv --version` works |
@@ -103,7 +104,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 | Check | Command |
 |--------|---------|
 | Lint loader | `uv run ruff check tools/bronze-preload/load_sample.py` |
-| Task list | `task --list \| rg bronze` — shows `render-iam`, `*-dry-run`, `glue-setup`, `s3tables-setup`, `load`, `all` |
+| Task list | `task --list \| rg 'check-tools|bronze'` — root **`check-tools`** plus `bronze:*` tasks |
 
 ---
 
