@@ -12,7 +12,7 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 | **Folder + file** | `sfguides/lakehouse-iceberg-production-pipelines/lakehouse-iceberg-production-pipelines.md` |
 | **Public title** | Lakehouse Transformations: Build Production Pipelines for your Iceberg Tables |
 | **Author** | Kamesh Sampath, Gilberto Hernandez — _format for Quickstarts frontmatter (single field vs list) per [create-sfguide](https://github.com/Snowflake-Labs/sfguides) / your DA skill at Phase 2 PR_ |
-| **Status** | Phase 1 map complete |
+| **Status** | Phase 1 map complete (bronze-first reader order + Tools/Overview agreed) |
 
 ## Docs inventory (`docs/`)
 
@@ -48,10 +48,12 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 
 | Source | What to extract | Target in `sfguides/<id>/<id>.md` |
 |--------|-----------------|-----------------------------------|
-| [README.md](../README.md) | Prerequisites list (replace k3d/Kafka with Snowflake + AWS + `snow` + `uv` + Task) | `### Prerequisites` |
-| [docs/index.md](../docs/index.md), [docs/summary.md](../docs/summary.md) | High-level story | `## Overview` |
-| [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) | Tables `balloon_pops.*` | Setup verify + Phase 3 SQL comments |
-| [docs/catalog_setup.md](../docs/catalog_setup.md) | Polaris/S3 concepts only | Link **lab/bronze-landing-zone.md** |
+| [README.md](../README.md) | Accounts + repo orientation; strip k3d/Kafka | `## Overview` (tone) + `## Tools and prerequisites` (bullets) |
+| [docs/index.md](../docs/index.md), [docs/summary.md](../docs/summary.md) | High-level story, “what you’ll learn” | `## Overview` |
+| [lab/bronze-landing-zone.md](../lab/bronze-landing-zone.md) | Full bronze sequence, env vars, `task bronze:*` | `## Bronze landing zone` (summary + link); keep long copy in lab |
+| [tools/bronze_preload/README.md](../tools/bronze_preload/README.md) | CLI / `uv run` scripts / two AWS surfaces | `## Tools and prerequisites` + Bronze subsection |
+| [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) | Tables `balloon_pops.*` | Bronze chapter “what you have” + Phase 3 SQL comments |
+| [docs/catalog_setup.md](../docs/catalog_setup.md) | Polaris/S3 concepts only | Overview or Bronze “why S3 Tables” one paragraph + link lab |
 | [docs/implementing_data_pipeline.md](../docs/implementing_data_pipeline.md), [docs/verifying_data_pipeline.md](../docs/verifying_data_pipeline.md) | MV / pipeline order | Phase 3 DT + verify |
 | [docs/dashboards.md](../docs/dashboards.md), leaderboard / color / performance chapters | Viz intent | Phase 3 SiS |
 | [docs/run_app.md](../docs/run_app.md) | UX flow | SiS open / grant |
@@ -70,22 +72,55 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 | RisingWave Iceberg sinks | Snowflake-managed Iceberg (DTs) + **external volume** |
 | Local Streamlit / MkDocs | **Streamlit in Snowflake** + single `sfguides/<id>/<id>.md` |
 
-## Proposed main H2 order (Phase 3 body)
+## Proposed guide outline (reader order)
 
-_Use ≤4 words per H2 per create-sfguide; adjust wording to match skill._
+**Intent:** Open with **Overview** and **Tools and prerequisites**, then the **Bronze landing zone** as the **first hands-on chapter** (still “setup” for Snowflake, but not buried). Learners see **what data exists**, **where it lives** (Glue + S3 warehouse + optional S3 Tables), and **what Snowflake will attach to** before any `CREATE CATALOG INTEGRATION`. Deep copy stays in [lab/bronze-landing-zone.md](../lab/bronze-landing-zone.md); the sfguide summarizes, links, and shows the Glue table inventory below.
+
+### Frontmatter
+
+`id`, `title`/`summary`, `authors`, `tags`, `license` per [Snowflake Quickstarts](https://github.com/Snowflake-Labs/sfguides) / create-sfguide checklist.
+
+### `## Overview`
+
+- End-to-end outcome: bronze Iceberg → linked catalog → Dynamic Iceberg Tables → Streamlit in Snowflake (optional DuckDB read).
+- Short “you will” bullets; optional one-block architecture (Glue / S3 → Snowflake CLD → DTs → SiS).
+- Sources: [docs/index.md](../docs/index.md), [docs/summary.md](../docs/summary.md), [README.md](../README.md) (Snowflake path only; omit legacy k3d stack).
+
+### `## Tools and prerequisites`
+
+- **Accounts:** AWS + Snowflake; assumed roles / permissions (pointer to [lab/aws/README.md](../lab/aws/README.md) for IAM render if needed).
+- **Local toolchain:** `uv` / `uv sync`; **`.envrc`** and `.venv/bin` on PATH; **`snow`** from `snowflake-cli`; **`task`**, **`task check-tools`** (`check-lab-prereqs`).
+- **Repo entrypoints:** `[project.scripts]` in [pyproject.toml](../pyproject.toml) (`bronze-cli`, `load-bronze-sample`, …) and **`task bronze:*`** — link [tools/bronze_preload/README.md](../tools/bronze_preload/README.md).
+- **Environment:** `.env.example` highlights (`AWS_PROFILE`, `BRONZE_WAREHOUSE`, `LAB_USERNAME`, …); no secrets in-repo.
+- Sources: [README.md](../README.md), [lab/bronze-landing-zone-MANUAL-TEST.md](../lab/bronze-landing-zone-MANUAL-TEST.md) for smoke order; [docs/setup.md](../docs/setup.md) only where still accurate (**omit** k8s/k3d).
+
+### `## Bronze landing zone` (first hands-on chapter)
+
+- **Why first:** grounds the lab so catalog linking and DTs have real Glue objects and sample rows; answers “what do I already have?”
+- **What you run:** ordered gloss (`render-iam` optional → `glue-setup` → `s3tables-setup` → `load` / `task bronze:all`); **full procedure** → [lab/bronze-landing-zone.md](../lab/bronze-landing-zone.md).
+- **What you have after:** five table names + one-line purpose each (see **Glue catalog inventory** below); optional callout for S3 Tables vs Glue warehouse (see bronze README “two AWS surfaces”).
+- **Schema truth:** link [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) for columns/partitions.
+
+### Snowflake pipeline (main H2s after bronze)
+
+_Use ≤4 words per H2 title where Quickstarts style requires it; wording can merge steps if length is an issue._
 
 1. **Link Iceberg catalog** — `CREATE CATALOG INTEGRATION`, secrets, `DESCRIBE CATALOG INTEGRATION` (trust policy pointers).
 2. **Create linked database** — `CREATE DATABASE … LINKED_CATALOG`.
 3. **Build silver pipeline** — Dynamic Iceberg Tables mirroring `mv_leaderboard` / `mv_balloon_color_stats` (names TBD).
 4. **Add windowed tables** — DTs for tumble-window semantics (`mv_realtime_scores`, `mv_balloon_colored_pops`, `mv_color_performance_trends`).
 5. **Visualize in Streamlit** — SiS deploy and queries.
-6. **Query Iceberg externally** _(optional appendix)_ — DuckDB + HIRC read DT tables.
+6. **Query Iceberg externally** _(optional appendix)_ — DuckDB + read path for DT tables.
 
-## First H2 after Setup
+### Other sections (non–step-1 bodies)
 
-**Not** bronze loading. Setup ends with “bronze ready” + link to [lab/bronze-landing-zone.md](../lab/bronze-landing-zone.md). First **numbered / main** lab H2 = **Link Iceberg catalog** (or combined link + CLD if you merge for brevity).
+| Section | Content |
+|---------|---------|
+| **Conclusion** | Recap bronze → Snowflake path; what to delete or keep in a shared AWS account. |
+| **Appendix** | Troubleshooting ([docs/troubleshooting.md](../docs/troubleshooting.md) patterns rewritten for Glue/`snow`/Snowflake only), limits, links to legacy `docs/` if anything remains. |
+| **Resources** | Lab deep-links, `snowflake/lab/*.sql`, DuckDB gist/docs as needed. |
 
-## Glue catalog inventory (Prerequisites)
+## Glue catalog inventory (Bronze reference)
 
 | Glue database (example) | Iceberg tables |
 |-------------------------|----------------|
