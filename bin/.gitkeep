@@ -1,0 +1,2 @@
+# Legacy k8s cluster helper scripts were removed during Snowflake lab migration.
+# Prefer task bronze:* for AWS/bronze work.

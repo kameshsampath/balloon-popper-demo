@@ -13,6 +13,7 @@ image-refs.txt
 **/*.key
 **/*.pem
 bin/**
+!bin/.gitkeep
 !bin/*.py
 !bin/*.sh
 kubectl
