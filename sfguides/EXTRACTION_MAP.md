@@ -11,7 +11,7 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 | **Guide `id` (proposed)** | `lakehouse-iceberg-production-pipelines` |
 | **Folder + file** | `sfguides/lakehouse-iceberg-production-pipelines/lakehouse-iceberg-production-pipelines.md` |
 | **Public title** | Lakehouse Transformations: Build Production Pipelines for your Iceberg Tables |
-| **Author** | Kamesh Sampat, Gilberto Hernandez — _format for Quickstarts frontmatter (single field vs list) per [create-sfguide](https://github.com/Snowflake-Labs/sfguides) / your DA skill at Phase 2 PR_ |
+| **Author** | Kamesh Sampath, Gilberto Hernandez — _format for Quickstarts frontmatter (single field vs list) per [create-sfguide](https://github.com/Snowflake-Labs/sfguides) / your DA skill at Phase 2 PR_ |
 | **Status** | Phase 1 map complete |
 
 ## Docs inventory (`docs/`)
