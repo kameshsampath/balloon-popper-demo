@@ -128,10 +128,22 @@ _Use ≤4 words per H2 title where Quickstarts style requires it; wording can me
 
 Align with [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) and [sink.sql.j2](../polaris-forge-setup/templates/sink.sql.j2).
 
+## Incremental Quickstart delivery (validate while building)
+
+Update **`sfguides/<id>/<id>.md`** **as phases complete**, together with the lab assets they describe—do not wait until the whole lab is finished. Each commit should leave the guide **internally consistent** with `lab/` and `snowflake/lab/` at that point.
+
+| Milestone | Typical Quickstart growth |
+|-----------|---------------------------|
+| **Phase 2 (scaffold)** | Create `sfguides/<id>/<id>.md` with frontmatter, **`## Overview`**, **`## Tools and prerequisites`**, and **`## Bronze landing zone`** (summaries + links to [lab/bronze-landing-zone.md](../lab/bronze-landing-zone.md); commands match `task bronze:*` / `pyproject` scripts). |
+| **Phase 3 (Snowflake body)** | Add pipeline **`##`** steps (catalog integration → linked DB → DTs → SiS) as SQL and procedures are verified in `snowflake/lab/`. |
+| **Phase 4 (closeout)** | **Conclusion**, **Appendix**, **Resources**; strip draft notes; align with create-sfguide checklist before **sfquickstarts** PR. |
+
+WIP in **this repo** may use a draft frontmatter flag or top-of-file note; **published** Quickstarts should avoid empty or misleading steps.
+
 ## Phase 1 exit checklist
 
 - [x] Extraction map covers all `docs/*.md` and key templates
 - [x] [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) holds MV ↔ DT porting notes
 - [ ] Reviewer sign-off on map (human gate)
 - [ ] `author` frontmatter formatted per Snowflake Quickstarts (names above)
-- [ ] After sign-off: Phase 2 scaffold `sfguides/<id>/<id>.md`
+- [ ] After sign-off: Phase 2 scaffold `sfguides/<id>/<id>.md` (start **incremental** updates per table above)

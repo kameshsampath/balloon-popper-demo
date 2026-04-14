@@ -23,6 +23,15 @@ Kamesh Sampath, Gilberto Hernandez — use the format required by create-sfguide
 
 Stop pipeline sprawl and the cost of data duplication. In this advanced lab, you will learn to perform secure, in-place transformations across your entire data estate. You will connect externally managed Iceberg tables with Catalog Linked Databases to always work on fresh data without ETL, build efficient and declarative pipelines with Dynamic Tables for Iceberg preserving multi-engine access to your data, and implement business continuity to ensure your production data is always available.
 
+## Incremental Quickstart updates (recommended)
+
+Maintain **`sfguides/<id>/<id>.md`** (Snowflake Quickstarts–style **single file**) **in step with lab phases**, not only at the end. That lets you **validate** narrative, commands, and links against the real **`lab/`** and **`snowflake/lab/`** trees while you build.
+
+- After each **phase** (or coherent milestone), **extend or tighten** the matching `##` sections in the guide and **commit** with the lab/SQL changes that made them true.
+- **Order of growth** (align with [sfguides/EXTRACTION_MAP.md](../../sfguides/EXTRACTION_MAP.md)): frontmatter + **`## Overview`** + **`## Tools and prerequisites`** + **`## Bronze landing zone`** first; then Snowflake pipeline **`##`** steps as catalog/CLD/DT/SiS work lands; then **Conclusion / Appendix / Resources**.
+- Prefer **real steps and tested commands** over permanent “TBD” placeholders. For in-repo WIP, a short **Draft** note in the guide frontmatter or top of a section is acceptable until publish—avoid shipping placeholder steps to **sfquickstarts** proper.
+- When a phase adds lab content, **cross-check** the Quickstart: env vars, `task` / `uv run` names, and links to **`lab/*.md`** still match.
+
 ## Required process
 
 Strictly follow the workflow, structure, and conventions in:
