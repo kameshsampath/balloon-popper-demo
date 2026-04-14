@@ -7,7 +7,7 @@
 version: "3"
 
 vars:
-  BRONZE_CLI: uv run python tools/bronze-preload/bronze_cli.py
+  BRONZE_CLI: uv run bronze-cli
 
 tasks:
   render-iam:
@@ -43,7 +43,7 @@ tasks:
   load:
     desc: PyIceberg sample rows into Glue Iceberg tables (needs AWS_PROFILE, BRONZE_WAREHOUSE; run after glue-setup)
     cmds:
-      - uv run python tools/bronze-preload/load_sample.py
+      - uv run load-bronze-sample
 
   all:
     desc: glue-setup, s3tables-setup, then load (render-iam is separate — run first if attaching new IAM)

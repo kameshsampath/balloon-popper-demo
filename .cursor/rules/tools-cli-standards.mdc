@@ -6,12 +6,17 @@ alwaysApply: false
 
 # `tools/` CLI and helper scripts
 
-When adding or editing anything under **`tools/`**, keep behavior and style aligned with the existing CLIs (`check_lab_prereqs.py`, `bronze-preload/bronze_cli.py`, `bronze-preload/load_sample.py`).
+When adding or editing anything under **`tools/`**, keep behavior and style aligned with the existing CLIs (`check_lab_prereqs.py`, `bronze_preload/bronze_cli.py`, `bronze_preload/load_sample.py`).
 
 ## Invocation
 
-- Prefer **`uv run python tools/...`** (or paths documented in **`.taskfiles/bronze.yml`** / **Taskfile.yml**) so dependencies match **`pyproject.toml`**.
-- New learner-facing steps should be reachable via **`task`** where practical, with the same command also documented in **`tools/bronze-preload/README.md`** or **`lab/`** as today.
+- Prefer **`uv run <script-name> ...`** (see **`[project.scripts]`** in **`pyproject.toml`**) or **`task`** (see **`.taskfiles/bronze.yml`** / **Taskfile.yml**) so the environment matches **`pyproject.toml`**.
+- New learner-facing steps should be reachable via **`task`** where practical, with the same command also documented in **`tools/bronze_preload/README.md`** or **`lab/`** as today.
+
+## Packaging (`pyproject.toml`)
+
+- The repo installs the **`tools`** package from the project root (Hatch **`[tool.hatch.build.targets.wheel]`** → **`packages = ["tools"]`** plus **`[build-system]`**). Subpackages under **`tools/`** must use **valid Python directory names** (underscores), e.g. **`bronze_preload/`**, so they are importable as **`tools.bronze_preload.…`**.
+- Add a **`[project.scripts]`** entry for each user-facing tool (**`uv run <script-name>`**). Use **kebab-case** script names and map them to **`tools.<subpackage>.<module>:<callable>`** (for example **`tools.check_lab_prereqs:main`**, **`tools.bronze_preload.bronze_cli:main`** for Click).
 
 ## Python layout
 
@@ -34,7 +39,7 @@ When adding or editing anything under **`tools/`**, keep behavior and style alig
 
 - **No `shell=True`** for subprocess unless there is a strong reason; pass **`list[str]`** argv.
 - Prefer **`pathlib.Path`** for repo-relative paths; resolve repo root once (see **`repo_root`** in `bronze_aws.py`) instead of hard-coding **`..`** chains from CWD assumptions.
-- Keep **`check_lab_prereqs.py`–style** tools **stdlib-only** unless there is a compelling reason (that script is invoked as plain **`python3 tools/...`** from Task).
+- Keep **`check_lab_prereqs.py`–style** tools **stdlib-only** unless there is a compelling reason (still invoked via **`uv run check-lab-prereqs`** from **`task check-tools`**).
 
 ## AWS and secrets
 
@@ -43,4 +48,4 @@ When adding or editing anything under **`tools/`**, keep behavior and style alig
 
 ## After changes
 
-- If you add a new script or command, update **`tools/bronze-preload/README.md`** (or the relevant **`lab/*.md`**) and **`task`** definitions so **`task check-tools`** and docs stay truthful.
+- If you add a new script or command, register it under **`[project.scripts]`** in **`pyproject.toml`** (kebab-case CLI name → **`tools.<subpackage>.<module>:<callable>`**). Use a **`tools/`** subpackage whose directory name is a valid Python identifier (underscores, not hyphens). Update **`tools/bronze_preload/README.md`** (or the relevant **`lab/*.md`**) and **`task`** definitions so **`task check-tools`** and docs stay truthful.

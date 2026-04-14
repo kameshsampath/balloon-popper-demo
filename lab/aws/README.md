@@ -1,6 +1,6 @@
 # IAM policy templates (bronze)
 
-- **`bronze-glue-writer-policy.json`** — Inline policy for a principal that runs **`tools/bronze-preload/bronze_cli.py`** (Glue / S3 Tables setup) and **`load_sample.py`** (Glue + S3 warehouse + optional S3 Tables control plane).
+- **`bronze-glue-writer-policy.json`** — Inline policy for a principal that runs **`tools/bronze_preload/bronze_cli.py`** (Glue / S3 Tables setup) and **`load_sample.py`** (Glue + S3 warehouse + optional S3 Tables control plane).
 
 ## Render to `.aws-config/` (no secrets committed)
 
@@ -16,7 +16,7 @@ task bronze:render-iam
 # Preview only: task bronze:render-iam -- --dry-run
 ```
 
-Or call the CLI directly: `uv run python tools/bronze-preload/bronze_cli.py render-iam` (add `--dry-run` to print JSON without writing).
+Or call the CLI directly: `uv run bronze-cli render-iam` (add `--dry-run` to print JSON without writing).
 
 Attach `.aws-config/bronze-glue-writer-policy.rendered.json` to an IAM **user** or **role** you use for local `aws` + PyIceberg, or merge statements into an existing policy.
 

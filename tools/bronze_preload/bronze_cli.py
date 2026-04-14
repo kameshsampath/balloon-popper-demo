@@ -12,7 +12,7 @@ import boto3
 import click
 from botocore.exceptions import ClientError
 
-from bronze_aws import (
+from .bronze_aws import (
     aws_json,
     derive_bronze_resource_names,
     ensure_aws_config_dir,

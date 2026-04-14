@@ -44,22 +44,25 @@ task bronze:all
 
 ## Two AWS surfaces (by design)
 
-1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load_sample.py`** create and append **Iceberg** tables your laptop can manage with **PyIceberg** (good for workshop data).
+1. **Glue Data Catalog + S3 warehouse** — `glue-setup` + **`load-bronze-sample`** create and append **Iceberg** tables your laptop can manage with **PyIceberg** (good for workshop data).
 2. **Amazon S3 Tables** (table bucket + namespace + empty ICEBERG tables) — `s3tables-setup` provisions the **S3 Tables** layout for **Snowflake Glue Iceberg REST** / analytics alignment; rows are not duplicated there automatically until you wire a writer to that catalog.
 
 ## CLI (Click; Windows / macOS / Linux)
 
-| Command | Role |
-|--------|------|
-| `uv run python tools/bronze-preload/bronze_cli.py glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` (add `--dry-run` for a plan) |
-| `uv run python tools/bronze-preload/bronze_cli.py s3tables-setup` | `aws s3tables` create bucket / namespace / five tables (`--dry-run` lists plan, read-only) |
-| `uv run python tools/bronze-preload/bronze_cli.py render-iam` | Substitute `${VAR}` in policy template → `.aws-config/` (`--dry-run` prints JSON only) |
-| `load_sample.py` | PyIceberg append sample rows (unchanged entrypoint) |
+Entry points are registered in the root **`pyproject.toml`** under **`[project.scripts]`** (run from repo root after **`uv sync`**):
 
-**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`.
+| `uv run …` | Role |
+|--------|------|
+| `uv run check-lab-prereqs` | Verify lab CLIs on `PATH` (same as `task check-tools`) |
+| `uv run bronze-cli glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` (add `--dry-run` for a plan) |
+| `uv run bronze-cli s3tables-setup` | `aws s3tables` create bucket / namespace / five tables (`--dry-run` lists plan, read-only) |
+| `uv run bronze-cli render-iam` | Substitute `${VAR}` in policy template → `.aws-config/` (`--dry-run` prints JSON only) |
+| `uv run load-bronze-sample` | PyIceberg append sample rows |
+
+**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:load`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`.
 
 Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-warehouse` / `BRONZE_WAREHOUSE`, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
-`uv run python tools/bronze-preload/bronze_cli.py glue-setup --aws-profile prod --bronze-warehouse s3://my/prefix/`
+`uv run bronze-cli glue-setup --aws-profile prod --bronze-warehouse s3://my/prefix/`
 
 ## Relationship to `packages/generator`
 

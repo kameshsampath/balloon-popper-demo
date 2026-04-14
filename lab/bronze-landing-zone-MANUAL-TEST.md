@@ -103,7 +103,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 | Check | Command |
 |--------|---------|
-| Lint loader | `uv run ruff check tools/bronze-preload/load_sample.py` |
+| Lint loader | `uv run ruff check tools/bronze_preload/load_sample.py` |
 | Task list | `task --list \| rg 'check-tools|bronze'` — root **`check-tools`** plus `bronze:*` tasks |
 
 ---
@@ -123,4 +123,4 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 ---
 
-**Related:** [bronze-landing-zone.md](bronze-landing-zone.md) · [tools/bronze-preload/README.md](../tools/bronze-preload/README.md)
+**Related:** [bronze-landing-zone.md](bronze-landing-zone.md) · [tools/bronze_preload/README.md](../tools/bronze_preload/README.md)

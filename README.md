@@ -6,7 +6,7 @@ This repository is **transitioning** from the original **RisingWave + k3d + Pola
 
 | Area | Link |
 |------|------|
-| Bronze (AWS, Glue, S3 Tables, sample load) | [lab/bronze-landing-zone.md](lab/bronze-landing-zone.md), [tools/bronze-preload/README.md](tools/bronze-preload/README.md), [manual test plan](lab/bronze-landing-zone-MANUAL-TEST.md) |
+| Bronze (AWS, Glue, S3 Tables, sample load) | [lab/bronze-landing-zone.md](lab/bronze-landing-zone.md), [tools/bronze_preload/README.md](tools/bronze_preload/README.md), [manual test plan](lab/bronze-landing-zone-MANUAL-TEST.md) |
 | Env template (Phase 0) | [`.env.example`](.env.example) |
 | Snowflake SQL (scaffold) | [snowflake/lab/](snowflake/lab/) |
 | SFGuide extraction | [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) |

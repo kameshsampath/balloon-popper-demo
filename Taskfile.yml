@@ -14,7 +14,7 @@ tasks:
   check-tools:
     desc: Verify lab CLIs on PATH (required + recommended direnv/curl/openssl + optional git)
     cmds:
-      - python3 tools/check_lab_prereqs.py
+      - uv run check-lab-prereqs
 
   default:
     desc: List available tasks (start with task check-tools)

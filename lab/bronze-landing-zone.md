@@ -24,7 +24,7 @@ Replace `balloon_pops` with your **Glue catalog / S3 Tables namespace** if it di
 
 ## Automation (`task bronze:…`)
 
-Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`). Implementation is **Python + Click** ([`tools/bronze-preload/bronze_cli.py`](../tools/bronze-preload/bronze_cli.py)) so the same commands work on **Windows, Linux, and macOS** (still requires **AWS CLI** on `PATH` for `s3tables` and for `sts` in `render-iam`). Use a **real** AWS account: set **`AWS_PROFILE`** (and usually **`AWS_REGION`**). See [tools/bronze-preload/README.md](../tools/bronze-preload/README.md) for full env vars.
+Modular tasks live in [`.taskfiles/bronze.yml`](../.taskfiles/bronze.yml) (included from the root `Taskfile.yml`). Implementation is **Python + Click** ([`tools/bronze_preload/bronze_cli.py`](../tools/bronze_preload/bronze_cli.py)) so the same commands work on **Windows, Linux, and macOS** (still requires **AWS CLI** on `PATH` for `s3tables` and for `sts` in `render-iam`). Use a **real** AWS account: set **`AWS_PROFILE`** (and usually **`AWS_REGION`**). See [tools/bronze_preload/README.md](../tools/bronze_preload/README.md) for full env vars.
 
 | Task | Purpose |
 |------|---------|

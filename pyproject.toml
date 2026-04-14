@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
 [project]
 name = "balloon-popper-demo"
 version = "0.0.1"
@@ -19,6 +23,14 @@ dependencies = [
     "click>=8.1.8",
     "boto3>=1.35",
 ]
+
+[project.scripts]
+check-lab-prereqs = "tools.check_lab_prereqs:main"
+bronze-cli = "tools.bronze_preload.bronze_cli:main"
+load-bronze-sample = "tools.bronze_preload.load_sample:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tools"]
 
 [dependency-groups]
 dev = [
