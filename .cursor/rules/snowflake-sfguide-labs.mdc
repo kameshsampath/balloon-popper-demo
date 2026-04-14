@@ -1,0 +1,44 @@
+---
+description: Sfguides/labs authoring; canonical lab title and description for this repo
+alwaysApply: true
+---
+
+# Snowflake quickstarts and lab instructions
+
+When authoring or editing **Snowflake quickstarts (sfguides)** or **lab-style instructions** (step-by-step hands-on guides), including Markdown under `docs/`, `sfguides/`, `labs/`, or similar:
+
+## Official lab title and description (canonical)
+
+Use **exactly** the following for this lab whenever you need a title, subtitle, summary, abstract, overview blurb, sfguide front matter, index or landing copy, or any other short description of what this lab is. Do **not** invent alternate titles or replace this description with a different pitch unless the user explicitly asks for variants.
+
+### Lab title
+
+Lakehouse Transformations: Build Production Pipelines for your Iceberg Tables
+
+### Authors (sfguide frontmatter)
+
+Kamesh Sampat, Gilberto Hernandez — use the format required by create-sfguide for multiple authors when you add YAML.
+
+### Lab description
+
+Stop pipeline sprawl and the cost of data duplication. In this advanced lab, you will learn to perform secure, in-place transformations across your entire data estate. You will connect externally managed Iceberg tables with Catalog Linked Databases to always work on fresh data without ETL, build efficient and declarative pipelines with Dynamic Tables for Iceberg preserving multi-engine access to your data, and implement business continuity to ensure your production data is always available.
+
+## Required process
+
+Strictly follow the workflow, structure, and conventions in:
+
+`/Users/ksampath/git-emu/coco-for-developer-advocates/.cortex/skills/create-sfguide/SKILL.md`
+
+Read that file and apply it; do not substitute an informal outline.
+
+## Examples
+
+Match tone, layout, and patterns used in existing quickstarts under:
+
+`/Users/ksampath/git-sfc/Snowflake-Labs/sfquickstarts/site/sfguides/src`
+
+Use those guides as concrete references for headings, duration/difficulty lines, prerequisites, SQL blocks, and narrative style.
+
+## Documentation facts
+
+For SQL syntax and Snowflake product details while writing guides, still use [docs.snowflake.com](https://docs.snowflake.com) as the source of truth (see the Snowflake documentation project rule).

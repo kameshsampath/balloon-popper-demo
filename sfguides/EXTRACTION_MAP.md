@@ -11,7 +11,7 @@ See also [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) for MV → 
 | **Guide `id` (proposed)** | `lakehouse-iceberg-production-pipelines` |
 | **Folder + file** | `sfguides/lakehouse-iceberg-production-pipelines/lakehouse-iceberg-production-pipelines.md` |
 | **Public title** | Lakehouse Transformations: Build Production Pipelines for your Iceberg Tables |
-| **Author** | Kamesh Sampath — _confirm exact string required by [create-sfguide](https://github.com/Snowflake-Labs/sfguides) / your DA skill before Phase 2 PR_ |
+| **Author** | Kamesh Sampat, Gilberto Hernandez — _format for Quickstarts frontmatter (single field vs list) per [create-sfguide](https://github.com/Snowflake-Labs/sfguides) / your DA skill at Phase 2 PR_ |
 | **Status** | Phase 1 map complete |
 
 ## Docs inventory (`docs/`)
@@ -98,5 +98,5 @@ Align with [docs/iceberg_schema_design.md](../docs/iceberg_schema_design.md) and
 - [x] Extraction map covers all `docs/*.md` and key templates
 - [x] [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md) holds MV ↔ DT porting notes
 - [ ] Reviewer sign-off on map (human gate)
-- [ ] `author` string validated against Snowflake Quickstarts rules
+- [ ] `author` frontmatter formatted per Snowflake Quickstarts (names above)
 - [ ] After sign-off: Phase 2 scaffold `sfguides/<id>/<id>.md`
