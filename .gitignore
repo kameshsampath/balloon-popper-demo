@@ -21,15 +21,9 @@ work/**
 !work/.gitkeep
 .vscode
 .ansible
-**/persistence.xml
-**/postgresql.yaml
-**/risingwave.yaml
-**/polaris.env
 scripts/*.sql
 __pycache__
 **/.ipynb_checkpoints/
-notebooks/*.ipynb
-!notebooks/workbook.ipynb
 
 # Snowflake lab: generated SQL from bronze .aws-config (task snowflake:generate-lab-sql)
 snowflake/lab/generated/*.generated.sql

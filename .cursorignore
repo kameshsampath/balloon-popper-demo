@@ -22,13 +22,7 @@ work/**
 !work/snow-utils/**
 .vscode
 .ansible
-**/persistence.xml
-**/postgresql.yaml
-**/risingwave.yaml
-**/polaris.env
 scripts/*.sql
 __pycache__
 **/.ipynb_checkpoints/
-notebooks/*.ipynb
-!notebooks/workbook.ipynb
 !work/**.png

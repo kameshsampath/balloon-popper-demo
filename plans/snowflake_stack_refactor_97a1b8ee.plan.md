@@ -12,7 +12,7 @@ todos:
     content: "lab/bronze-landing-zone.md + tools/bronze_preload + .taskfiles/ modular tasks (bronze:*); include explicit Glue DB + table names; Glue IRC per gist if needed; test; commit"
     status: pending
   - id: companion-repo-delete
-    content: "Partial done: removed GH Pages workflow, bin/*.sh, cluster-config, .ansible-lint. Remaining: polaris-forge-setup, k8s, mkdocs.yaml, docs/, notebooks legacy, tighten after final lifts"
+    content: "Partial done: removed GH Pages workflow, bin/*.sh, cluster-config, .ansible-lint, polaris-forge-setup/, k8s/, notebooks/. Remaining: mkdocs.yaml, docs/ lift or trim, tighten after final lifts"
     status: pending
   - id: snowflake-sql-lab
     content: "snowflake/lab/*.sql: integration → CREATE DATABASE … LINKED_CATALOG → DTs; align with sfguide Phase 3"
