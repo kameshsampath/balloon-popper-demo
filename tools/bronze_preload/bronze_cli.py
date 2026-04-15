@@ -14,8 +14,12 @@ import click
 from botocore.exceptions import ClientError
 
 from .bronze_aws import (
+    apply_bronze_from_aws_config,
     apply_cleanup_context_from_aws_config,
+    apply_s3tables_millis_suffix_if_enabled,
+    remove_bronze_aws_config_artifacts,
     aws_json,
+    default_snowflake_glue_catalog_iam_role_name,
     derive_bronze_resource_names,
     ensure_aws_config_dir,
     ensure_bronze_s3_arn_for_policy,
@@ -24,12 +28,16 @@ from .bronze_aws import (
     repo_root,
     require_aws_cli_s3tables,
     require_aws_profile,
+    glue_database_json_path,
     resolve_bronze_warehouse,
     resolve_aws_account_id,
     resolve_region,
+    resolve_s3tables_table_bucket_name,
     sanitize_lab_slug_bucket,
 )
 from .bronze_tables import BRONZE_GLUE_TABLES as TABLES
+from .lakeformation_bronze import run_lakeformation_setup
+from tools.snowflake_lab.catalog_iam import delete_tagged_snowflake_glue_catalog_read_role
 
 
 def _read_text_strip(path: Path) -> str | None:
@@ -427,6 +435,7 @@ def s3tables_setup_cmd(
     require_aws_profile()
     region = resolve_region()
     derive_bronze_resource_names()
+    apply_s3tables_millis_suffix_if_enabled()
     tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
     if not tb_name and not dry_run:
         print(
@@ -682,6 +691,16 @@ def snowflake_summary_cmd(
     require_aws_profile()
     region = resolve_region()
     os.environ.setdefault("AWS_REGION", region)
+    root = repo_root()
+    gdb = glue_database_json_path(root)
+    if not gdb.is_file():
+        print(
+            f"error: missing {gdb}. Run `task bronze:glue-setup` (or `uv run bronze-cli glue-setup`) "
+            "before snowflake-summary.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
+    apply_bronze_from_aws_config(root)
     derive_bronze_resource_names()
     glue_db = os.environ.get("GLUE_DATABASE", "balloon_pops")
     os.environ["GLUE_DATABASE"] = glue_db
@@ -704,11 +723,12 @@ def snowflake_summary_cmd(
     glue_db_arn = f"arn:aws:glue:{region}:{account}:database/{glue_db}"
     glue_catalog_arn = f"arn:aws:glue:{region}:{account}:catalog"
 
-    tb_name = (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
+    tb_name = resolve_s3tables_table_bucket_name(
+        root, cli_bucket=(s3tables_bucket or "").strip()
+    )
     ns = os.environ.get("S3TABLES_NAMESPACE", "balloon_pops")
     table_bucket_arn = _resolve_s3tables_table_bucket_arn(profile, region, tb_name)
 
-    root = repo_root()
     cfg = root / ".aws-config"
     file_warehouse = _read_text_strip(cfg / "bronze-warehouse-uri.txt")
     file_tb_arn = _read_text_strip(cfg / "s3tables-table-bucket-arn.txt")
@@ -822,6 +842,77 @@ def snowflake_summary_cmd(
     click.echo("")
 
 
+@cli.command("lakeformation-setup")
+@click.option(
+    "--aws-profile",
+    envvar="AWS_PROFILE",
+    show_envvar=True,
+    help="AWS credential profile (or set AWS_PROFILE).",
+)
+@click.option(
+    "--aws-region",
+    envvar="AWS_REGION",
+    show_envvar=True,
+    help="AWS region (or set AWS_REGION / profile default).",
+)
+@click.option(
+    "--lab-username",
+    envvar="LAB_USERNAME",
+    show_envvar=True,
+    help="Workshop id; derives BRONZE_BUCKET_NAME / GLUE_DATABASE when unset.",
+)
+@click.option(
+    "--glue-database",
+    envvar="GLUE_DATABASE",
+    show_envvar=True,
+    help="Glue database name (default balloon_pops or derived from LAB_USERNAME).",
+)
+@click.option(
+    "--bronze-bucket-name",
+    envvar="BRONZE_BUCKET_NAME",
+    show_envvar=True,
+    help="Warehouse S3 bucket (required for register-resource and LF data-access policy).",
+)
+@click.option(
+    "--repo-root",
+    "repo_root_arg",
+    type=click.Path(path_type=Path, exists=True, file_okay=False),
+    default=None,
+    help="Repository root (default: auto-detect).",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print planned actions only; no IAM/Lake Formation/Glue writes.",
+)
+def lakeformation_setup_cmd(
+    aws_profile: str | None,
+    aws_region: str | None,
+    lab_username: str | None,
+    glue_database: str | None,
+    bronze_bucket_name: str | None,
+    repo_root_arg: Path | None,
+    dry_run: bool,
+) -> None:
+    """Lake Formation prep for Snowflake vended reads: LF data-access role, register S3, Glue DB, grants.
+
+    Requires ``.aws-config/glue-database.json`` and Snowflake catalog role ARN in
+    ``.aws-config/snowflake-glue-catalog-iam-role-arn.txt`` (or ``SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN``).
+    Optional: ``LAKE_FORMATION_BRONZE_DATA_ACCESS_ROLE_NAME``, ``LAKE_FORMATION_ADMIN_ESCAPE_PRINCIPAL_ARN``.
+    """
+    apply_overrides(
+        AWS_PROFILE=aws_profile,
+        AWS_REGION=aws_region,
+        LAB_USERNAME=lab_username,
+        GLUE_DATABASE=glue_database,
+        BRONZE_BUCKET_NAME=bronze_bucket_name,
+    )
+    require_aws_profile()
+    region = resolve_region()
+    os.environ.setdefault("AWS_REGION", region)
+    run_lakeformation_setup(root=repo_root_arg, dry_run=dry_run)
+
+
 @cli.command("cleanup")
 @click.option(
     "--aws-profile",
@@ -870,6 +961,13 @@ def snowflake_summary_cmd(
     help="Print cleanup plan only; no deletes.",
 )
 @click.option(
+    "--delete-snowflake-catalog-iam-role",
+    is_flag=True,
+    default=False,
+    help="After Glue/S3 Tables steps, delete lab-tagged Snowflake Glue catalog SIGV4 IAM role "
+    "(same name as create-read-role: LAB_USERNAME → <glue_slug>_snowflake_glue_catalog_read).",
+)
+@click.option(
     "--no-aws-config",
     "cleanup_no_aws_config",
     is_flag=True,
@@ -885,6 +983,7 @@ def cleanup_cmd(
     s3tables_namespace: str | None,
     yes: bool,
     dry_run: bool,
+    delete_snowflake_catalog_iam_role: bool,
     cleanup_no_aws_config: bool,
 ) -> None:
     """Remove Glue database/tables and S3 Tables control-plane resources.
@@ -898,6 +997,10 @@ def cleanup_cmd(
     repo **``.aws-config/``** files written by **``glue-setup``** / **``s3tables-setup``**
     so teardown matches the last local run (not ``~/.aws-config``). Passing **``--glue-database``**
     or **``--s3tables-bucket``** skips the on-disk hint for that target only.
+
+    Optional **``--delete-snowflake-catalog-iam-role``** removes the lab-created SIGV4 read role
+    (tags ``project=balloon-popper-demo``, ``purpose=snowflake-glue-catalog-read``) only when the
+    resolved role name matches; skips otherwise.
     """
     apply_overrides(
         AWS_PROFILE=aws_profile,
@@ -1017,8 +1120,24 @@ def cleanup_cmd(
         "  Note: Glue + S3 Tables control-plane deletes only. "
         "Objects under s3://<BRONZE_BUCKET_NAME>/iceberg/ are unchanged; empty that prefix in S3 if you want a hard reset."
     )
+    sf_catalog_role = default_snowflake_glue_catalog_iam_role_name()
+    click.echo(f"  Snowflake Glue catalog SIGV4 IAM role target={sf_catalog_role!r}.")
+    if delete_snowflake_catalog_iam_role:
+        click.echo(
+            "  Snowflake catalog IAM role: will delete after Glue/S3 Tables (only if role exists "
+            "with tags project=balloon-popper-demo, purpose=snowflake-glue-catalog-read)."
+        )
+    else:
+        click.echo(
+            "  (Optional) --delete-snowflake-catalog-iam-role removes that lab-tagged IAM role after Glue/S3 Tables."
+        )
 
     if dry_run:
+        if delete_snowflake_catalog_iam_role:
+            iam = session.client("iam")
+            delete_tagged_snowflake_glue_catalog_read_role(
+                iam, sf_catalog_role, root=repo_root(), dry_run=True
+            )
         click.echo("[dry-run] No deletes executed.")
         return
 
@@ -1106,6 +1225,18 @@ def cleanup_cmd(
             glue.delete_table(DatabaseName=glue_db, Name=name)
         click.echo(f"Deleting Glue database {glue_db!r} ...")
         glue.delete_database(Name=glue_db)
+
+    if delete_snowflake_catalog_iam_role:
+        iam = session.client("iam")
+        delete_tagged_snowflake_glue_catalog_read_role(
+            iam, sf_catalog_role, root=repo_root(), dry_run=False
+        )
+
+    removed = remove_bronze_aws_config_artifacts(repo_root())
+    if removed:
+        click.echo("Removed local bronze .aws-config/ artifacts:")
+        for p in removed:
+            click.echo(f"  • {p}")
 
     click.echo("Bronze cleanup completed (warehouse bucket untouched).")
 

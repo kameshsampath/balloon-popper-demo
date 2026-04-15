@@ -1,0 +1,130 @@
+# https://taskfile.dev
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+#
+# Namespace: task snowflake:<task>
+# Uses Snowflake CLI (`snow`) from the project venv — same pattern as sfutils-extvolumes (SQL → IAM artifacts).
+version: "3"
+
+vars:
+  SNOW_TRUST_CLI: uv run snowflake-catalog-trust
+  SNOW_CATALOG_IAM: uv run snowflake-catalog-iam
+  SNOW_LAB_SQL: uv run snowflake-lab-sql
+
+tasks:
+  create-glue-catalog-read-role:
+    desc: Create IAM role + Glue/Lake Formation policy; bootstrap trust; write .aws-config/snowflake-glue-catalog-iam-role-arn.txt
+    summary: |
+      Uses **boto3** + **`AWS_PROFILE`** / **`AWS_REGION`**. Requires **`.aws-config/glue-database.json`**
+      (run **`task bronze:glue-setup`** first) so account id and Glue DB match the last successful bronze setup.
+
+      Default role: **`snowflake_glue_catalog_read`** without **`LAB_USERNAME`**; with **`LAB_USERNAME`**,
+      **`<glue_slug>_snowflake_glue_catalog_read`** (override with **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_NAME`**) with:
+      - Inline permissions: Snowflake Glue REST **Step 1** Glue catalog read + Lake Formation credential vending APIs
+        (**`lab/aws/snowflake-glue-catalog-read-policy.json`**). S3 reads for vended access: run **`task bronze:lakeformation-setup`**
+        with a **separate** LF data-access role (see **`lab/bronze-landing-zone.md`**).
+      - **Bootstrap trust**: ``Principal`` = ``arn:aws:iam::<account>:root`` (lab only — tighten with **`apply-glue-catalog-trust-from-rendered`**).
+
+      Dry-run: `uv run snowflake-catalog-iam create-read-role --dry-run`
+    cmds:
+      - "{{.SNOW_CATALOG_IAM}} create-read-role"
+
+  create-glue-catalog-read-role-dry-run:
+    desc: Print IAM trust + permissions JSON only (no AWS writes)
+    cmds:
+      - "{{.SNOW_CATALOG_IAM}} create-read-role --dry-run"
+
+  apply-glue-catalog-trust-from-rendered:
+    desc: IAM update-assume-role-policy from .aws-config/snowflake-glue-catalog-trust-policy.rendered.json
+    summary: |
+      After **`CREATE CATALOG INTEGRATION`** and **`task snowflake:render-glue-catalog-trust`**, applies the rendered
+      trust JSON to the SIGV4 role (Snowflake **`API_AWS_IAM_USER_ARN`** or **`GLUE_AWS_IAM_USER_ARN`** + **`sts:ExternalId`**).
+
+      Default role name matches **`create-read-role`** (LAB_USERNAME-derived or **`snowflake_glue_catalog_read`**),
+      or **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_NAME`** / parse from **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`**.
+
+      Dry-run: `uv run snowflake-catalog-iam apply-trust-from-rendered --dry-run`
+    cmds:
+      - "{{.SNOW_CATALOG_IAM}} apply-trust-from-rendered"
+
+  print-env-hints:
+    desc: Print repo Snowflake CLD defaults (SIGV4 env optional if create-read-role wrote ARN file)
+    summary: |
+      Shows **defaults**: **`SNOWFLAKE_CATALOG_INTEGRATION_NAME`**, **`SNOWFLAKE_LINKED_DATABASE_NAME`**, and that **SIGV4** signer role
+      needs **no env var** if you ran **`task snowflake:create-glue-catalog-read-role`** (writes **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`**).
+      Override **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** / **`.txt`** / **`--sigv4-role-arn`** only when you use a different IAM role.
+      Optional trial vars (**`ROLE`**, **`WAREHOUSE`**, **`DEFAULT_CONNECTION_NAME`**) are listed for reference.
+
+      Run: `uv run snowflake-lab-sql print-env-hints`
+    cmds:
+      - "{{.SNOW_LAB_SQL}} print-env-hints"
+
+  describe-catalog-integration:
+    desc: Print catalog integration properties from DESC (needs snow; includes API_AWS_* / GLUE_* trust fields)
+    summary: |
+      Runs `DESC CATALOG INTEGRATION` via `snow sql` and prints properties in a stable order
+      (catalog + `API_AWS_*` / `GLUE_*` trust + `REST_*`, then any remaining keys). External IDs are masked.
+
+      **`SNOWFLAKE_CATALOG_INTEGRATION_NAME`** defaults to **`glue_rest_catalog_int`** if unset (override if you used another name).
+
+      JSON: `task snowflake:describe-catalog-integration-json` or
+      `uv run snowflake-catalog-trust describe-catalog-integration --json`.
+    cmds:
+      - "{{.SNOW_TRUST_CLI}} describe-catalog-integration"
+
+  describe-catalog-integration-json:
+    desc: Same as describe-catalog-integration with --json
+    cmds:
+      - "{{.SNOW_TRUST_CLI}} describe-catalog-integration --json"
+
+  render-glue-catalog-trust:
+    desc: Write .aws-config/snowflake-glue-catalog-trust-policy.rendered.json from DESC or env overrides
+    summary: |
+      Renders `lab/aws/snowflake-glue-catalog-trust-policy.json` using Snowflake trust fields.
+
+      If `GLUE_AWS_*` / `API_AWS_*` IAM user ARN + external ID env vars are unset, runs
+      `DESC CATALOG INTEGRATION` (uses default integration name **`glue_rest_catalog_int`** if
+      `SNOWFLAKE_CATALOG_INTEGRATION_NAME` is unset; needs `snow` auth).
+
+      Aligns with Snowflake doc: Configure a catalog integration for AWS Glue Iceberg REST (trust policy on SIGV4 role).
+
+      Dry-run (stdout only): `uv run snowflake-catalog-trust render-glue-catalog-trust --dry-run`
+    cmds:
+      - "{{.SNOW_TRUST_CLI}} render-glue-catalog-trust{{.CLI_ARGS}}"
+
+  render-glue-catalog-trust-dry-run:
+    desc: Print rendered trust JSON only (no .aws-config write)
+    cmds:
+      - "{{.SNOW_TRUST_CLI}} render-glue-catalog-trust --dry-run"
+
+  generate-lab-sql:
+    desc: Write snowflake/lab/generated/*.generated.sql from .aws-config/glue-database.json + env
+    summary: |
+      Fills **CREATE CATALOG INTEGRATION** and **CLD / SHOW / SELECT** using **`.aws-config/glue-database.json`**
+      (12-digit **CatalogId** / STS account id and **Glue database name**). **Default** matches Snowflake
+      [Glue REST Step 2](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue#step-2-create-a-catalog-integration-in-snowflake):
+      **`CATALOG_NAME`** = account id, **`CATALOG_NAMESPACE`** = Glue **Database.Name**.
+
+      **Amazon S3 Tables** composite **`CATALOG_NAME`**: pass **`--glue-s3tables-catalog`** or set
+      **`SNOWFLAKE_GLUE_REST_USE_S3TABLES_CATALOG=1`**, plus **`BRONZE_S3TABLES_BUCKET_NAME`** or
+      **`.aws-config/bronze-s3tables-last-bucket-name.txt`** and **`S3TABLES_NAMESPACE`** (default **`balloon_pops`**).
+
+      **SIGV4** signer role: default is the first line of **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`**
+      (from **`task snowflake:create-glue-catalog-read-role`**). No env var required unless you override:
+      **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** or **`--sigv4-role-arn`**. **`--placeholder-role`** emits a stub ARN.
+
+      If **CatalogId** is missing from **glue-database.json**, **`AWS_PROFILE`** is required
+      so the tool can call **STS GetCallerIdentity** for the 12-digit account id.
+
+      **`--glue-data-catalog`** / **`SNOWFLAKE_GLUE_REST_USE_DATA_CATALOG=1`**: same default shape (explicit force).
+
+      Other optional overrides: **`SNOWFLAKE_CATALOG_INTEGRATION_NAME`**, **`SNOWFLAKE_LINKED_DATABASE_NAME`**, **`SNOWFLAKE_GLUE_REST_CATALOG_NAME`** (full **`CATALOG_NAME`** string), **`--s3tables-bucket`**.
+
+      Then: **`snow sql --filename snowflake/lab/generated/01_catalog_integration.generated.sql`**
+    cmds:
+      - "{{.SNOW_LAB_SQL}} generate"
+
+  generate-lab-sql-stdout:
+    desc: Print generated lab SQL to stdout only (no files)
+    cmds:
+      - "{{.SNOW_LAB_SQL}} generate --stdout"

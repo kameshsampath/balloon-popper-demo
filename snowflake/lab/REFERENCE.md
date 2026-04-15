@@ -1,26 +1,33 @@
-# Reference: legacy RisingWave → Snowflake DT porting
+# Reference: Snowflake Dynamic Iceberg Tables from bronze JSON
 
-Use this when authoring `snowflake/lab/*.sql` and the sfguide Phase 3 body. **Do not** run RisingWave in the new lab; this file captures **semantic parity** only.
+Use this when authoring `snowflake/lab/*.sql` and the quickstart Snowflake chapters. It defines the **bronze stream contract** and how **Dynamic Iceberg Tables** can project and aggregate it with Snowflake-documented JSON APIs.
 
 ## Iceberg identifiers (bronze)
 
-**This lab (Glue + `load-bronze-sample`):** one raw table, aligned with [source.sql.j2](../../polaris-forge-setup/templates/source.sql.j2):
+**Glue + `load-bronze-sample`:** one raw-events table.
 
 | Glue database (example) | Raw table |
 |-------------------------|-----------|
 | Typically `balloon_pops` in docs | `balloon_game_events` |
 
-**Legacy RisingWave sinks** (semantic targets for Snowflake DT SQL, not created by the bronze loader): [sink.sql.j2](../../polaris-forge-setup/templates/sink.sql.j2) — `leaderboard`, `balloon_color_stats`, `realtime_scores`, `balloon_colored_pops`, `color_performance_trends`.
+Optional historical column layouts (not used by the current bronze loader): [docs/iceberg_schema_design.md](../../docs/iceberg_schema_design.md).
 
-Historical per-table schema notes: [docs/iceberg_schema_design.md](../../docs/iceberg_schema_design.md).
+## Bronze `event` JSON (stream contract)
 
-## Raw stream (Kafka) → bronze fact
+Each Iceberg row has string column **`event`** containing one JSON object (Kafka-style **PLAIN JSON**), with keys:
 
-RisingWave [source.sql.j2](../../polaris-forge-setup/templates/source.sql.j2) declares typed columns for `balloon_game_events`. The **bronze loader** instead stores **one JSON object per row** in Iceberg string column **`event`** (Kafka **FORMAT PLAIN ENCODE JSON** style), with keys `player`, `balloon_color`, `score`, `page_id`, `favorite_color_bonus`, `event_ts` (ISO-8601 string). That matches how many streams deliver payloads before a warehouse extracts fields.
+| Key | Type in JSON | Notes |
+|-----|----------------|-------|
+| `player` | string | |
+| `balloon_color` | string | |
+| `score` | number | integer score |
+| `page_id` | number | loader uses `0` until a producer sets it |
+| `favorite_color_bonus` | boolean | |
+| `event_ts` | string | ISO-8601 timestamp |
 
 ## Dynamic Iceberg Tables: JSON extraction (Snowflake)
 
-In Snowflake, treat each row’s payload as semi-structured JSON, then write DT `AS SELECT` bodies that mirror the MVs. Use documented JSON functions and casting—for example [`PARSE_JSON`](https://docs.snowflake.com/en/sql-reference/functions/parse_json) and [`VARIANT` / dot/bracket paths](https://docs.snowflake.com/en/sql-reference/data-types-semistructured)—so DT SQL stays aligned with [source.sql.j2](../../polaris-forge-setup/templates/source.sql.j2) while the Iceberg bronze table stays a narrow **blob + catalog** shape.
+In Snowflake, parse the payload with documented functions—for example [`PARSE_JSON`](https://docs.snowflake.com/en/sql-reference/functions/parse_json) and [`VARIANT` / paths](https://docs.snowflake.com/en/sql-reference/data-types-semistructured)—then build DT `AS SELECT` definitions. Confirm syntax and Iceberg DT rules against current [Dynamic Tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-about) documentation.
 
 Illustrative fragments (replace catalog/database/table identifiers with your CLD names; validate types against your integration):
 
@@ -38,16 +45,20 @@ SELECT
 FROM src;
 ```
 
-Windowed MVs (`TUMBLE` / 15s) map to Snowflake time-windowing in DT definitions (for example `TIME_SLICE` / `DATE_TRUNC` patterns appropriate to your refresh cadence—confirm against current [Dynamic Tables](https://docs.snowflake.com/en/user-guide/dynamic-tables-about) and SQL windowing docs rather than copying RisingWave `TUMBLE` verbatim).
+**15-second windows:** express tumbling / fixed windows with Snowflake time functions appropriate to your DT target lag (for example `TIME_SLICE` on `event_ts`); confirm windowing against current SQL docs rather than copying non-Snowflake dialects.
 
-## Materialized view → proposed Dynamic Iceberg Table
+## Aggregate targets → Dynamic Iceberg Table roles
 
-| Legacy MV (`source.sql.j2`) | Role | Notes for Snowflake DT `AS SELECT` |
-|-----------------------------|------|-----------------------------------|
-| `mv_leaderboard` | Per-player totals | From `PARSE_JSON(event)`: `GROUP BY v:player`; `SUM(v:score::INTEGER)`, `COUNT_IF(v:favorite_color_bonus::BOOLEAN)`, `MAX(v:event_ts::TIMESTAMP_TZ)` |
-| `mv_balloon_color_stats` | Per player × color | `GROUP BY v:player`, `v:balloon_color::STRING` |
-| `mv_realtime_scores` | 15s tumble window | Same JSON casts, then a 15-second grid on `event_ts` per Snowflake time-bucketing docs |
-| `mv_balloon_colored_pops` | Pops per window × color | Same window semantics + color dimensions |
-| `mv_color_performance_trends` | Color effectiveness in window | `GROUP BY v:balloon_color::STRING`, window bounds |
+Silver-style tables the lab builds from the raw stream (names are illustrative—match your `CREATE DYNAMIC TABLE` identifiers):
 
-Full SQL: always diff against the template on disk before deleting `polaris-forge-setup/`.
+| Lab aggregate / DT role | Purpose | Notes for DT `AS SELECT` |
+|-------------------------|---------|---------------------------|
+| Per-player leaderboard | Totals and bonus counts | From `PARSE_JSON(event)`: `GROUP BY v:player`; `SUM(v:score::INTEGER)`, `COUNT_IF(v:favorite_color_bonus::BOOLEAN)`, `MAX(v:event_ts::TIMESTAMP_TZ)` |
+| Per player × color | Pops and points by color | `GROUP BY v:player`, `v:balloon_color::STRING` |
+| Realtime scores (15s window) | Windowed totals | JSON casts, then 15-second time buckets on `event_ts` |
+| Balloon colored pops (window) | Pops per window × color | Same window semantics + color dimensions |
+| Color performance (window) | Effectiveness by color | `GROUP BY v:balloon_color::STRING`, window bounds |
+
+Keep DT definitions version-controlled next to this file; align column names with **Streamlit in Snowflake** and dashboard queries as you add them.
+
+**IAM trust for Glue Iceberg REST catalog integration:** after `CREATE CATALOG INTEGRATION`, use **`task snowflake:render-glue-catalog-trust`** (see [README.md](README.md)) to materialize the Snowflake **`GLUE_AWS_IAM_USER_ARN`** / **`GLUE_AWS_EXTERNAL_ID`** pair into a trust policy JSON—parallel to how **sfutils-extvolumes** drives **`snow sql`** plus templated IAM for external volumes.

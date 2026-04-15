@@ -8,12 +8,12 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 | Check | How |
 |--------|-----|
-| Host CLIs | `task check-tools` — **required:** **aws**, **snow**, **task**, **envsubst**, **jq**, **cortex**, **uv**; **recommended:** **direnv**, **curl**, **openssl**; **optional:** **git** ([README](../README.md)) |
+| Host CLIs | `task check-tools` — **required:** **aws**, **snow**, **task**, **envsubst**, **jq**, **cortex**, **uv**; then **`aws sts get-caller-identity`** (valid AWS session). **Recommended:** **direnv**, **curl**, **openssl**; **optional:** **git** ([README](../README.md)) |
 | Env template (Phase 0) | `cp .env.example .env` then edit `.env` — or rely on **direnv** + `.env` / `.envrc.local`. Set **`AWS_PROFILE`**, **`AWS_REGION`**, and for workshops **`LAB_USERNAME`** (leave both bucket vars empty for **`<bucket_slug>-balloon-bronze`** / **`<bucket_slug>-balloon-s3tables`**; see `.env.example`). |
 | Python | `python --version` shows **3.12+** |
 | uv | `uv --version` works |
 | AWS CLI | `aws --version` — for S3 Tables steps, **v2.34+** (`aws s3tables help`) |
-| Profile | `export AWS_PROFILE=<profile>` (real account, not LocalStack for this plan) |
+| Profile | `export AWS_PROFILE=<profile>` (real AWS account; this plan does not use emulated cloud endpoints) |
 | Region | `export AWS_REGION=<region>` (or region set on the profile) |
 
 ### Env vars and usage
@@ -26,7 +26,7 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 | `GLUE_DATABASE` | optional | `glue-setup`, `load`, cleanup | If unset and `LAB_USERNAME` is set, CLI derives one |
 | `LAB_USERNAME` | optional but recommended in workshops | derivation logic in bronze CLI | Avoids participant collisions; derives DB + S3 Tables bucket defaults |
 | `BRONZE_S3TABLES_BUCKET_NAME` | section 3 | `s3tables-setup`, cleanup | With **`LAB_USERNAME`**: omit for **`<slug>-balloon-s3tables`**, or set a suffix → **`<slug>-<suffix>`**. Without **`LAB_USERNAME`**, set the full globally unique table-bucket name. |
-| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | section 3 | `s3tables-setup` (derivation) | Optional `1`/`true`/… → append **`-<epoch_millis>`**; after setup use **`.aws-config/bronze-s3tables-last-bucket-name.txt`** and unset this before cleanup with **`BRONZE_S3TABLES_BUCKET_NAME`**. |
+| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | section 3 | **`s3tables-setup` only** | Optional `1`/`true`/… → append **`-<epoch_millis>`** once at the start of **`s3tables-setup`**. After setup, **`snowflake-lab-sql`**, **`snowflake-catalog-iam`**, and **`snowflake-summary`** resolve the table-bucket from **`.aws-config/`** (see [`.aws-config/README.md`](../.aws-config/README.md)). **`bronze:cleanup`** deletes those bronze files after successful teardown. |
 | `S3TABLES_NAMESPACE` | optional | `s3tables-setup`, cleanup | Defaults to `balloon_pops` |
 
 **Record (not in git):** account id, chosen bucket names.
@@ -106,6 +106,23 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 
 ---
 
+## 4a. Lake Formation after bronze load
+
+**Goal:** Register **`BRONZE_BUCKET_NAME`** with Lake Formation, clear Glue default IAM-only table permissions on **`GLUE_DATABASE`**, and grant LF data permissions **to** the **Snowflake catalog `SIGV4` IAM role** (ARN from **`task snowflake:create-glue-catalog-read-role`** → **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`**). Required when using **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`** with Glue Iceberg REST.
+
+**Preferred:** `task bronze:lakeformation-setup-dry-run` then `task bronze:lakeformation-setup` (same **`AWS_PROFILE`** / **`AWS_REGION`** / bucket / DB as bronze load).
+
+**Manual (equivalent):**
+
+1. Create a **separate** IAM role (not **`SIGV4`**) trusted by **`lakeformation.amazonaws.com`** with **S3 read** on **`arn:aws:s3:::$BRONZE_BUCKET_NAME`**—LF uses this role to read objects when vending credentials; **`SIGV4`** must stay distinct to avoid **vending credential errors**.  
+2. Run **`aws lakeformation register-resource`** with **`--no-hybrid-access-enabled`**, **`--no-with-federation`**, and **`--role-arn`** = that **data-access** role, then **`aws glue update-database`** with empty **`CreateTableDefaultPermissions`** as in [Lake Formation (after bronze load)](bronze-landing-zone.md#lake-formation-after-bronze-load) (read the **why** table there).  
+3. Run **`aws lakeformation grant-permissions`** for **`DESCRIBE`** on the database and **`SELECT`/`DESCRIBE`** on table wildcard for **`SIGV4_ROLE_ARN`** (Snowflake catalog role only).  
+4. Optional: grant **`ALL`** to an admin/SSO principal so you cannot lock yourself out of LF.
+
+**Pass:** LF console shows the S3 location registered; **`.aws-config/lake-formation-bronze-data-access-role-arn.txt`** exists after automation; Snowflake **`SELECT`** from CLD succeeds after catalog integration + IAM trust (see **[lab/snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md)**).
+
+---
+
 ## 5. Orchestrated run (`bronze:all`)
 
 **Goal:** Strictly ordered glue → s3tables → load.
@@ -135,11 +152,20 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 | Check | Command |
 |--------|---------|
 | Lint loader | `uv run ruff check tools/bronze_preload/load_sample.py` |
-| Task list | `task --list \| rg 'check-tools|bronze'` — root **`check-tools`** plus `bronze:*` tasks |
+| Task list | `task --list \| rg 'check-tools|bronze|snowflake'` — root **`check-tools`** plus `bronze:*` and `snowflake:*` tasks |
 
 ---
 
-## 7. Cleanup (recommended after manual test)
+## 7. Optional — Snowflake CLD (catalog integration + linked database)
+
+**Goal:** Same as **[lab/snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md)** — Glue Iceberg REST catalog integration, IAM trust on **`SIGV4_IAM_ROLE`**, catalog-linked database, discovery, and read on **`balloon_game_events`**.
+
+1. Use the dedicated checklist: **[lab/snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md)** (ordered steps, env table, pass/fail). Narrative and SQL scaffolds remain in **[lab/snowflake-catalog-cld.md](snowflake-catalog-cld.md)**.
+2. **Pass:** As defined in **section 8** of **[snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md)** (discovery lists **`balloon_game_events`**; **`SELECT event`** succeeds).
+
+---
+
+## 8. Cleanup (recommended after manual test)
 
 **Goal:** Remove bronze metadata resources created during testing.
 
@@ -161,6 +187,4 @@ Use this checklist to validate **AWS + Glue + optional S3 Tables** before learne
 |------|------|------|--------|
 | Tester | | | Region / account id (internal): |
 
----
-
-**Related:** [bronze-landing-zone.md](bronze-landing-zone.md) · [tools/bronze_preload/README.md](../tools/bronze_preload/README.md)
+**Related:** [bronze-landing-zone.md](bronze-landing-zone.md) · [snowflake-catalog-cld.md](snowflake-catalog-cld.md) · [snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md) · [tools/bronze_preload/README.md](../tools/bronze_preload/README.md)

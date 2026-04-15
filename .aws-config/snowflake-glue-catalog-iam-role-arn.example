@@ -1,0 +1,5 @@
+# Copy to snowflake-glue-catalog-iam-role-arn.txt (same directory) and replace with your real ARN.
+# That file is gitignored. The Snowflake lab SQL generator reads the first line if
+# SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN is unset.
+#
+# arn:aws:iam::123456789012:role/my-snowflake-glue-catalog-read

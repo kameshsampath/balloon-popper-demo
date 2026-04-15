@@ -31,6 +31,9 @@ __pycache__
 notebooks/*.ipynb
 !notebooks/workbook.ipynb
 
+# Snowflake lab: generated SQL from bronze .aws-config (task snowflake:generate-lab-sql)
+snowflake/lab/generated/*.generated.sql
+
 # Bronze: local rendered IAM / snippets (real AWS via AWS_PROFILE); never commit secrets
 .aws-config/*
 !.aws-config/README.md

@@ -3,11 +3,10 @@
 # Licensed under the Apache License, Version 2.0
 """Create (if needed) a single Glue Iceberg raw-events table and append JSON rows.
 
-Bronze is **one table** — ``balloon_game_events`` — aligned with
-``polaris-forge-setup/templates/source.sql.j2``. Each row is one **JSON object** (Kafka
+Bronze is **one table** — ``balloon_game_events``. Each row is one **JSON object** (Kafka
 ``FORMAT PLAIN ENCODE JSON`` style) in string column ``event``, so streaming-shaped data
 lands as a blob; **Snowflake Dynamic Iceberg Tables** use JSON extraction (for example
-``PARSE_JSON``) to mirror the RisingWave MVs. Aggregates are not written here.
+``PARSE_JSON``) for downstream DTs. Aggregates are not written here.
 
 Requires real AWS credentials (e.g. AWS_PROFILE) and:
   BRONZE_BUCKET_NAME  general-purpose S3 warehouse bucket (see ``task bronze:glue-setup``).
@@ -279,7 +278,7 @@ def simulate_game_events(plan: EventBatchPlan) -> list[GameEvent]:
 
 
 def game_event_to_json_line(ev: GameEvent) -> str:
-    """Serialize to one JSON object per RisingWave/Kafka PLAIN JSON line (``page_id`` until Kafka sets it)."""
+    """Serialize to one JSON object per Kafka-style PLAIN JSON line (``page_id`` until the producer sets it)."""
     payload = {
         "player": ev.player,
         "balloon_color": ev.balloon_color,

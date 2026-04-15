@@ -9,10 +9,12 @@ version: "3"
 includes:
   bronze:
     taskfile: .taskfiles/bronze.yml
+  snowflake:
+    taskfile: .taskfiles/snowflake.yml
 
 tasks:
   check-tools:
-    desc: Verify lab CLIs on PATH (required + recommended direnv/curl/openssl + optional git)
+    desc: Verify lab CLIs on PATH + aws sts get-caller-identity (valid AWS session)
     cmds:
       - uv run check-lab-prereqs
 

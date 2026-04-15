@@ -1,6 +1,6 @@
 # Bronze preload (AWS + PyIceberg)
 
-Land **sample** raw balloon game events into a single **AWS Glue Data Catalog** Iceberg table on **S3** — **`balloon_game_events`**. Each row is one **JSON object** in string column **`event`** (Kafka **PLAIN JSON** shape: same keys as [``polaris-forge-setup/templates/source.sql.j2``](../../polaris-forge-setup/templates/source.sql.j2)). That mirrors streaming payloads; **Snowflake Dynamic Iceberg Tables** use **`PARSE_JSON`** / VARIANT-style paths over **`event`** to mirror the RisingWave MVs (see [snowflake/lab/REFERENCE.md](../../snowflake/lab/REFERENCE.md)). Aggregates are not written here.
+Land **sample** raw balloon game events into a single **AWS Glue Data Catalog** Iceberg table on **S3** — **`balloon_game_events`**. Each row is one **JSON object** in string column **`event`** (Kafka **PLAIN JSON** shape; field list in [snowflake/lab/REFERENCE.md](../../snowflake/lab/REFERENCE.md)). **Snowflake Dynamic Iceberg Tables** use **`PARSE_JSON`** / semi-structured paths over **`event`** for aggregates. This loader does not write silver tables.
 
 If you already created **`balloon_game_events`** with the older multi-column schema, **drop** that Glue table (or run **`bronze:cleanup`** then **`glue-setup`** + **`load`**) before loading this JSON layout—**`ensure_table`** does not evolve schemas in place.
 
@@ -32,7 +32,7 @@ This repo’s bronze path still uses **local** name rules in `bronze_aws.py` (Gl
 | `BRONZE_BUCKET_NAME` | yes for `glue-setup` / `load` | General-purpose S3 warehouse bucket; **`glue-setup` creates it if missing** (idempotent). With **`LAB_USERNAME`**, omit for **`<slug>-balloon-bronze`** or set a short suffix → **`<slug>-<suffix>`**; without **`LAB_USERNAME`**, set the full global name. Warehouse URI `s3://<bucket>/iceberg/` is printed after `glue-setup` and saved in `.aws-config/bronze-warehouse-uri.txt`. |
 | `GLUE_DATABASE` | no | Default `balloon_pops`, or `<glue_slug>_balloon_pops` when **`LAB_USERNAME`** is set and this var is unset |
 | `BRONZE_S3TABLES_BUCKET_NAME` | yes for `s3tables-setup` | Globally unique **table bucket** name (`[0-9a-z-]{3,63}`). With **`LAB_USERNAME`**, leave empty for **`<slug>-balloon-s3tables`** or set a suffix (same rules as **`BRONZE_BUCKET_NAME`**) |
-| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | no | If `1` / `true` / `yes` / `y` / `on`, appends **`-<epoch_millis>`** to the resolved table-bucket name (fresh suffix per CLI run—useful after AWS delete “transitional state” delays). **`s3tables-setup`** writes **`.aws-config/bronze-s3tables-last-bucket-name.txt`**; for **`bronze:cleanup`**, unset this var and set **`BRONZE_S3TABLES_BUCKET_NAME`** to that file’s line (or use **`uv run bronze-cli s3tables-setup --enable-s3tables-bucket-suffix`** for a one-off) |
+| `BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX` | no | If `1` / `true` / `yes` / `y` / `on`, appends **`-<epoch_millis>`** to the resolved table-bucket name **once** when **`s3tables-setup`** runs (not on every `derive` / summary / IAM call—avoids IAM vs Snowflake drift). **`s3tables-setup`** writes **`.aws-config/s3tables-table-bucket-arn.txt`** and **`bronze-s3tables-last-bucket-name.txt`**. Snowflake tools read the bucket from those files when env overrides are unset. **`bronze:cleanup`** removes bronze **`.aws-config/`** files after successful teardown |
 | `S3TABLES_NAMESPACE` | no | Default `balloon_pops` |
 | `BRONZE_LOAD_DURATION_MINUTES` | no | Generator batch length when **not** using row/synthetic mode (default **5**; max **240**) |
 | `BRONZE_GENERATOR_DELAY` | no | Seconds between pops in generator mode (falls back to **`DELAY`**; default **1.0**, min **0.05**) |
@@ -52,6 +52,9 @@ task bronze:render-iam    # optional: writes .aws-config/bronze-glue-writer-poli
 task bronze:glue-setup
 task bronze:s3tables-setup
 task bronze:load
+# After task snowflake:create-glue-catalog-read-role (vended-credentials path):
+# task bronze:lakeformation-setup-dry-run
+# task bronze:lakeformation-setup
 task bronze:load-more   # optional: append additional rows for extended exercises
 # or
 task bronze:all
@@ -72,15 +75,16 @@ Entry points are registered in the root **`pyproject.toml`** under **`[project.s
 
 | `uv run …` | Role |
 |--------|------|
-| `uv run check-lab-prereqs` | Verify lab CLIs on `PATH` (same as `task check-tools`) |
+| `uv run check-lab-prereqs` | Verify lab CLIs on `PATH` and **`aws sts get-caller-identity`** (same as `task check-tools`) |
 | `uv run bronze-cli glue-setup` | Create Glue database + dump `.aws-config/glue-database.json` and `.aws-config/bronze-warehouse-uri.txt` (add `--dry-run` for a plan) |
 | `uv run bronze-cli s3tables-setup` | `aws s3tables` create bucket / namespace / **`balloon_game_events`** ICEBERG table (`--dry-run` lists plan, read-only) |
 | `uv run bronze-cli render-iam` | Substitute `${VAR}` in policy template → `.aws-config/`; sets **`BRONZE_S3_ARN`** from **`BRONZE_BUCKET_NAME`** internally (`--dry-run` prints JSON only) |
 | `uv run bronze-cli snowflake-summary` | Read-only: print exports / ARNs / Glue REST URI + table names for Snowflake catalog / CLD prep (`--json` for one object) |
+| `uv run bronze-cli lakeformation-setup` | Lake Formation prep for Snowflake vended reads: **`register_resource`** with **`HybridAccessEnabled=False`**, **`WithFederation=False`**, then Glue DB defaults + LF grants (`--dry-run` to preview). Needs **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** and **`glue-database.json`**. Optional env: **`LAKE_FORMATION_BRONZE_DATA_ACCESS_ROLE_NAME`**, **`LAKE_FORMATION_ADMIN_ESCAPE_PRINCIPAL_ARN`**. |
 | `uv run bronze-cli cleanup` | Delete Glue tables/database + S3 Tables namespace/table bucket (`--dry-run` first; requires confirmation or `--yes`) |
 | `uv run load-bronze-sample` | Append rows: default **generator** batch (`--duration-minutes M`, or env); **`--row-count N`** synthetic mode; **`--dataset more`** second batch |
 
-**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:snowflake-summary`, `task bronze:snowflake-summary-json`, `task bronze:load`, `task bronze:cleanup`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`, `task bronze:cleanup-dry-run`.
+**Task** shortcuts: `task bronze:glue-setup`, `task bronze:s3tables-setup`, `task bronze:render-iam`, `task bronze:snowflake-summary`, `task bronze:snowflake-summary-json`, `task bronze:load`, `task bronze:lakeformation-setup`, `task bronze:lakeformation-setup-dry-run`, `task bronze:cleanup`. Dry-run variants (included Taskfiles do not forward `--` args reliably): `task bronze:glue-setup-dry-run`, `task bronze:s3tables-setup-dry-run`, `task bronze:render-iam-dry-run`, `task bronze:cleanup-dry-run`.
 
 For **`snowflake-summary`**, Task only forwards extra CLI flags after a bare `--` (see [Forward CLI arguments](https://taskfile.dev/usage/#forwarding-cli-arguments-to-commands)): `task bronze:snowflake-summary -- --json`. Prefer **`task bronze:snowflake-summary-json`** when you only need JSON.
 Use `task bronze:load-more` to append a second batch after `bronze:load`. Examples: `uv run load-bronze-sample --duration-minutes 15` (more pops), `uv run load-bronze-sample --row-count 500` (synthetic stress), `uv run load-bronze-sample --row-count 20` (smoke). With **Task**, pass flags after `--`: `task bronze:load -- --duration-minutes 20`.
@@ -88,7 +92,11 @@ Use `task bronze:load-more` to append a second batch after `bronze:load`. Exampl
 Each subcommand accepts **Click options** with matching **`envvar=`** names (for example `--bronze-bucket-name` / `BRONZE_BUCKET_NAME` on **`glue-setup`** and **`render-iam`**, `--s3tables-bucket` / `BRONZE_S3TABLES_BUCKET_NAME`), so you can override `.env` for one-off runs:  
 `uv run bronze-cli glue-setup --aws-profile prod --bronze-bucket-name my-bucket`
 
-`cleanup` removes Glue/S3 Tables metadata only. It does **not** delete objects under `s3://<BRONZE_BUCKET_NAME>/iceberg/` in your warehouse bucket. By default **`bronze-cli cleanup`** re-reads **repo** **`.aws-config/glue-database.json`** and **`.aws-config/bronze-s3tables-last-bucket-name.txt`** (not **`~/.aws-config`**) so targets match the last **`glue-setup`** / **`s3tables-setup`**; pass **`--no-aws-config`** to use only env / **`LAB_USERNAME`** derivation.
+`cleanup` removes Glue/S3 Tables metadata only. It does **not** delete objects under `s3://<BRONZE_BUCKET_NAME>/iceberg/` in your warehouse bucket.
+
+## Snowflake catalog trust (Phase 2)
+
+For **Glue Iceberg REST** catalog integration, IAM **trust** on your `SIGV4_IAM_ROLE` is generated separately: **`task snowflake:render-glue-catalog-trust`** (see [snowflake/lab/README.md](../../snowflake/lab/README.md)). That follows the same **`snow sql` + template → `.aws-config/`** pattern as **sfutils-extvolumes** for external volumes, but targets **`DESC CATALOG INTEGRATION`** output instead. By default **`bronze-cli cleanup`** re-reads **repo** **`.aws-config/`** ( **`glue-database.json`**, S3 Tables ARN / last-bucket name — not **`~/.aws-config`**) so targets match the last **`glue-setup`** / **`s3tables-setup`**; pass **`--no-aws-config`** to use only env / **`LAB_USERNAME`** derivation. After successful deletes it removes bronze-authored **`.aws-config/`** files so the next run does not point at torn-down resources.
 
 ## Relationship to `packages/generator`
 

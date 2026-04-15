@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright 2024-Present Kamesh Sampath
 # Licensed under the Apache License, Version 2.0
-"""Verify common lab CLIs are on PATH (Windows, Linux, macOS). Stdlib only."""
+"""Verify common lab CLIs are on PATH and AWS credentials work (STS). Stdlib only."""
 from __future__ import annotations
 
 import shutil
@@ -129,6 +129,45 @@ def _check_one(spec: ToolSpec, *, optional: bool) -> bool:
     return True
 
 
+def _check_aws_sts_caller_identity() -> bool:
+    """Run ``aws sts get-caller-identity`` when the AWS CLI is on PATH (valid session / profile)."""
+    if not shutil.which("aws"):
+        return True
+    print("\nAWS credentials (required for bronze / IAM tasks):\n")
+    try:
+        r = subprocess.run(
+            ["aws", "sts", "get-caller-identity"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as e:
+        print(f"MISS  aws sts get-caller-identity  (could not run: {e})")
+        print("      → https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html")
+        return False
+    if r.returncode != 0:
+        err = (r.stderr or r.stdout or "").strip()
+        print("MISS  aws sts get-caller-identity  (invalid or expired credentials / no profile)")
+        for line in err.splitlines()[:8]:
+            if line.strip():
+                print(f"      {line}")
+        print(
+            "      → Set AWS_PROFILE to a configured profile (see .env.example), or run "
+            "`aws configure login` / refresh SSO, then re-run: task check-tools"
+        )
+        print(
+            "      → https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html"
+        )
+        return False
+    out = (r.stdout or "").strip()
+    print("ok   aws sts get-caller-identity")
+    for line in out.splitlines()[:12]:
+        if line.strip():
+            print(f"      {line}")
+    return True
+
+
 def main() -> int:
     if sys.version_info < (3, 12):
         print(
@@ -150,6 +189,9 @@ def main() -> int:
     print("\nOptional:\n")
     for spec in OPTIONAL:
         _check_one(spec, optional=True)
+
+    if shutil.which("aws") and not _check_aws_sts_caller_identity():
+        ok = False
 
     print()
     if ok:

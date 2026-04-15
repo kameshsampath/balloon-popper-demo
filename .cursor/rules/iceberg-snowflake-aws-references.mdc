@@ -21,6 +21,8 @@ When this project touches **Apache Iceberg**, **Snowflake Iceberg or catalog int
 
 ## AWS documentation
 
+- [Glue: connect to the Data Catalog using the Glue Iceberg REST endpoint](https://docs.aws.amazon.com/glue/latest/dg/connect-glu-iceberg-rest.html) (endpoint URI, REST prefix / catalog ID patterns)
+- [S3 Tables: Iceberg REST endpoint for open-source clients](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-integrating-open-source.html) (separate **`s3tables.<region>.amazonaws.com/iceberg`** host and **`s3tables`** SigV4 signing name — contrast with Snowflake **Glue** REST integration)
 - [S3 Tables getting started (tutorial — create bucket)](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-getting-started.html#s1-tables-tutorial-create-bucket)
 - [What is AWS Glue?](https://docs.aws.amazon.com/glue/latest/dg/what-is-glue.html)
 - [IAM roles](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html)

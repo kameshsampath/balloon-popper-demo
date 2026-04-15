@@ -3,10 +3,8 @@
 site_name: "Balloon Popper Demo"
 site_url: https://kameshsampath.github.io/balloon-popper-demo/
 site_description: >
-  This demo showcases streaming analytics using RisingWave with Apache Iceberg integration, visualized through a
-  Streamlit dashboard. It processes real-time data from a balloon popping game, demonstrating RisingWave's stream
-  processing capabilities connected to Apache Iceberg for data lake storage. The demo features live game metrics,
-  materialized views, and shows how to implement end-to-end stream processing workflows with interactive visualizations.
+  Snowflake lakehouse lab: Apache Iceberg bronze on AWS (Glue, S3), catalog-linked databases, Dynamic Iceberg Tables,
+  and Streamlit in Snowflake—balloon game sample data for hands-on pipelines.
 extra_css:
   - stylesheets/extra.css
 theme:

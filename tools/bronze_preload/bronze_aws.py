@@ -131,9 +131,9 @@ def derive_bronze_resource_names() -> None:
     ``BRONZE_BUCKET_NAME`` (general-purpose S3 warehouse bucket):
     - Same rules with suffix ``balloon-bronze`` when unset / bare slug.
 
-    After lab rules, if ``BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX`` is truthy and
-    ``BRONZE_S3TABLES_BUCKET_NAME`` is non-empty, appends ``-<epoch_millis>`` (testing /
-    avoiding name collisions after deletes).
+    Optional ``-<epoch_millis>`` on ``BRONZE_S3TABLES_BUCKET_NAME`` is **not** applied here;
+    call :func:`apply_s3tables_millis_suffix_if_enabled` from ``s3tables-setup`` only so IAM
+    and generated SQL do not drift on every ``derive`` invocation.
     """
     lab = os.environ.get("LAB_USERNAME", "").strip()
     if lab:
@@ -205,7 +205,27 @@ def derive_bronze_resource_names() -> None:
                     f"{candidate!r} (LAB_USERNAME prefix; was {raw_bucket!r})"
                 )
 
+
+def apply_s3tables_millis_suffix_if_enabled() -> None:
+    """Apply millis suffix to ``BRONZE_S3TABLES_BUCKET_NAME`` when enabled (``s3tables-setup`` only)."""
     _apply_optional_s3tables_millis_suffix()
+
+
+def default_snowflake_glue_catalog_iam_role_name() -> str:
+    """IAM role name for Snowflake Glue REST ``SIGV4`` read (``create-glue-catalog-read-role``).
+
+    When ``LAB_USERNAME`` is set (after :func:`derive_bronze_resource_names`), uses the same
+    **Glue slug** prefix as ``GLUE_DATABASE`` (``<glue_slug>_…``) so workshop roles do not collide:
+    ``{glue_slug}_snowflake_glue_catalog_read``. Otherwise returns the solo default
+    ``snowflake_glue_catalog_read``. Clamped to 64 characters for IAM.
+    """
+    lab = os.environ.get("LAB_USERNAME", "").strip()
+    if lab:
+        gslug = sanitize_lab_slug_glue(lab)
+        if gslug:
+            name = f"{gslug}_snowflake_glue_catalog_read"
+            return name[:64] if len(name) > 64 else name
+    return "snowflake_glue_catalog_read"
 
 
 def ensure_bronze_s3_arn_for_policy() -> str:
@@ -313,12 +333,119 @@ def _s3_uri_bucket(uri: str) -> str | None:
     return rest.split("/", 1)[0] or None
 
 
-def apply_bronze_from_aws_config(root: Path | None = None) -> None:
-    """Fill unset ``BRONZE_BUCKET_NAME`` / ``GLUE_DATABASE`` from ``.aws-config/``.
+def read_aws_config_first_line(path: Path) -> str:
+    """First non-empty, non-``#`` line of a file; empty string if missing/unreadable."""
+    if not path.is_file():
+        return ""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    for raw in text.splitlines():
+        line = raw.strip()
+        if line and not line.startswith("#"):
+            return line
+    return ""
 
-    Written by ``bronze-cli glue-setup``. Explicit environment variables always win;
-    call after ``derive_bronze_resource_names()`` so lab-derived names take precedence
-    when set, and files only backfill gaps (e.g. shell without ``.env``).
+
+def parse_s3tables_table_bucket_name_from_arn(arn: str) -> str | None:
+    """Table-bucket **name** from ``arn:aws:s3tables:region:account:bucket/<name>``."""
+    arn = (arn or "").strip()
+    if not arn.startswith("arn:aws:s3tables:") or ":bucket/" not in arn:
+        return None
+    name = arn.split(":bucket/", 1)[1].strip()
+    return name or None
+
+
+def resolve_s3tables_table_bucket_from_aws_config_files(root: Path | None = None) -> str:
+    """S3 Tables table-bucket name from ``.aws-config/`` only (ARN file, then last-bucket line)."""
+    cfg = (root or repo_root()) / ".aws-config"
+    arn_line = read_aws_config_first_line(cfg / "s3tables-table-bucket-arn.txt")
+    if arn_line:
+        parsed = parse_s3tables_table_bucket_name_from_arn(arn_line)
+        if parsed:
+            return parsed
+    return read_aws_config_first_line(cfg / "bronze-s3tables-last-bucket-name.txt")
+
+
+def resolve_s3tables_table_bucket_name(
+    root: Path | None = None,
+    *,
+    cli_bucket: str = "",
+) -> str:
+    """Resolve S3 **table bucket** name for Snowflake Glue REST + S3 Tables.
+
+    Precedence: ``cli_bucket`` → ``SNOWFLAKE_S3TABLES_BUCKET_NAME`` → parse
+    ``.aws-config/s3tables-table-bucket-arn.txt`` →
+    ``.aws-config/bronze-s3tables-last-bucket-name.txt`` → ``BRONZE_S3TABLES_BUCKET_NAME``.
+    Prefer on-disk artifacts from ``s3tables-setup`` over bare ``.env`` so IAM and
+    ``generate-lab-sql`` stay aligned.
+    """
+    b = (cli_bucket or "").strip()
+    if b:
+        return b
+    v = (os.environ.get("SNOWFLAKE_S3TABLES_BUCKET_NAME") or "").strip()
+    if v:
+        return v
+    from_files = resolve_s3tables_table_bucket_from_aws_config_files(root)
+    if from_files:
+        return from_files
+    return (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip()
+
+
+def glue_database_json_path(root: Path | None = None) -> Path:
+    return (root or repo_root()) / ".aws-config" / "glue-database.json"
+
+
+# Written by bronze ``glue-setup`` / ``s3tables-setup`` / ``render-iam`` — removed after successful ``cleanup``.
+_BRONZE_AWS_CONFIG_ARTIFACT_NAMES: tuple[str, ...] = (
+    "glue-database.json",
+    "bronze-warehouse-uri.txt",
+    "s3tables-table-bucket-arn.txt",
+    "bronze-s3tables-last-bucket-name.txt",
+    "s3tables-list-table-buckets.json",
+    "s3tables-create-table-bucket.json",
+    "s3tables-tables-list.json",
+    "bronze-glue-writer-policy.rendered.json",
+)
+
+
+def remove_bronze_aws_config_artifacts(root: Path | None = None) -> list[str]:
+    """Delete repo-local bronze outputs under ``.aws-config/`` (not ``snowflake-*`` files).
+
+    Returns paths removed (as strings) for logging.
+    """
+    cfg = (root or repo_root()) / ".aws-config"
+    removed: list[str] = []
+    for name in _BRONZE_AWS_CONFIG_ARTIFACT_NAMES:
+        p = cfg / name
+        if p.is_file():
+            try:
+                p.unlink()
+                removed.append(str(p))
+            except OSError:
+                pass
+    if cfg.is_dir():
+        for extra in sorted(cfg.glob("s3tables-*.json")):
+            if extra.name in _BRONZE_AWS_CONFIG_ARTIFACT_NAMES:
+                continue
+            if extra.is_file():
+                try:
+                    extra.unlink()
+                    removed.append(str(extra))
+                except OSError:
+                    pass
+    return removed
+
+
+def apply_bronze_from_aws_config(root: Path | None = None) -> None:
+    """Fill unset ``BRONZE_BUCKET_NAME`` / ``GLUE_DATABASE`` / ``BRONZE_S3TABLES_BUCKET_NAME`` from ``.aws-config/``.
+
+    Written by ``bronze-cli glue-setup`` / ``s3tables-setup``. Explicit environment variables
+    always win for the warehouse and Glue DB; for **S3 Tables**, on-disk ARN / last-bucket-name
+    files backfill ``BRONZE_S3TABLES_BUCKET_NAME`` when unset so Snowflake/IAM match the last
+    successful ``s3tables-setup``. Call before ``derive_bronze_resource_names()`` in tooling
+    that needs stable names (e.g. ``snowflake-summary``, ``create-read-role``).
     """
     cfg = (root or repo_root()) / ".aws-config"
     uri_path = cfg / "bronze-warehouse-uri.txt"
@@ -366,6 +493,16 @@ def apply_bronze_from_aws_config(root: Path | None = None) -> None:
                     "info: BRONZE_BUCKET_NAME="
                     f"{bucket!r} (from .aws-config/glue-database.json LocationUri)"
                 )
+
+    if not (os.environ.get("BRONZE_S3TABLES_BUCKET_NAME") or "").strip():
+        tb = resolve_s3tables_table_bucket_from_aws_config_files(root)
+        if tb:
+            os.environ["BRONZE_S3TABLES_BUCKET_NAME"] = tb
+            print(
+                "info: BRONZE_S3TABLES_BUCKET_NAME="
+                f"{tb!r} (from .aws-config/s3tables-table-bucket-arn.txt or "
+                "bronze-s3tables-last-bucket-name.txt)"
+            )
 
 
 def apply_cleanup_context_from_aws_config(

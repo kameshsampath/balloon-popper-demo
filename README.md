@@ -1,25 +1,21 @@
-# Balloon popper → Snowflake lakehouse lab (in progress)
+# Balloon popper → Snowflake lakehouse lab
 
-This repository is **transitioning** from the original **RisingWave + k3d + Polaris** streaming demo to a **Snowflake** quickstart-style lab (**Iceberg**, catalog-linked bronze, **Dynamic Iceberg Tables**, **Streamlit in Snowflake**). The supported path is **AWS Glue** bronze on S3, **Snowflake** for catalog / CLD / DTs, and **DuckDB** only where the guide calls for local read-only checks. Legacy trees (`k8s/`, `polaris-forge-setup/`, `docs/`, `mkdocs.yaml`) remain **for now** so [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) and [snowflake/lab/REFERENCE.md](snowflake/lab/REFERENCE.md) can keep pointing at them until the **companion-repo-delete** phase.
+Hands-on lab for **Apache Iceberg** on **AWS** (Glue, S3, optional S3 Tables) and **Snowflake**: catalog-linked bronze, **Dynamic Iceberg Tables**, and **Streamlit in Snowflake**. **DuckDB** appears only where the guide calls for optional local read-only checks. Work from the repo root with **`uv`**, **`task`**, and **`task check-tools`**.
 
 ## Where to start (new lab path)
 
 | Area | Link |
 |------|------|
 | Bronze (AWS, Glue, S3 Tables, sample load) | [lab/bronze-landing-zone.md](lab/bronze-landing-zone.md), [tools/bronze_preload/README.md](tools/bronze_preload/README.md), [manual test plan](lab/bronze-landing-zone-MANUAL-TEST.md) |
+| Snowflake CLD (catalog integration + linked DB) | [lab/snowflake-catalog-cld.md](lab/snowflake-catalog-cld.md), [manual test plan](lab/snowflake-cld-MANUAL-TEST.md), [snowflake/lab/](snowflake/lab/) |
 | Env template (Phase 0) | [`.env.example`](.env.example) |
-| Snowflake SQL (scaffold) | [snowflake/lab/](snowflake/lab/) |
+| Snowflake SQL + catalog trust / IAM | [snowflake/lab/README.md](snowflake/lab/README.md) — `task snowflake:*` (includes **`create-glue-catalog-read-role`**, **`apply-glue-catalog-trust-from-rendered`**) |
 | SFGuide extraction | [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) |
 | Plan | [plans/snowflake_stack_refactor_97a1b8ee.plan.md](plans/snowflake_stack_refactor_97a1b8ee.plan.md) |
 
-**Prerequisites (Snowflake / bronze track):** Python **3.12+**; CLIs **`aws`**, **`snow`**, **`task`**, **`envsubst`** (gettext), **`jq`**, **[Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)** (`cortex`), and **[uv](https://github.com/astral-sh/uv)**. **Recommended:** **[direnv](https://direnv.net/)** (matches this repo’s [`.envrc`](.envrc)), **`curl`**, and **`openssl`**. AWS CLI **2.34+** for `aws s3tables`. Configure **`AWS_PROFILE`** (see `.env.example`). From the repo root run **`task check-tools`** to verify everything is on your `PATH` (Windows, Linux, macOS).
+**Prerequisites (Snowflake / bronze track):** Python **3.12+**; CLIs **`aws`**, **`snow`**, **`task`**, **`envsubst`** (gettext), **`jq`**, **[Cortex Code CLI](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)** (`cortex`), and **[uv](https://github.com/astral-sh/uv)**. **Recommended:** **[direnv](https://direnv.net/)** (matches this repo’s [`.envrc`](.envrc)), **`curl`**, and **`openssl`**. AWS CLI **2.34+** for `aws s3tables`. Configure **`AWS_PROFILE`** (and **`AWS_REGION`**) with a **working session**—see `.env.example`. From the repo root run **`task check-tools`**: it verifies binaries on `PATH` and runs **`aws sts get-caller-identity`** so invalid or expired tokens fail fast before bronze tasks (Windows, Linux, macOS).
 
-## Legacy demo (deprecated)
-
-The sections below describe the **old** k3d / RisingWave / MkDocs flow. The root **Taskfile** no longer defines **kubectl** / **docker** cluster tasks (Glue + Snowflake + DuckDB is the supported path). GitHub Pages **docs workflow** and **cluster `bin/*.sh` helpers** have been removed; do not rely on `bin/cleanup.sh`.
-
-- **HTML docs** — the MkDocs publish workflow was removed; use markdown under [`docs/`](docs/) locally until content is migrated.
-- **Polaris cleanup** — if you still run Ansible from `polaris-forge-setup/`, use `ansible-playbook` with the playbooks there (see that folder’s README if present).
+**OS install paths:** see the **“Install paths by OS”** table in [`sfguides/lakehouse-iceberg-production-pipelines/lakehouse-iceberg-production-pipelines.md`](sfguides/lakehouse-iceberg-production-pipelines/lakehouse-iceberg-production-pipelines.md) (macOS Homebrew, apt/dnf, Windows Scoop/Chocolatey/WSL2 for `envsubst`).
 
 ## Related projects
 

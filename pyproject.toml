@@ -33,6 +33,9 @@ dependencies = [
 check-lab-prereqs = "tools.check_lab_prereqs:main"
 bronze-cli = "tools.bronze_preload.bronze_cli:main"
 load-bronze-sample = "tools.bronze_preload.load_sample:main"
+snowflake-catalog-trust = "tools.snowflake_lab.catalog_trust:cli"
+snowflake-catalog-iam = "tools.snowflake_lab.catalog_iam:cli"
+snowflake-lab-sql = "tools.snowflake_lab.sql_generate:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["tools"]

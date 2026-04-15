@@ -31,3 +31,4 @@ __pycache__
 **/.ipynb_checkpoints/
 notebooks/*.ipynb
 !notebooks/workbook.ipynb
+!work/**.png

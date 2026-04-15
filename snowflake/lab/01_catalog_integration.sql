@@ -1,0 +1,29 @@
+-- Create catalog integration — AWS Glue Iceberg REST (SIGV4)
+-- Canonical: https://docs.snowflake.com/en/sql-reference/sql/create-catalog-integration-rest
+-- Walkthrough: https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue
+--
+-- Step 2 (Glue Data Catalog): CATALOG_NAME = 12-digit AWS account id; CATALOG_NAMESPACE = Glue database name.
+-- Prefer generated SQL: `task snowflake:generate-lab-sql` (reads .aws-config/glue-database.json + SIGV4 role ARN file).
+--
+-- Optional Amazon S3 Tables composite catalog id: `task snowflake:generate-lab-sql -- --glue-s3tables-catalog`
+-- (or SNOWFLAKE_GLUE_REST_USE_S3TABLES_CATALOG=1) — see generator help.
+
+-- CREATE OR REPLACE CATALOG INTEGRATION glue_rest_catalog_int
+--   CATALOG_SOURCE = ICEBERG_REST
+--   TABLE_FORMAT = ICEBERG
+--   CATALOG_NAMESPACE = '<GLUE_DATABASE>'
+--   REST_CONFIG = (
+--     CATALOG_URI = 'https://glue.<AWS_REGION>.amazonaws.com/iceberg'
+--     CATALOG_API_TYPE = AWS_GLUE
+--     CATALOG_NAME = '<AWS_ACCOUNT_ID>'
+--     ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS
+--   )
+--   REST_AUTHENTICATION = (
+--     TYPE = SIGV4
+--     SIGV4_IAM_ROLE = 'arn:aws:iam::<AWS_ACCOUNT_ID>:role/<YOUR_GLUE_CATALOG_READ_ROLE>'
+--     SIGV4_SIGNING_REGION = '<AWS_REGION>'
+--   )
+--   ENABLED = TRUE;
+
+-- After IAM trust matches DESC CATALOG INTEGRATION (Snowflake Step 3–4):
+-- DESC CATALOG INTEGRATION glue_rest_catalog_int;

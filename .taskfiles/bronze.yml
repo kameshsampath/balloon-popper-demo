@@ -35,6 +35,28 @@ tasks:
     cmds:
       - "{{.BRONZE_CLI}} snowflake-summary --json"
 
+  lakeformation-setup:
+    desc: LF data-access IAM role, register S3 (LF-only, no federation), Glue DB defaults, grants to SIGV4 (after load + snowflake:create-glue-catalog-read-role)
+    summary: |
+      Automates the Lake Formation path in lab/bronze-landing-zone.md for Snowflake
+      ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS: creates/updates a dedicated IAM role
+      trusted by lakeformation.amazonaws.com (S3 read on BRONZE_BUCKET_NAME), register-resource
+      with HybridAccessEnabled false and WithFederation false, glue update-database with empty CreateTableDefaultPermissions, and
+      grant-permissions to the Snowflake SIGV4 role from .aws-config/snowflake-glue-catalog-iam-role-arn.txt.
+
+      Env: AWS_PROFILE, AWS_REGION, BRONZE_BUCKET_NAME or LAB_USERNAME, GLUE_DATABASE (or glue-database.json).
+      Optional: LAKE_FORMATION_BRONZE_DATA_ACCESS_ROLE_NAME, SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN,
+      LAKE_FORMATION_ADMIN_ESCAPE_PRINCIPAL_ARN.
+
+      Dry-run: task bronze:lakeformation-setup-dry-run
+    cmds:
+      - "{{.BRONZE_CLI}} lakeformation-setup{{.CLI_ARGS}}"
+
+  lakeformation-setup-dry-run:
+    desc: Preview lakeformation-setup (no AWS writes)
+    cmds:
+      - "{{.BRONZE_CLI}} lakeformation-setup --dry-run"
+
   render-iam:
     desc: Render lab/aws/bronze-glue-writer-policy.json to .aws-config/ (needs AWS_PROFILE; BRONZE_BUCKET_NAME or LAB_USERNAME)
     summary: |
@@ -95,7 +117,8 @@ tasks:
         BRONZE_S3TABLES_BUCKET_NAME — globally unique table-bucket name; if unset and
         LAB_USERNAME is set, the CLI derives <lab-slug>-balloon-s3tables (see bronze_aws).
         BRONZE_S3TABLES_BUCKET_ENABLE_SUFFIX — optional; truthy values append -<epoch_millis>
-        for unique test names (see .env.example). After setup, .aws-config/bronze-s3tables-last-bucket-name.txt holds the final name for cleanup.
+        once during s3tables-setup only (not on every derive). After setup, .aws-config/s3tables-table-bucket-arn.txt
+        and bronze-s3tables-last-bucket-name.txt are canonical for Snowflake/IAM/cleanup.
         S3TABLES_NAMESPACE — optional; defaults to balloon_pops.
 
       Same flags/env as: uv run bronze-cli s3tables-setup --help
@@ -162,6 +185,10 @@ tasks:
       the last local `glue-setup` / `s3tables-setup`. Pass `--no-aws-config` after `--` to skip.
       Does **not** delete or empty **BRONZE_BUCKET_NAME** (for example `<slug>-balloon-bronze`);
       Iceberg files under `s3://…/iceberg/` remain until you remove them in S3.
+      Optional: pass `-- --delete-snowflake-catalog-iam-role` to also remove the lab-tagged Snowflake
+      Glue catalog SIGV4 IAM role after Glue/S3 Tables (same resolved name as `create-read-role`).
+      After successful deletes, bronze-authored files under repo .aws-config/ are removed (Glue + S3 Tables
+      artifacts); snowflake-glue-catalog-* files are kept so you can re-run bronze without redoing Snowflake IAM.
       This task runs with `--yes`; review with `bronze:cleanup-dry-run` first.
     cmds:
       - "{{.BRONZE_CLI}} cleanup --yes"
