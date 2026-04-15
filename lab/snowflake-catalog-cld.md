@@ -1,50 +1,21 @@
 # Snowflake: Glue catalog integration and catalog-linked database (CLD)
 
-This chapter is the **first Snowflake hands-on** after [bronze landing zone](bronze-landing-zone.md). You will create a **catalog integration** for **AWS Glue Iceberg REST**, capture **trust** fields for **IAM**, then create a **catalog-linked database** and run discovery / read queries.
+This chapter is the **first Snowflake hands-on** after [bronze landing zone](bronze-landing-zone.md). The **core path** below walks **`CREATE CATALOG INTEGRATION`** through **IAM trust**, **catalog-linked database (CLD)**, **discovery**, and **read queries**. Longer AWS context—**Lake Formation** for vended Glue reads, **IAM role** creation options, **S3 Tables** `CATALOG_NAME` shape, and **external volume** delegation—is under **[Additional reading](#additional-reading)** so you can open it when needed.
 
 All SQL in this chapter must match current Snowflake documentation—use [CREATE CATALOG INTEGRATION (Apache Iceberg REST)](https://docs.snowflake.com/en/sql-reference/sql/create-catalog-integration-rest), [Configure a catalog integration for AWS Glue Iceberg REST](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue), and [Use a catalog-linked database for Apache Iceberg tables](https://docs.snowflake.com/en/user-guide/tables-iceberg-catalog-linked-database) as the source of truth.
 
-## Before you start
+## Prerequisites (short)
 
 - **Bronze** is loaded: Glue database **`GLUE_DATABASE`** and table **`balloon_game_events`** (JSON column **`event`**). See [snowflake/lab/REFERENCE.md](../snowflake/lab/REFERENCE.md).
-- **Lake Formation (recommended for vended reads):** if you use **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`**, complete the AWS steps in [Lake Formation (after bronze load)](bronze-landing-zone.md#lake-formation-after-bronze-load) in **`lab/bronze-landing-zone.md`**: a **dedicated** LF **data-access** role (trusted by **`lakeformation.amazonaws.com`**, S3 read on **`BRONZE_BUCKET_NAME`**) for **`register-resource`** with **`HybridAccessEnabled=false`** and **`WithFederation=false`** ([AWS `RegisterResource`](https://docs.aws.amazon.com/lake-formation/latest/APIReference/API_RegisterResource.html))—**not** hybrid access and **not** a federated Data Catalog resource—plus **`glue update-database`** to clear **`CreateTableDefaultPermissions`**, plus LF **`grant-permissions`** **to** the **Snowflake `SIGV4_IAM_ROLE`** (the catalog signer—not the data-access role). **Do not use one IAM role for both** the **`SIGV4_IAM_ROLE`** and the LF **`register-resource --role-arn`** data-access role; combining them commonly causes **credential vending errors**. Rationale and step-by-step “why”: same section. Snowflake documents the integration alongside [Glue Iceberg REST catalog integration](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue).
-- **`snow`** (Snowflake CLI) is configured for a role that can create integrations and databases (see [Snowflake CLI installation](https://docs.snowflake.com/developer-guide/snowflake-cli/installation/installation)). Run **`task snowflake:print-env-hints`** for a short list of **defaults** (integration name, linked DB) and **optional** trial connection overrides (**`SNOWFLAKE_ROLE`**, **`SNOWFLAKE_WAREHOUSE`**, **`SNOWFLAKE_DEFAULT_CONNECTION_NAME`**) per [Managing Snowflake connections](https://docs.snowflake.com/developer-guide/snowflake-cli/connecting/configure-connections).
-- **`task bronze:snowflake-summary`** (or **`--json`**) gives **`GLUE_ICEBERG_REST_URI`**, **`AWS_ACCOUNT_ID`**, **`GLUE_DATABASE`**, and S3/Glue ARNs for copy/paste.
-- In **AWS**, you have (or will create) an **IAM role** used as **`SIGV4_IAM_ROLE`** whose **permissions policy** allows **Glue** catalog reads on **`GLUE_DATABASE`** and **Lake Formation** APIs used for credential vending (**`lakeformation:GetDataAccess`**, **`GetTemporaryGlueTableCredentials`**, **`GetTemporaryGluePartitionCredentials`**) per [Snowflake Step 1](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue#step-1-configure-access-permissions-for-the-aws-glue-data-catalog)—with **S3 object access** enforced through **Lake Formation** (registered location + LF data-access role + grants) as in the bronze lab section linked above, rather than **`s3:GetObject`** on the same role when you follow that pattern. A separate **trust policy** is filled in **after** Snowflake returns the Glue catalog integration fields (next sections). Starter patterns: [Snowflake + Glue gist](https://gist.github.com/kameshsampath/e9c8c27097dd23378d70f63c9e978426) (validate every line against docs).
+- **`.aws-config/glue-database.json`** exists after bronze **`glue-setup`** (used by **`task snowflake:generate-lab-sql`**).
+- **`snow`** (Snowflake CLI) is configured for a role that can create integrations and databases ([Snowflake CLI installation](https://docs.snowflake.com/developer-guide/snowflake-cli/installation/installation)). Run **`task snowflake:print-env-hints`** for defaults and optional connection overrides ([Managing Snowflake connections](https://docs.snowflake.com/developer-guide/snowflake-cli/connecting/configure-connections)).
+- **IAM** — an ARN for **`SIGV4_IAM_ROLE`** and trust/permissions aligned with Snowflake docs. The repo can create **`snowflake_glue_catalog_read`**; see [Additional reading — SIGV4 IAM role](#sigv4-iam-role-arn).
+- **Lake Formation** — required when generated SQL uses **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`**. If you skip that until link checks fail, read [Lake Formation (after bronze load)](bronze-landing-zone.md#lake-formation-after-bronze-load) in **`lab/bronze-landing-zone.md`**.
+- **External volume path** (optional alternate to vended credentials for S3 access) — see [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md).
 
 Scaffold SQL files (commented examples you uncomment and edit): [snowflake/lab/01_catalog_integration.sql](../snowflake/lab/01_catalog_integration.sql), [snowflake/lab/02_cld_verify.sql](../snowflake/lab/02_cld_verify.sql).
 
-Alternatively, after bronze has written **`.aws-config/glue-database.json`**, **`task snowflake:generate-lab-sql`** emits runnable **`snowflake/lab/generated/*.generated.sql`** from that file, region env, and the **Snowflake catalog IAM role ARN** (see below). This repo uses **`<repo>/.aws-config/`** (not **`~/.aws-config`**); if you keep a personal copy elsewhere, symlink or paste the same one-line files here.
-
-### `SIGV4_IAM_ROLE` ARN (not in `glue-database.json`)
-
-**`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** is the ARN of an **IAM role in your AWS account** that Snowflake will **assume** to call the **Glue Iceberg REST** endpoint. It is **not** returned by **`glue-database.json`** or **`task bronze:snowflake-summary`**. Do **not** reuse the bronze **PyIceberg writer** role for **`SIGV4_IAM_ROLE`** unless your organization has explicitly merged trust and permissions for both flows (the lab keeps them separate). Do **not** reuse the **Lake Formation data-access** role you pass to **`register-resource --role-arn`** as **`SIGV4_IAM_ROLE`** either—those roles must stay separate to avoid **vending credential** failures.
-
-#### Option A — repo task creates the read role (recommended for the lab)
-
-After **`task bronze:glue-setup`** (**`GLUE_DATABASE`** from **`glue-database.json`**, same **`AWS_PROFILE`** / **`AWS_REGION`** as other bronze tasks; keep **`BRONZE_BUCKET_NAME`** set for **`snowflake-summary`** and LF registration steps even when the **SIGV4** inline policy follows **Glue + Lake Formation** only):
-
-1. **`task snowflake:create-glue-catalog-read-role`** (dry-run: **`task snowflake:create-glue-catalog-read-role-dry-run`**) — creates IAM role **`snowflake_glue_catalog_read`** (override with **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_NAME`**) with:
-   - **Permissions** from **`lab/aws/snowflake-glue-catalog-read-policy.json`**: align with Snowflake [Step 1](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue#step-1-configure-access-permissions-for-the-aws-glue-data-catalog) and the **Lake Formation** subsection—**Glue** read APIs scoped to **`GLUE_DATABASE`** (and **`catalog` / `catalog/*`** ARNs as needed), plus **Lake Formation** **`GetDataAccess`** and related temporary credential APIs for vended access. **S3 Tables federated catalog** (`s3tablescatalog/...` in **`CATALOG_NAME`**) is a separate IAM shape; the default generated SQL uses the **Glue Data Catalog** account id + **`GLUE_DATABASE`**. When Lake Formation governs the warehouse bucket, prefer **LF grants + LF data-access role** for **`s3:GetObject`** instead of duplicating broad S3 read on **`SIGV4_IAM_ROLE`**, after your security review.
-   - **Bootstrap trust** (lab convenience): **`Principal`** = **`arn:aws:iam::<your-account-id>:root`** so principals in the same account (including Snowflake’s integration IAM user, once it exists) can assume the role while you iterate. **Tighten trust** in the next subsection after **`task snowflake:render-glue-catalog-trust`** using **`task snowflake:apply-glue-catalog-trust-from-rendered`** (Snowflake **`GLUE_AWS_IAM_USER_ARN`** + **`sts:ExternalId`**). Do **not** leave bootstrap trust in production shared accounts.
-2. The task writes **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** and prints the role ARN — **`task snowflake:generate-lab-sql`** picks it up automatically.
-3. **`task bronze:lakeformation-setup`** (after **`task bronze:load`**) — registers **`BRONZE_BUCKET_NAME`** with Lake Formation and grants LF access **to** this **`SIGV4`** role using a **separate** LF data-access role (see **`lab/bronze-landing-zone.md`**). **Never** use the same IAM role for **`SIGV4_IAM_ROLE`** and **`register-resource --role-arn`**.
-
-Implementation: **`uv run snowflake-catalog-iam`** (`create-read-role`, **`apply-trust-from-rendered`**). Policy template: **`lab/aws/snowflake-glue-catalog-read-policy.json`**. Lake Formation: **`uv run bronze-cli lakeformation-setup`**.
-
-#### Option B — create the role yourself (console or IaC)
-
-**Look up the ARN after you create (or pick) the role:**
-
-1. **AWS console:** **IAM** → **Roles** → open the role → copy **ARN** from the summary page.
-2. **AWS CLI** (same profile as bronze):  
-   `aws iam get-role --role-name <YourRoleName> --query Role.Arn --output text`
-
-**Persist it for `generate-lab-sql`:**
-
-- Put the ARN on the **first line** of **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** (see **`.aws-config/snowflake-glue-catalog-iam-role-arn.example`**), or **`export SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN=...`** ([`.env.example`](../.env.example)).
-
-Precedence for generated SQL: **`--sigv4-role-arn`** / **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** (override signer role) → **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** (default after **`create-glue-catalog-read-role`**) → error (or **`--placeholder-role`** for a stub).
+Alternatively, after bronze has written **`.aws-config/glue-database.json`**, **`task snowflake:generate-lab-sql`** emits runnable **`snowflake/lab/generated/*.generated.sql`** from that file, region env, and the **Snowflake catalog IAM role ARN** (see [Additional reading](#sigv4-iam-role-arn)). This repo uses **`<repo>/.aws-config/`** (not **`~/.aws-config`**); if you keep a personal copy elsewhere, symlink or paste the same one-line files here.
 
 ## 1. Create the catalog integration (Glue Iceberg REST)
 
@@ -123,6 +94,8 @@ task snowflake:describe-catalog-integration-json
 task snowflake:render-glue-catalog-trust-dry-run
 ```
 
+**External volume + catalog on one role:** if you use **`EXTERNAL_VOLUME_CREDENTIALS`** (omitting **`ACCESS_DELEGATION_MODE`** or setting delegation per docs) and attach an **external volume**, the IAM trust policy may need **two** Snowflake external IDs—see [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md).
+
 ## 4. Create the catalog-linked database (CLD)
 
 With the integration **ENABLED** and IAM trust correct, create the **catalog-linked database** that mirrors Glue namespaces/schemas and Iceberg tables.
@@ -136,6 +109,8 @@ CREATE OR REPLACE DATABASE balloon_game_events
     CATALOG = 'glue_rest_catalog_int'
   );
 ```
+
+When using an **external volume** on the CLD, add **`EXTERNAL_VOLUME = '…'`** to **`CREATE DATABASE`** per Snowflake docs; end-to-end SQL and trust notes: [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md).
 
 See [CREATE DATABASE (catalog-linked)](https://docs.snowflake.com/en/sql-reference/sql/create-database-catalog-linked.md).
 
@@ -201,9 +176,49 @@ LIMIT 10;
 
 For more on the trust helper, see [snowflake/lab/README.md](../snowflake/lab/README.md).
 
+## Additional reading
+
+### Lake Formation (vended reads)
+
+If you use **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`**, complete the AWS steps in [Lake Formation (after bronze load)](bronze-landing-zone.md#lake-formation-after-bronze-load) in **`lab/bronze-landing-zone.md`**: a **dedicated** LF **data-access** role (trusted by **`lakeformation.amazonaws.com`**, S3 read on **`BRONZE_BUCKET_NAME`**) for **`register-resource`** with **`HybridAccessEnabled=false`** and **`WithFederation=false`** ([AWS `RegisterResource`](https://docs.aws.amazon.com/lake-formation/latest/APIReference/API_RegisterResource.html))—**not** hybrid access and **not** a federated Data Catalog resource—plus **`glue update-database`** to clear **`CreateTableDefaultPermissions`**, plus LF **`grant-permissions`** **to** the **Snowflake `SIGV4_IAM_ROLE`** (the catalog signer—not the data-access role). **Do not use one IAM role for both** the **`SIGV4_IAM_ROLE`** and the LF **`register-resource --role-arn`** data-access role; combining them commonly causes **credential vending errors**. Rationale and step-by-step “why”: same section. Snowflake documents the integration alongside [Glue Iceberg REST catalog integration](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue).
+
+### SIGV4 IAM role ARN
+
+**`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** is the ARN of an **IAM role in your AWS account** that Snowflake will **assume** to call the **Glue Iceberg REST** endpoint. It is **not** returned by **`glue-database.json`** or **`task bronze:snowflake-summary`**. Do **not** reuse the bronze **PyIceberg writer** role for **`SIGV4_IAM_ROLE`** unless your organization has explicitly merged trust and permissions for both flows (the lab keeps them separate). Do **not** reuse the **Lake Formation data-access** role you pass to **`register-resource --role-arn`** as **`SIGV4_IAM_ROLE`** either—those roles must stay separate to avoid **vending credential** failures.
+
+#### Option A — repo task creates the read role (recommended for the lab)
+
+After **`task bronze:glue-setup`** (**`GLUE_DATABASE`** from **`glue-database.json`**, same **`AWS_PROFILE`** / **`AWS_REGION`** as other bronze tasks; keep **`BRONZE_BUCKET_NAME`** set for **`snowflake-summary`** and LF registration steps even when the **SIGV4** inline policy follows **Glue + Lake Formation** only):
+
+1. **`task snowflake:create-glue-catalog-read-role`** (dry-run: **`task snowflake:create-glue-catalog-read-role-dry-run`**) — creates IAM role **`snowflake_glue_catalog_read`** (override with **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_NAME`**) with:
+   - **Permissions** from **`lab/aws/snowflake-glue-catalog-read-policy.json`**: align with Snowflake [Step 1](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue#step-1-configure-access-permissions-for-the-aws-glue-data-catalog) and the **Lake Formation** subsection—**Glue** read APIs scoped to **`GLUE_DATABASE`** (and **`catalog` / `catalog/*`** ARNs as needed), plus **Lake Formation** **`GetDataAccess`** and related temporary credential APIs for vended access. **S3 Tables federated catalog** (`s3tablescatalog/...` in **`CATALOG_NAME`**) is a separate IAM shape; the default generated SQL uses the **Glue Data Catalog** account id + **`GLUE_DATABASE`**. When Lake Formation governs the warehouse bucket, prefer **LF grants + LF data-access role** for **`s3:GetObject`** instead of duplicating broad S3 read on **`SIGV4_IAM_ROLE`**, after your security review.
+   - **Bootstrap trust** (lab convenience): **`Principal`** = **`arn:aws:iam::<your-account-id>:root`** so principals in the same account (including Snowflake’s integration IAM user, once it exists) can assume the role while you iterate. **Tighten trust** in the next subsection after **`task snowflake:render-glue-catalog-trust`** using **`task snowflake:apply-glue-catalog-trust-from-rendered`** (Snowflake **`GLUE_AWS_IAM_USER_ARN`** + **`sts:ExternalId`**). Do **not** leave bootstrap trust in production shared accounts.
+2. The task writes **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** and prints the role ARN — **`task snowflake:generate-lab-sql`** picks it up automatically.
+3. **`task bronze:lakeformation-setup`** (after **`task bronze:load`**) — registers **`BRONZE_BUCKET_NAME`** with Lake Formation and grants LF access **to** this **`SIGV4`** role using a **separate** LF data-access role (see **`lab/bronze-landing-zone.md`**). **Never** use the same IAM role for **`SIGV4_IAM_ROLE`** and **`register-resource --role-arn`**.
+
+Implementation: **`uv run snowflake-catalog-iam`** (`create-read-role`, **`apply-trust-from-rendered`**). Policy template: **`lab/aws/snowflake-glue-catalog-read-policy.json`**. Lake Formation: **`uv run bronze-cli lakeformation-setup`**.
+
+#### Option B — create the role yourself (console or IaC)
+
+**Look up the ARN after you create (or pick) the role:**
+
+1. **AWS console:** **IAM** → **Roles** → open the role → copy **ARN** from the summary page.
+2. **AWS CLI** (same profile as bronze):  
+   `aws iam get-role --role-name <YourRoleName> --query Role.Arn --output text`
+
+**Persist it for `generate-lab-sql`:**
+
+- Put the ARN on the **first line** of **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** (see **`.aws-config/snowflake-glue-catalog-iam-role-arn.example`**), or **`export SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN=...`** ([`.env.example`](../.env.example)).
+
+Precedence for generated SQL: **`--sigv4-role-arn`** / **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** (override signer role) → **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** (default after **`create-glue-catalog-read-role`**) → error (or **`--placeholder-role`** for a stub).
+
+### External volume delegation
+
+Step-by-step **external volume**, **dual external IDs** on IAM trust, **`ALLOW_WRITES = FALSE`**, **`GRANT USAGE ON EXTERNAL VOLUME`**, **`CREATE DATABASE … EXTERNAL_VOLUME`**, queries, cleanup, and a troubleshooting table: **[`lab/cld-with-extvol-setup-guide.md`](cld-with-extvol-setup-guide.md)**.
+
 ## Related
 
 - [bronze-landing-zone.md](bronze-landing-zone.md) — AWS prerequisite
 - [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md) — bronze landing QA (includes optional **`task bronze:snowflake-summary`**)
 - [snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md) — **Snowflake CLD** QA (catalog integration → IAM trust → linked DB → **`SELECT`**)
-- [Snowflake: Iceberg REST catalog integration](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest)
+- [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md) — external volume path and troubleshooting

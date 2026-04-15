@@ -2,6 +2,8 @@
 
 Use this checklist to validate **Snowflake Glue Iceberg REST catalog integration**, **IAM trust** on **`SIGV4_IAM_ROLE`**, **catalog-linked database (CLD)**, and **read path** to bronze **`balloon_game_events`** before learners or release notes depend on it.
 
+The companion narrative **[`snowflake-catalog-cld.md`](snowflake-catalog-cld.md)** leads with the **core Snowflake path** (integration → trust → CLD → queries); **Lake Formation**, **IAM role** options, and **[`cld-with-extvol-setup-guide.md`](cld-with-extvol-setup-guide.md)** sit under **Additional reading** there—use them when preconditions below apply.
+
 **Prerequisite:** Bronze landing is done so **`.aws-config/glue-database.json`** exists and Glue has table **`balloon_game_events`** (see [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md) sections 2 and 4, or section 5b for read-only prep only).
 
 Run from the **repo root** with **`uv sync`** already done.

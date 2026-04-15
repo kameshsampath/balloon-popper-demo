@@ -41,3 +41,4 @@ snowflake/lab/generated/*.generated.sql
 
 # Local-only helper scripts (do not commit)
 sync-sfquickstarts-local.sh
+sfguides/**
