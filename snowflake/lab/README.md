@@ -2,7 +2,9 @@
 
 Step-by-step narrative (create integration → IAM trust → CLD → SHOW → SELECT): **[lab/snowflake-catalog-cld.md](../lab/snowflake-catalog-cld.md)**. **Manual QA:** **[lab/snowflake-cld-MANUAL-TEST.md](../lab/snowflake-cld-MANUAL-TEST.md)**.
 
-Ordered scripts (commented examples—uncomment and edit placeholders): **`01_catalog_integration.sql`**, **`02_cld_verify.sql`**. Use **`snow sql`** (Snowflake CLI **≥3.16**, from **`uv sync`**) against a configured connection.
+**Dynamic Iceberg Tables (silver):** **[lab/snowflake-dynamic-iceberg-tables.md](../lab/snowflake-dynamic-iceberg-tables.md)**. **Manual QA:** **[lab/snowflake-dt-MANUAL-TEST.md](../lab/snowflake-dt-MANUAL-TEST.md)**.
+
+Ordered scripts: **`01_catalog_integration.sql`**, **`02_cld_verify.sql`**, **`03_dt_pipelines.sql`** (scaffolds / comments). **Read-only DT checks:** **`04_dt_verify_sample_queries.sql`** (run after `03_dt_pipelines` + refresh). Use **`snow sql`** (Snowflake CLI **≥3.16**, from **`uv sync`**) against a configured connection. **DT tasks:** **`task dt:generate-sql`** / **`task dt:generate-sql-stdout`**. **Silver external volume (sfutils-extvolumes):** **`task dt:extvol-*`** (see **`lab/snowflake-dynamic-iceberg-tables.md`** — **`SILVER_EXTVOLUME_BUCKET_SLUG`** or **`LAB_USERNAME`**, then **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`**).
 
 **Minimal env:** run **`task snowflake:print-env-hints`**. You do **not** need **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** by default — run **`task snowflake:create-glue-catalog-read-role`** first and **`generate-lab-sql`** reads **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`**. Override the signer role only with that env var, **`--sigv4-role-arn`**, or a custom **`.txt`** line if you use another IAM role. **`SNOWFLAKE_CATALOG_INTEGRATION_NAME`** and **`SNOWFLAKE_LINKED_DATABASE_NAME`** have repo defaults. Optional trial / multi-connection vars: [`.env.example`](../.env.example) ([Managing Snowflake connections](https://docs.snowflake.com/developer-guide/snowflake-cli/connecting/configure-connections)).
 
@@ -13,12 +15,16 @@ After **`task bronze:glue-setup`** (writes **`.aws-config/glue-database.json`**)
 | Step | Command |
 |------|---------|
 | 1 | Default: **`task snowflake:create-glue-catalog-read-role`** writes **`.aws-config/snowflake-glue-catalog-iam-role-arn.txt`** — no **`SNOWFLAKE_GLUE_CATALOG_IAM_ROLE_ARN`** needed. Override only for a different signer role (env, **`--sigv4-role-arn`**, or **`.txt`**). Same role receives **`apply-glue-catalog-trust-from-rendered`**. See [lab/snowflake-catalog-cld.md](../lab/snowflake-catalog-cld.md). |
-| 2 | **`task snowflake:generate-lab-sql`** — writes **`01_catalog_integration.generated.sql`** (`REST_CONFIG` includes **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`** so **`02_cld_verify`** `LINKED_CATALOG` works without **`EXTERNAL_VOLUME`**) and **`02_cld_verify.generated.sql`**. |
-| 3 | **`snow sql --filename snowflake/lab/generated/01_catalog_integration.generated.sql`** (then **`02_…`** after trust is correct). |
+| 2 | **`task snowflake:generate-lab-sql`** — writes **`01_catalog_integration.generated.sql`** and **`02_cld_verify.generated.sql`** only (`REST_CONFIG` includes **`ACCESS_DELEGATION_MODE = VENDED_CREDENTIALS`** for vended Glue reads). |
+| 3 | **`snow sql --filename snowflake/lab/generated/01_catalog_integration.generated.sql`** (after IAM trust is applied). |
+| 4 | **`snow sql --filename snowflake/lab/generated/02_cld_verify.generated.sql`** — CLD + sample reads. |
+| 5 | **Silver external volume (before DT SQL):** set DT env per narrative **§1**, then with **`LAB_USERNAME`**, run **`task dt:extvol-create-dry-run`** then **`task dt:extvol-create`** (defaults: **`--bucket balloon-silver`**, **`--prefix`** = same workshop slug as bronze). Solo: set **`SILVER_EXTVOLUME_BUCKET_SLUG`**. Then set **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`** from CLI output; optional **`task dt:extvol-verify`**. See **[lab/snowflake-dynamic-iceberg-tables.md](../lab/snowflake-dynamic-iceberg-tables.md)** §1–§2 and **`tools/snowflake_lab/extvol_resolve.py`**. |
+| 6 | **`task dt:generate-sql`** — writes **`03_dt_pipelines.generated.sql`** (five Dynamic Iceberg Tables; **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`** should already be set from step 5). Optional one-shot: **`task snowflake:generate-lab-sql-all`**. |
+| 7 | **`snow sql --filename snowflake/lab/generated/03_dt_pipelines.generated.sql`** — see **[lab/snowflake-dynamic-iceberg-tables.md](../lab/snowflake-dynamic-iceberg-tables.md)**. |
 
 **Stub role ARN (teaching / scratch):** `uv run snowflake-lab-sql generate --placeholder-role` (writes **`arn:aws:iam::<account>:role/REPLACE_ME_GLUE_CATALOG_READ`** using **CatalogId** or STS).
 
-**Stdout only:** **`task snowflake:generate-lab-sql-stdout`**.
+**Stdout only:** **`task snowflake:generate-lab-sql-stdout`** (catalog + CLD), **`task dt:generate-sql-stdout`** (silver DTs).
 
 Entry point: **`uv run snowflake-lab-sql`** (`generate`, **`print-env-hints`**). Implementation: **`tools/snowflake_lab/sql_generate.py`**, **`tools/snowflake_lab/defaults.py`**.
 

@@ -1,0 +1,9 @@
+-- Silver: Dynamic Iceberg Tables (legacy RisingWave MV parity)
+-- Prereq: CLD reads succeed. External volume + USAGE on warehouse/volume.
+-- Docs: https://docs.snowflake.com/en/user-guide/dynamic-tables-create-iceberg
+--
+-- Generated runnable script (gitignored):
+--   task dt:generate-sql
+--   snow sql --filename snowflake/lab/generated/03_dt_pipelines.generated.sql
+--
+-- Hand-edit only if you are not using the generator.

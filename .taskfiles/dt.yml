@@ -1,0 +1,167 @@
+# https://taskfile.dev
+# Copyright 2024-Present Kamesh Sampath
+# Licensed under the Apache License, Version 2.0
+#
+# Namespace: task dt:<task> — Dynamic Iceberg Table SQL (silver) over CLD bronze.
+version: "3"
+
+vars:
+  SNOW_LAB_SQL: uv run snowflake-lab-sql
+  EXTVOL_CLI: uv run sfutils-extvolumes
+  # Two lines: resolved --bucket base, optional --prefix … (see tools/snowflake_lab/extvol_resolve.py)
+  EXTVOL_RESOLVE: uv run python tools/snowflake_lab/extvol_resolve.py
+
+tasks:
+  generate-sql:
+    desc: Write snowflake/lab/generated/03_dt_pipelines.generated.sql (all silver DTs)
+    summary: |
+      Emits **five** Dynamic Iceberg pipelines (legacy RisingWave MV parity): leaderboard, per-player color stats,
+      15-second window scores, windowed color pops, color performance trends. Requires **`.aws-config/glue-database.json`**
+      (same as CLD) for Glue schema quoting. Set **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`** (or **`--external-volume`**);
+      optional **`SNOWFLAKE_SILVER_DATABASE`**, **`SNOWFLAKE_SILVER_SCHEMA`**, **`SNOWFLAKE_WAREHOUSE`**, **`SNOWFLAKE_DT_PATH_PREFIX`**.
+
+      Catalog + CLD scripts: **`task snowflake:generate-lab-sql`** (does not overwrite this file unless you run both).
+
+      External volume automation: **`task dt:extvol-create-dry-run`** / **`task dt:extvol-create`** (defaults from **`LAB_USERNAME`** or **`SILVER_EXTVOLUME_BUCKET_SLUG`** — **`tools/snowflake_lab/extvol_resolve.py`**, **`.env.example`**).
+
+      Stdout: **`task dt:generate-sql-stdout`**
+    cmds:
+      - "{{.SNOW_LAB_SQL}} generate --dt-pipelines-only"
+
+  generate-sql-stdout:
+    desc: Print 03_dt_pipelines SQL to stdout only (no files)
+    cmds:
+      - "{{.SNOW_LAB_SQL}} generate --dt-pipelines-only --stdout"
+
+  extvol-help:
+    desc: Show sfutils-extvolumes top-level CLI help
+    cmds:
+      - "{{.EXTVOL_CLI}} --help"
+
+  extvol-create-help:
+    desc: Show sfutils-extvolumes create subcommand help
+    cmds:
+      - "{{.EXTVOL_CLI}} create --help"
+
+  extvol-create-dry-run:
+    desc: Preview S3/IAM/Snowflake external volume for silver DTs (no changes)
+    summary: |
+      Runs **`uv run sfutils-extvolumes create --dry-run`**. **Bucket base** and optional **`--prefix`** come from
+      **`tools/snowflake_lab/extvol_resolve.py`**: set **`SILVER_EXTVOLUME_BUCKET_SLUG`** *or* leave it unset and set
+      **`LAB_USERNAME`** for workshop defaults (**`balloon-silver`** + **`--prefix`** = same **24-char** slug as bronze
+      **`<slug>-balloon-bronze`**). Override that prefix with **`SILVER_EXTVOLUME_PREFIX`** when needed (does not replace
+      sfutils’ own **`EXTVOLUME_PREFIX`** / **`--prefix`** after **`--`** for explicit **`SILVER_EXTVOLUME_BUCKET_SLUG`** runs).
+
+      If **`SILVER_EXTVOLUME_BUCKET_SLUG`** is set explicitly, no **`--prefix`** is injected (sfutils default = OS username).
+      **`--prefix`** is a **top-level** sfutils flag (before **`create`**); this task injects it in the right place when **`LAB_USERNAME`** drives resolution. For other global overrides with an explicit bucket base, run **`uv run sfutils-extvolumes …`** yourself or set upstream env vars sfutils documents.
+
+      Requires a valid **AWS** session and **`snow`** connection (see upstream tool prerequisites). **`AWS_REGION`** as usual.
+
+      Examples: `LAB_USERNAME=alice task dt:extvol-create-dry-run` · `SILVER_EXTVOLUME_BUCKET_SLUG=my-silver task dt:extvol-create-dry-run -- --output json`
+    cmds:
+      - |
+          set -eu
+          out="$({{.EXTVOL_RESOLVE}})" || exit $?
+          BUCKET_SLUG=$(printf '%s\n' "$out" | sed -n '1p')
+          PREFIX_LINE=$(printf '%s\n' "$out" | sed -n '2p')
+          {{.EXTVOL_CLI}} $PREFIX_LINE create --dry-run --bucket "$BUCKET_SLUG" {{.CLI_ARGS}}
+
+  extvol-create:
+    desc: Create S3 bucket, IAM role/policy, and Snowflake external volume for silver DTs
+    summary: |
+      Wraps **`uv run sfutils-extvolumes create`** (same **bucket / prefix** resolution as **`extvol-create-dry-run`**).
+      Capture the Snowflake volume name (text output or **`--output json`**), set **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`**, then **`task dt:generate-sql`**.
+
+      Retries the whole **`create`** on failure (**default 3** attempts, **45s** between) for IAM / trust propagation lag (**`SILVER_EXTVOL_CREATE_MAX_ATTEMPTS`**, **`SILVER_EXTVOL_CREATE_RETRY_SECS`**). Set attempts to **`1`** to disable.
+
+      Optional **`--no-writes`** after **`--`** if you need a read-only volume definition (match your org and DT storage needs).
+
+      Idempotent / replace behavior per upstream **`--force`**.
+    cmds:
+      - |
+          set -eu
+          out="$({{.EXTVOL_RESOLVE}})" || exit $?
+          BUCKET_SLUG=$(printf '%s\n' "$out" | sed -n '1p')
+          PREFIX_LINE=$(printf '%s\n' "$out" | sed -n '2p')
+          attempt=1
+          max_attempts="${SILVER_EXTVOL_CREATE_MAX_ATTEMPTS:-3}"
+          retry_secs="${SILVER_EXTVOL_CREATE_RETRY_SECS:-45}"
+          while [ "$attempt" -le "$max_attempts" ]; do
+            if {{.EXTVOL_CLI}} $PREFIX_LINE create --bucket "$BUCKET_SLUG" {{.CLI_ARGS}}; then
+              exit 0
+            fi
+            if [ "$attempt" -eq "$max_attempts" ]; then
+              echo "error: extvol-create failed after ${max_attempts} attempt(s)" >&2
+              exit 1
+            fi
+            echo "extvol-create failed (attempt ${attempt}/${max_attempts}); waiting ${retry_secs}s before retry (IAM / trust propagation)..." >&2
+            sleep "$retry_secs"
+            attempt=$((attempt + 1))
+          done
+
+  extvol-verify:
+    desc: Verify connectivity for an existing Snowflake external volume
+    summary: |
+      Uses **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`** as **`--volume-name`**. Retries on failure (**default 5** attempts, **20s** between — **`SILVER_EXTVOL_VERIFY_MAX_ATTEMPTS`**, **`SILVER_EXTVOL_VERIFY_RETRY_SECS`**). Forward extra flags after **`--`** if needed.
+    cmds:
+      - |
+          set -eu
+          : "${SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME:?set SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME}"
+          attempt=1
+          max_attempts="${SILVER_EXTVOL_VERIFY_MAX_ATTEMPTS:-5}"
+          retry_secs="${SILVER_EXTVOL_VERIFY_RETRY_SECS:-20}"
+          while [ "$attempt" -le "$max_attempts" ]; do
+            if {{.EXTVOL_CLI}} verify --volume-name "$SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME" {{.CLI_ARGS}}; then
+              exit 0
+            fi
+            if [ "$attempt" -eq "$max_attempts" ]; then
+              echo "error: extvol-verify failed after ${max_attempts} attempt(s)" >&2
+              exit 1
+            fi
+            echo "extvol-verify failed (attempt ${attempt}/${max_attempts}); waiting ${retry_secs}s before retry..." >&2
+            sleep "$retry_secs"
+            attempt=$((attempt + 1))
+          done
+
+  extvol-describe:
+    desc: Describe an existing Snowflake external volume (sfutils-extvolumes)
+    summary: |
+      Uses **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`** as **`--volume-name`**.
+    cmds:
+      - |
+          set -eu
+          : "${SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME:?set SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME}"
+          {{.EXTVOL_CLI}} describe --volume-name "$SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME" {{.CLI_ARGS}}
+
+  extvol-update-trust:
+    desc: Re-sync IAM trust policy for an external volume from Snowflake
+    summary: |
+      When **`SILVER_EXTVOLUME_BUCKET_SLUG`** or **`LAB_USERNAME`** resolves a bucket slug (same rules as **`extvol-create`**),
+      passes **`--bucket`** and optional **`--prefix`**. Otherwise supply **`--bucket`** or **`--role-name`** + **`--volume-name`**
+      after **`--`** (see **`task dt:extvol-help`** / **`uv run sfutils-extvolumes update-trust --help`**).
+    cmds:
+      - |
+          set -eu
+          if [ -n "${SILVER_EXTVOLUME_BUCKET_SLUG:-}" ] || [ -n "${LAB_USERNAME:-}" ]; then
+            out="$({{.EXTVOL_RESOLVE}})" || exit $?
+            BUCKET_SLUG=$(printf '%s\n' "$out" | sed -n '1p')
+            PREFIX_LINE=$(printf '%s\n' "$out" | sed -n '2p')
+            exec {{.EXTVOL_CLI}} $PREFIX_LINE update-trust --bucket "$BUCKET_SLUG" {{.CLI_ARGS}}
+          else
+            exec {{.EXTVOL_CLI}} update-trust {{.CLI_ARGS}}
+          fi
+
+  extvol-delete:
+    desc: Drop Snowflake external volume and IAM resources (optional S3 bucket delete)
+    summary: |
+      **Destructive.** Uses the same resolved **`--bucket`** / **`--prefix`** as **`extvol-create`** (see **`extvol_resolve.py`**).
+      Pass **`--yes`** for non-interactive use. **`--delete-bucket`** removes the bucket; add **`--force`** when the bucket is non-empty.
+
+      Prefer explicit teardown over leaving orphaned IAM when you are done with the lab.
+    cmds:
+      - |
+          set -eu
+          out="$({{.EXTVOL_RESOLVE}})" || exit $?
+          BUCKET_SLUG=$(printf '%s\n' "$out" | sed -n '1p')
+          PREFIX_LINE=$(printf '%s\n' "$out" | sed -n '2p')
+          {{.EXTVOL_CLI}} $PREFIX_LINE delete --bucket "$BUCKET_SLUG" {{.CLI_ARGS}}

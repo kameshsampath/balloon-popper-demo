@@ -157,7 +157,7 @@ Run from the **repo root** with **`uv sync`** already done.
 | Check | Command |
 |--------|---------|
 | Ruff (Snowflake lab tools) | `uv run ruff check tools/snowflake_lab/` |
-| Task list | `task --list \| rg snowflake` — includes **`create-glue-catalog-read-role`**, **`apply-glue-catalog-trust-from-rendered`**, **`print-env-hints`**, **`generate-lab-sql`**, **`describe-catalog-integration`**, **`render-glue-catalog-trust`** |
+| Task list | `task --list \| rg snowflake` — includes **`create-glue-catalog-read-role`**, **`apply-glue-catalog-trust-from-rendered`**, **`print-env-hints`**, **`generate-lab-sql`**, **`describe-catalog-integration`**, **`render-glue-catalog-trust`**. For silver DTs, **`task --list \| rg 'dt:'`** includes **`extvol-*`** before **`generate-sql`**. |
 
 ---
 
@@ -193,5 +193,7 @@ The CLI deletes only when the role exists **and** has tags **`project=balloon-po
 | Role | Name | Date | Notes |
 |------|------|------|--------|
 | Tester | | | Snowflake account / connection used (internal): |
+
+**Next (silver):** [snowflake-dt-MANUAL-TEST.md](snowflake-dt-MANUAL-TEST.md) — start with **Phase A (external volume)**, then **Phase B (DTs)**.
 
 **Related:** [snowflake-catalog-cld.md](snowflake-catalog-cld.md) (full narrative) · [snowflake/lab/README.md](../snowflake/lab/README.md) · [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md) · [`.env.example`](../.env.example)

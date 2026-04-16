@@ -8,8 +8,9 @@ Hands-on lab for **Apache Iceberg** on **AWS** (Glue, S3, optional S3 Tables) an
 |------|------|
 | Bronze (AWS, Glue, S3 Tables, sample load) | [lab/bronze-landing-zone.md](lab/bronze-landing-zone.md), [tools/bronze_preload/README.md](tools/bronze_preload/README.md), [manual test plan](lab/bronze-landing-zone-MANUAL-TEST.md) |
 | Snowflake CLD (catalog integration + linked DB) | [lab/snowflake-catalog-cld.md](lab/snowflake-catalog-cld.md), [manual test plan](lab/snowflake-cld-MANUAL-TEST.md), [snowflake/lab/](snowflake/lab/) |
+| Snowflake Dynamic Iceberg Tables (silver) | [lab/snowflake-dynamic-iceberg-tables.md](lab/snowflake-dynamic-iceberg-tables.md), [manual test plan](lab/snowflake-dt-MANUAL-TEST.md), [snowflake/lab/REFERENCE.md](snowflake/lab/REFERENCE.md) |
 | Env template (Phase 0) | [`.env.example`](.env.example) |
-| Snowflake SQL + catalog trust / IAM | [snowflake/lab/README.md](snowflake/lab/README.md) — `task snowflake:*` (includes **`create-glue-catalog-read-role`**, **`apply-glue-catalog-trust-from-rendered`**) |
+| Snowflake SQL + catalog trust / IAM | [snowflake/lab/README.md](snowflake/lab/README.md) — `task snowflake:*` (catalog + CLD), **`task dt:*`** (silver DT SQL); includes **`create-glue-catalog-read-role`**, **`apply-glue-catalog-trust-from-rendered`** |
 | SFGuide extraction | [sfguides/EXTRACTION_MAP.md](sfguides/EXTRACTION_MAP.md) |
 | Plan | [plans/snowflake_stack_refactor_97a1b8ee.plan.md](plans/snowflake_stack_refactor_97a1b8ee.plan.md) |
 

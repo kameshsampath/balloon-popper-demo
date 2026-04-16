@@ -49,16 +49,18 @@ FROM src;
 
 ## Aggregate targets → Dynamic Iceberg Table roles
 
-Silver-style tables the lab builds from the raw stream (names are illustrative—match your `CREATE DYNAMIC TABLE` identifiers):
+Generated SQL (**`task dt:generate-sql`** → `snowflake/lab/generated/03_dt_pipelines.generated.sql`) mirrors the **original RisingWave materialized views** from `docs/implementing_data_pipeline.md`:
 
-| Lab aggregate / DT role | Purpose | Notes for DT `AS SELECT` |
-|-------------------------|---------|---------------------------|
-| Per-player leaderboard | Totals and bonus counts | From `PARSE_JSON(event)`: `GROUP BY v:player`; `SUM(v:score::INTEGER)`, `COUNT_IF(v:favorite_color_bonus::BOOLEAN)`, `MAX(v:event_ts::TIMESTAMP_TZ)` |
-| Per player × color | Pops and points by color | `GROUP BY v:player`, `v:balloon_color::STRING` |
-| Realtime scores (15s window) | Windowed totals | JSON casts, then 15-second time buckets on `event_ts` |
-| Balloon colored pops (window) | Pops per window × color | Same window semantics + color dimensions |
-| Color performance (window) | Effectiveness by color | `GROUP BY v:balloon_color::STRING`, window bounds |
+| RisingWave MV (legacy) | Snowflake Dynamic Iceberg Table | Purpose |
+|------------------------|----------------------------------|---------|
+| `mv_leaderboard` | `dt_player_leaderboard` | Per-player `SUM(score)`, `COUNT_IF(favorite_color_bonus)`, `MAX(event_ts)` |
+| `mv_balloon_color_stats` | `dt_balloon_color_stats` | Per player × color: pops, points, bonus hits, max ts |
+| `mv_realtime_scores` | `dt_realtime_scores` | 15s windows: `TIME_SLICE(event_ts, 15, 'SECOND')` + `DATEADD(second, 15, …)` as window end; `SUM(score)` by player × window |
+| `mv_balloon_colored_pops` | `dt_balloon_colored_pops` | Same window + player + color |
+| `mv_color_performance_trends` | `dt_color_performance_trends` | Per color × window: `AVG(score)`, `COUNT(*)` |
 
-Keep DT definitions version-controlled next to this file; align column names with **Streamlit in Snowflake** and dashboard queries as you add them.
+Confirm [`TIME_SLICE`](https://docs.snowflake.com/en/sql-reference/functions/time_slice) and window bounds against current SQL docs for your account.
+
+Keep DT definitions version-controlled in **`tools/snowflake_lab/sql_generate.py`**; align column names with **Streamlit in Snowflake** and dashboard queries as you add them.
 
 **IAM trust for Glue Iceberg REST catalog integration:** after `CREATE CATALOG INTEGRATION`, use **`task snowflake:render-glue-catalog-trust`** (see [README.md](README.md)) to materialize the Snowflake **`GLUE_AWS_IAM_USER_ARN`** / **`GLUE_AWS_EXTERNAL_ID`** pair into a trust policy JSON—parallel to how **sfutils-extvolumes** drives **`snow sql`** plus templated IAM for external volumes.

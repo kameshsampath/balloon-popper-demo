@@ -6,11 +6,15 @@
 
 version: "3"
 
+dotenv: [".env"]
+
 includes:
   bronze:
     taskfile: .taskfiles/bronze.yml
   snowflake:
     taskfile: .taskfiles/snowflake.yml
+  dt:
+    taskfile: .taskfiles/dt.yml
 
 tasks:
   check-tools:

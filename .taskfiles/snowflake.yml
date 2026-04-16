@@ -98,8 +98,11 @@ tasks:
       - "{{.SNOW_TRUST_CLI}} render-glue-catalog-trust --dry-run"
 
   generate-lab-sql:
-    desc: Write snowflake/lab/generated/*.generated.sql from .aws-config/glue-database.json + env
+    desc: Write snowflake/lab/generated/01_*.sql and 02_*.sql (catalog + CLD only)
     summary: |
+      Writes **`01_catalog_integration.generated.sql`** and **`02_cld_verify.generated.sql`** only (**`--catalog-cld-only`**).
+      For **Dynamic Iceberg Table** pipelines (silver), run **`task dt:generate-sql`** after CLD works.
+
       Fills **CREATE CATALOG INTEGRATION** and **CLD / SHOW / SELECT** using **`.aws-config/glue-database.json`**
       (12-digit **CatalogId** / STS account id and **Glue database name**). **Default** matches Snowflake
       [Glue REST Step 2](https://docs.snowflake.com/en/user-guide/tables-iceberg-configure-catalog-integration-rest-glue#step-2-create-a-catalog-integration-in-snowflake):
@@ -120,11 +123,19 @@ tasks:
 
       Other optional overrides: **`SNOWFLAKE_CATALOG_INTEGRATION_NAME`**, **`SNOWFLAKE_LINKED_DATABASE_NAME`**, **`SNOWFLAKE_GLUE_REST_CATALOG_NAME`** (full **`CATALOG_NAME`** string), **`--s3tables-bucket`**.
 
-      Then: **`snow sql --filename snowflake/lab/generated/01_catalog_integration.generated.sql`**
+      Then: **`snow sql`** on **`01_…`** and **`02_…`**. Silver DTs: **`task dt:generate-sql`** then **`snow sql`** on **`03_dt_pipelines.generated.sql`**.
     cmds:
-      - "{{.SNOW_LAB_SQL}} generate"
+      - "{{.SNOW_LAB_SQL}} generate --catalog-cld-only"
 
   generate-lab-sql-stdout:
-    desc: Print generated lab SQL to stdout only (no files)
+    desc: Print catalog + CLD generated SQL to stdout only (no files)
     cmds:
-      - "{{.SNOW_LAB_SQL}} generate --stdout"
+      - "{{.SNOW_LAB_SQL}} generate --catalog-cld-only --stdout"
+
+  generate-lab-sql-all:
+    desc: Write 01, 02, and 03_dt_pipelines.generated.sql in one shot (catalog + CLD + all DTs)
+    summary: |
+      Runs **`uv run snowflake-lab-sql generate`** with no mode flags. Prefer **`task snowflake:generate-lab-sql`**
+      then **`task dt:generate-sql`** when you want CLD and DT artifacts refreshed independently.
+    cmds:
+      - "{{.SNOW_LAB_SQL}} generate"

@@ -15,7 +15,7 @@ All SQL in this chapter must match current Snowflake documentation—use [CREATE
 
 Scaffold SQL files (commented examples you uncomment and edit): [snowflake/lab/01_catalog_integration.sql](../snowflake/lab/01_catalog_integration.sql), [snowflake/lab/02_cld_verify.sql](../snowflake/lab/02_cld_verify.sql).
 
-Alternatively, after bronze has written **`.aws-config/glue-database.json`**, **`task snowflake:generate-lab-sql`** emits runnable **`snowflake/lab/generated/*.generated.sql`** from that file, region env, and the **Snowflake catalog IAM role ARN** (see [Additional reading](#sigv4-iam-role-arn)). This repo uses **`<repo>/.aws-config/`** (not **`~/.aws-config`**); if you keep a personal copy elsewhere, symlink or paste the same one-line files here.
+Alternatively, after bronze has written **`.aws-config/glue-database.json`**, **`task snowflake:generate-lab-sql`** emits **`01_catalog_integration.generated.sql`** and **`02_cld_verify.generated.sql`** from that file, region env, and the **Snowflake catalog IAM role ARN** (see [Additional reading](#sigv4-iam-role-arn)). Silver Dynamic Iceberg SQL: **`task dt:generate-sql`** → **`03_dt_pipelines.generated.sql`**. This repo uses **`<repo>/.aws-config/`** (not **`~/.aws-config`**); if you keep a personal copy elsewhere, symlink or paste the same one-line files here.
 
 ## 1. Create the catalog integration (Glue Iceberg REST)
 
@@ -173,6 +173,7 @@ LIMIT 10;
     7. **`task snowflake:apply-glue-catalog-trust-from-rendered`** — replace bootstrap trust with Snowflake user + external ID *or* paste the same JSON in the IAM console for that role.
     8. **CLD + verify** — **`snowflake/lab/generated/02_cld_verify.generated.sql`** or **`snowflake/lab/02_cld_verify.sql`**.
     9. Optional: **`task snowflake:render-glue-catalog-trust-dry-run`** before step 6 to preview trust JSON without writing files.
+    10. **Silver / Dynamic Iceberg Tables** — configure env (**[snowflake-dynamic-iceberg-tables.md](snowflake-dynamic-iceberg-tables.md)** §1), create or select a **silver** **external volume** (**§2**, **`task dt:extvol-*`** or manual), set **`SNOWFLAKE_ICEBERG_EXTERNAL_VOLUME`**, then **`task dt:generate-sql`** and **`snow sql --filename snowflake/lab/generated/03_dt_pipelines.generated.sql`** — see the same chapter and **[snowflake-dt-MANUAL-TEST.md](snowflake-dt-MANUAL-TEST.md)** (env → Phase A → Phase B).
 
 For more on the trust helper, see [snowflake/lab/README.md](../snowflake/lab/README.md).
 
@@ -221,4 +222,5 @@ Step-by-step **external volume**, **dual external IDs** on IAM trust, **`ALLOW_W
 - [bronze-landing-zone.md](bronze-landing-zone.md) — AWS prerequisite
 - [bronze-landing-zone-MANUAL-TEST.md](bronze-landing-zone-MANUAL-TEST.md) — bronze landing QA (includes optional **`task bronze:snowflake-summary`**)
 - [snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md) — **Snowflake CLD** QA (catalog integration → IAM trust → linked DB → **`SELECT`**)
+- [snowflake-dynamic-iceberg-tables.md](snowflake-dynamic-iceberg-tables.md) — **Dynamic Iceberg Tables** over CLD (leaderboard DT)
 - [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md) — external volume path and troubleshooting

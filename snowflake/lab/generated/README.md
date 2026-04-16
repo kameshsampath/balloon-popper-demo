@@ -11,7 +11,7 @@ They are gitignored. **Default** inputs: **`.aws-config/glue-database.json`** (1
 
 **S3 Tables** composite **`CATALOG_NAME`**: set **`SNOWFLAKE_GLUE_REST_USE_S3TABLES_CATALOG=1`** or pass **`--glue-s3tables-catalog`**, plus **`BRONZE_S3TABLES_BUCKET_NAME`** or **`.aws-config/bronze-s3tables-last-bucket-name.txt`** and **`S3TABLES_NAMESPACE`**.
 
-See **[../README.md](../README.md)** and **[lab/snowflake-catalog-cld.md](../../../lab/snowflake-catalog-cld.md)**.
+See **[../README.md](../README.md)**, **[lab/snowflake-catalog-cld.md](../../../lab/snowflake-catalog-cld.md)**, and **[lab/snowflake-dynamic-iceberg-tables.md](../../../lab/snowflake-dynamic-iceberg-tables.md)**. **Catalog + CLD:** `task snowflake:generate-lab-sql` → `01` / `02`. **Silver DTs:** `task dt:generate-sql` → **`03_dt_pipelines.generated.sql`** (five tables).
 
 Preview without writing files:
 
