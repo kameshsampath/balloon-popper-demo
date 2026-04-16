@@ -10,6 +10,7 @@ import streamlit as st
 from colors import color_map
 
 st.title("Performance Trends")
+st.caption("Scoring efficiency over time — performance summary, distribution box plots, average score by balloon color, and 15-second time-window breakdown.")
 
 
 def show_summary(df):

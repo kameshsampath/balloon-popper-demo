@@ -6,15 +6,12 @@ import streamlit as st
 st.title("Game Analytics Dashboards")
 
 st.markdown("""
-Now that we've set up our data pipeline and loaded our game data, we can create interactive dashboards
-to visualize and analyze player performance. This **Streamlit in Snowflake** app reads **silver Dynamic
-Iceberg Tables** (`dt_*`) in the database/schema configured in **snowflake.yml** (`SNOWFLAKE_SILVER_DATABASE`, `SNOWFLAKE_SILVER_SCHEMA`).
+Interactive analytics for the Balloon Popper game, powered by **Dynamic Iceberg Tables** in Snowflake.
+Use the sidebar to navigate between the three dashboards.
 
-## Purpose
-
-- **Monitor player performance** from DT-backed aggregates
-- **Identify patterns** in gameplay
-- **Track scoring** over 15-second windows
-
-Use the sidebar navigation for **Leaderboard**, **Color Analysis**, and **Performance Trends**.
+| Dashboard | What it shows |
+|---|---|
+| **Leaderboard** | Top-5 scoreboard with bonus hits and score trends over time |
+| **Color Analysis** | Per-player balloon color preferences, usage heatmap, and color metrics |
+| **Performance Trends** | Scoring efficiency, distribution over time, and 15-second window summaries |
 """)

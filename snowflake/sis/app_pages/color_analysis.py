@@ -10,6 +10,7 @@ import streamlit as st
 from colors import color_map
 
 st.title("Color Analysis")
+st.caption("Insights into players' balloon color preferences — usage patterns, color distribution heatmap, and per-color metrics (pops, points, bonus hits).")
 
 
 def analyze_balloon_stats(df, ca_selected_player):

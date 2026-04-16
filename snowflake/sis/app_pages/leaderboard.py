@@ -63,6 +63,7 @@ def filter_data_by_time(
 
 
 st.title("Leaderboard")
+st.caption("Real-time analytics of player performance — top-5 scoreboard with bonus hits and interactive score trends over selectable time ranges.")
 
 if st.session_state.leaderboard_data is not None:
     leaderboard = st.session_state.leaderboard_data
