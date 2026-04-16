@@ -9,21 +9,34 @@ Use [docs.snowflake.com](https://docs.snowflake.com) as the source of truth: [Ge
 - **DTs live and readable:** `03_dt_pipelines` applied; `SHOW DYNAMIC TABLES LIKE 'dt_%' IN SCHEMA` lists the five `dt_*` objects; your role can `SELECT` them (see [snowflake/lab/04_dt_verify_sample_queries.sql](../snowflake/lab/04_dt_verify_sample_queries.sql)).
 - **Identifiers:** checked-in **`snowflake/sis/streamlit_app.py`** defaults to **`balloon_silver`**, **`silver`**. Edit that file before upload if you set **`SNOWFLAKE_SILVER_DATABASE`** / **`SNOWFLAKE_SILVER_SCHEMA`** to different names when generating SQL.
 - **Privileges:** role used to **create** the Streamlit object: **`CREATE STREAMLIT`** on the target schema, **`READ`** on the internal stage used for `FROM @…`, **`USAGE`** on **`QUERY_WAREHOUSE`**. Roles that **run** the app need **`USAGE`** on the Streamlit object and **`SELECT`** on the underlying tables (see access matrix in [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit)).
+- **Snowflake CLI:** [Install](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation) **3.14+** for **`snow streamlit deploy`** ([command reference](https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/streamlit-commands/deploy), [create with CLI](https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/create-streamlit-snowflake-cli)).
 
-## 1. Stage app files
+## 1. Deploy with Snowflake CLI (recommended)
 
-From the **repo root**, follow **[snowflake/sis/README.md](../snowflake/sis/README.md)** to create a schema + internal stage and **`snow stage copy`** (or Snowsight upload) for:
+1. Ensure your **`snow`** connection’s **database** and **schema** are where you want the Streamlit object (for example **`balloon_silver`** / **`sis`**), or pass **`--database`** / **`--schema`** on the command. Create the schema once if needed, for example: `CREATE SCHEMA IF NOT EXISTS balloon_silver.sis;`
+2. From **repo root**, using **`snowflake/sis/snowflake.yml`**:
 
-- **`snowflake/sis/streamlit_app.py`**
-- **`snowflake/sis/environment.yml`**
+   ```bash
+   snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace
+   ```
 
-## 2. Create and go live
+   Optional: open in a browser after deploy: add **`--open`**. Override warehouse: **`--warehouse YOUR_WH`** (must match a warehouse your role can use).
 
-Use the commented template **[snowflake/sis/deploy_streamlit_example.sql](../snowflake/sis/deploy_streamlit_example.sql)** as a checklist: **`CREATE OR REPLACE STREAMLIT`**, then **`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST`** (or the Snowsight flow documented for your account).
+   Repo shortcut (forwards flags after **`--`**):
 
-## 3. Open and share
+   ```bash
+   task snowflake:sis-deploy -- --open
+   ```
+
+3. If needed for your account, promote the version users see: **`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST`** (see [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit) and **[snowflake/sis/deploy_streamlit_example.sql](../snowflake/sis/deploy_streamlit_example.sql)**).
+
+## 2. Open and share
 
 Open the app in **Snowsight** (or your org’s supported entry point), then **`GRANT USAGE`** on the Streamlit object to analyst roles as needed.
+
+## 3. Optional — manual stage + SQL
+
+Instead of the CLI, you can **`snow stage copy`** (or Snowsight) and run **`CREATE STREAMLIT`** from a stage using the commented template **[snowflake/sis/deploy_streamlit_example.sql](../snowflake/sis/deploy_streamlit_example.sql)**. See **[snowflake/sis/README.md](../snowflake/sis/README.md)** for the full checklist.
 
 ## Optional later — Snowflake Notebooks
 
@@ -32,5 +45,5 @@ Open the app in **Snowsight** (or your org’s supported entry point), then **`G
 ## Related
 
 - [snowflake-dynamic-iceberg-tables.md](snowflake-dynamic-iceberg-tables.md) — silver DT generation and apply
-- [snowflake/sis/README.md](../snowflake/sis/README.md) — file layout and deploy outline
+- [snowflake/sis/README.md](../snowflake/sis/README.md) — file layout, **`snowflake.yml`**, deploy outline
 - [snowflake/lab/README.md](../snowflake/lab/README.md) — SQL lab index

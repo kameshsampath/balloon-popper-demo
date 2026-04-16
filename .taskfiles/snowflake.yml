@@ -139,3 +139,18 @@ tasks:
       then **`task dt:generate-sql`** when you want CLD and DT artifacts refreshed independently.
     cmds:
       - "{{.SNOW_LAB_SQL}} generate"
+
+  sis-deploy:
+    desc: Deploy SiS app via snow streamlit deploy (project snowflake/sis)
+    summary: |
+      Runs **`snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace`**.
+      Requires **Snowflake CLI 3.14+** and a **`snow`** connection whose **database** / **schema** (or **`--database`** / **`--schema`**) is where the Streamlit object should live — default lab layout: **`balloon_silver.sis`** (create schema once if needed).
+
+      Forward extra **`snow`** flags after **`--`**, for example:
+
+      - **`task snowflake:sis-deploy -- --open`**
+      - **`task snowflake:sis-deploy -- --warehouse COMPUTE_WH -c myconnection`**
+
+      See **[lab/snowflake-streamlit-sis.md](../../lab/snowflake-streamlit-sis.md)** and **[snowflake/sis/README.md](../../snowflake/sis/README.md)**.
+    cmds:
+      - snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace{{.CLI_ARGS}}

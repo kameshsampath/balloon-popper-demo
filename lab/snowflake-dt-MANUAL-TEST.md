@@ -180,7 +180,7 @@ Edit **`04_dt_verify_sample_queries.sql`** `USE DATABASE` / `USE SCHEMA` if you 
 
 ## Next — Streamlit in Snowflake
 
-After DTs refresh and verify queries pass, see **[snowflake-streamlit-sis.md](snowflake-streamlit-sis.md)** to stage **`snowflake/sis/streamlit_app.py`**, create a **Streamlit in Snowflake** app over **`balloon_silver.silver.dt_*`**, and go **live**.
+After DTs refresh and verify queries pass, see **[snowflake-streamlit-sis.md](snowflake-streamlit-sis.md)** to deploy with **`snow streamlit deploy`** (or stage + **`CREATE STREAMLIT`**) so the SiS app reads **`balloon_silver.silver.dt_*`**, then go **live** if your account requires it.
 
 ## Failure notes
 

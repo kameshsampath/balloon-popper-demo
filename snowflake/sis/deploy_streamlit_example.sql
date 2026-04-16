@@ -2,6 +2,11 @@
 -- Replace identifiers (database, schema, stage, role, warehouse, streamlit name) for your account.
 -- Canonical syntax: https://docs.snowflake.com/en/sql-reference/sql/create-streamlit
 -- Getting started: https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/overview
+--
+-- Prefer Snowflake CLI when you can (upload + CREATE in one step):
+--   snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace
+--   https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/streamlit-commands/deploy
+--   https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/create-streamlit-snowflake-cli
 
 -- 1) Schema + stage to hold uploaded app files (streamlit_app.py, environment.yml)
 -- CREATE SCHEMA IF NOT EXISTS balloon_silver.sis;

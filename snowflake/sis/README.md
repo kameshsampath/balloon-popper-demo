@@ -4,18 +4,42 @@ Source for a **warehouse-runtime** [Streamlit in Snowflake](https://docs.snowfla
 
 | File | Purpose |
 |------|---------|
+| `snowflake.yml` | Snowflake CLI project for **`snow streamlit deploy`** ([deploy](https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/streamlit-commands/deploy), [getting started](https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/create-streamlit-snowflake-cli)). |
 | `streamlit_app.py` | Entrypoint: `get_active_session()`, queries `balloon_silver.silver.dt_*`. |
 | `environment.yml` | Anaconda channel dependencies for warehouse runtime ([dependency management](https://docs.snowflake.com/en/developer-guide/streamlit/app-development/dependency-management)). |
-| `deploy_streamlit_example.sql` | Commented `CREATE STAGE` / `CREATE STREAMLIT` / `ALTER … LIVE` / `GRANT` template. |
+| `deploy_streamlit_example.sql` | Optional manual path: commented `CREATE STAGE` / `CREATE STREAMLIT` / `ALTER … LIVE` / `GRANT` template. |
 
-## Deploy (outline)
+## Deploy (recommended): Snowflake CLI
+
+Requires [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation) **3.14+** (uses current `CREATE STREAMLIT … FROM @stage` flow; use **`--legacy`** only if your account still requires the old syntax).
 
 1. Complete **CLD + DT** lab steps so `dt_player_leaderboard` (and siblings) exist and have refreshed at least once.
-2. In Snowflake, pick a schema (e.g. `balloon_silver.sis`) and create an **internal named stage** for app files.
-3. **Upload** `streamlit_app.py` and `environment.yml` to that stage (`snow stage copy …` with [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/stage-commands/overview), or Snowsight).
-4. Run **`CREATE STREAMLIT`** with `FROM @…`, `MAIN_FILE = 'streamlit_app.py'`, and **`QUERY_WAREHOUSE`** — see [`deploy_streamlit_example.sql`](deploy_streamlit_example.sql) and [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit).
-5. **Activate** the live version (`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST` or open in Snowsight per docs).
-6. **Grant** `USAGE` on the Streamlit object (and ensure the role can `SELECT` the underlying `dt_*` tables).
+2. Point your **`snow`** connection at the database and schema where the Streamlit object should live (for example **`balloon_silver`**, schema **`sis`**). Create the schema once if needed: `CREATE SCHEMA IF NOT EXISTS balloon_silver.sis;`
+3. From the **repo root**, deploy (uploads artifacts to the stage named in `snowflake.yml`, creates or replaces the Streamlit object):
+
+   ```bash
+   snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace
+   ```
+
+   Convenience wrapper (forwards extra flags after `--`):
+
+   ```bash
+   task snowflake:sis-deploy -- --open --warehouse COMPUTE_WH
+   ```
+
+   See **`snow streamlit deploy --help`** for **`--connection`**, **`--database`**, **`--schema`**, **`--warehouse`**, **`--prune`**, etc.
+
+4. If viewers with **`USAGE`** still cannot open the app, run **`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST`** once (see [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit) usage notes and [`deploy_streamlit_example.sql`](deploy_streamlit_example.sql)).
+
+5. **Grant** `USAGE` on the Streamlit object (and ensure the role can `SELECT` the underlying `dt_*` tables).
+
+## Deploy (optional): manual stage + SQL
+
+1. In Snowflake, pick a schema (e.g. `balloon_silver.sis`) and create an **internal named stage** for app files.
+2. **Upload** `streamlit_app.py` and `environment.yml` (`snow stage copy …` or Snowsight).
+3. Run **`CREATE STREAMLIT`** with `FROM @…`, `MAIN_FILE = 'streamlit_app.py'`, and **`QUERY_WAREHOUSE`** — see [`deploy_streamlit_example.sql`](deploy_streamlit_example.sql) and [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit).
+4. **Activate** the live version (`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST` or Snowsight).
+5. **Grant** `USAGE` on the Streamlit object (and ensure the role can `SELECT` the underlying `dt_*` tables).
 
 Narrative and privileges checklist: **[lab/snowflake-streamlit-sis.md](../../lab/snowflake-streamlit-sis.md)**.
 

@@ -7,7 +7,7 @@ Defaults match `snowflake-lab-sql` generated DT SQL: database **`balloon_silver`
 
 Prerequisites: apply `03_dt_pipelines.generated.sql` (or equivalent) and allow DT refresh before expecting rows.
 
-See **`snowflake/sis/README.md`** and **`lab/snowflake-streamlit-sis.md`** for staging and `CREATE STREAMLIT`.
+See **`snowflake/sis/README.md`** and **`lab/snowflake-streamlit-sis.md`** for **`snow streamlit deploy`** (via **`snowflake.yml`**) or manual `CREATE STREAMLIT`.
 """
 
 from __future__ import annotations

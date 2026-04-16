@@ -1,0 +1,22 @@
+# Snowflake CLI Streamlit project — deploy with:
+#   snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace
+# Docs: https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/streamlit-commands/deploy
+#       https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/create-streamlit-snowflake-cli
+#
+# The STREAMLIT object is created in the database and schema from your `snow` connection
+# (config.toml), unless you pass --database / --schema on the deploy command.
+# Recommended lab placement: database balloon_silver, schema sis.
+# Override the warehouse with: snow streamlit deploy ... --warehouse YOUR_WH
+
+definition_version: 2
+entities:
+  balloon_game_dashboard:
+    type: streamlit
+    identifier: balloon_game_dashboard
+    stage: balloon_sis_stage
+    query_warehouse: COMPUTE_WH
+    title: "Balloon pops — silver"
+    main_file: streamlit_app.py
+    artifacts:
+      - streamlit_app.py
+      - environment.yml
