@@ -3,20 +3,13 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import altair as alt
 import pandas as pd
 import streamlit as st
 
-_root = Path(__file__).resolve().parent.parent
-if str(_root) not in sys.path:
-    sys.path.insert(0, str(_root))
+from colors import color_map
 
-from colors import color_map  # noqa: E402
-
-st.header("Balloon Performance Analysis")
+st.title("Performance Trends")
 
 
 def show_summary(df):
@@ -159,7 +152,7 @@ if st.session_state.color_performance_data is not None:
 
     st.subheader("Time Window Summary")
     time_summary = (
-        performance_trends_df.groupby(pd.Grouper(key="window_start", freq="15S"))
+        performance_trends_df.groupby(pd.Grouper(key="window_start", freq="15s"))
         .agg(
             {
                 "avg_score_per_pop": ["mean", "min", "max", "count"],

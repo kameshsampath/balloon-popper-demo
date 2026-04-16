@@ -3,18 +3,11 @@
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import altair as alt
 import pandas as pd
 import streamlit as st
 
-_root = Path(__file__).resolve().parent.parent
-if str(_root) not in sys.path:
-    sys.path.insert(0, str(_root))
-
-from colors import color_map  # noqa: E402
+from colors import color_map
 
 st.title("Color Analysis")
 
@@ -172,7 +165,7 @@ if st.session_state.balloon_colored_pops is not None:
     with st.sidebar:
         st.header("⚙️ Settings")
         players = sorted(colored_pops["player"].unique())
-        selected_player = st.sidebar.selectbox(
+        selected_player = st.selectbox(
             "Select Player",
             options=players,
         )
@@ -181,7 +174,7 @@ if st.session_state.balloon_colored_pops is not None:
             "Points by Color": "points_by_color",
             "Bonus Hits": "bonus_hits",
         }
-        selected_metric = st.sidebar.selectbox("Select Metric", list(metrics.keys()))
+        selected_metric = st.selectbox("Select Metric", list(metrics.keys()))
 
     fav = analyze_balloon_stats(colored_pops, selected_player)
     if fav is None:

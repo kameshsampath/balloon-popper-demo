@@ -56,8 +56,8 @@ def create_score_chart(data, f_selected_players, f_time_unit: str = "minutes"):
 def filter_data_by_time(
     df: pd.DataFrame, f_start_time: Timestamp, f_end_time: Timestamp
 ):
-    start_pd = pd.to_datetime(f_start_time).tz_localize("UTC")
-    end_pd = pd.to_datetime(f_end_time).tz_localize("UTC")
+    start_pd = pd.to_datetime(f_start_time)
+    end_pd = pd.to_datetime(f_end_time)
     mask = (df["window_start"] >= start_pd) & (df["window_start"] <= end_pd)
     return df[mask]
 
@@ -104,7 +104,7 @@ if st.session_state.leaderboard_data is not None:
 
         with st.sidebar:
             st.header("⚙️ Settings")
-            selected_players = st.sidebar.multiselect(
+            selected_players = st.multiselect(
                 "Select Players",
                 options=list(leaders),
                 default=list(leaders),
@@ -113,11 +113,11 @@ if st.session_state.leaderboard_data is not None:
             min_time = realtime_scores_df["window_start"].min()
             max_time = realtime_scores_df["window_start"].max()
 
-            time_unit = st.sidebar.radio(
+            time_unit = st.radio(
                 "Time Display Unit", options=["minutes", "hours"], horizontal=True
             )
 
-            col1, col2 = st.sidebar.columns(2)
+            col1, col2 = st.columns(2)
 
             with col1:
                 start_time = st.time_input(

@@ -141,16 +141,33 @@ tasks:
       - "{{.SNOW_LAB_SQL}} generate"
 
   sis-deploy:
-    desc: Deploy SiS app via snow streamlit deploy (project snowflake/sis)
+    desc: Deploy SiS app via sis-deploy CLI (project snowflake/sis)
     summary: |
-      Runs **`snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace`**.
-      Requires **Snowflake CLI 3.14+** and a **`snow`** connection whose **database** / **schema** (or **`--database`** / **`--schema`**) is where the Streamlit object should live — default lab layout: **`balloon_silver.sis`** (create schema once if needed).
+      Deploys **`snowflake/sis`** to **`balloon_silver.apps`** using the `sis-deploy` Python CLI,
+      which wraps Snow CLI 3.14+ and handles LAB_USERNAME-derived resource names.
 
-      Forward extra **`snow`** flags after **`--`**, for example:
+      ## App naming
 
+      When **`LAB_USERNAME`** is set in **`.env`** (e.g. `LAB_USERNAME=alice`), the Streamlit object is named
+      **`alice_balloon_game_dashboard`** and the silver database defaults to **`alice_balloon_silver`**.
+      Without LAB_USERNAME, names are **`balloon_game_dashboard`** / **`balloon_silver`**.
+
+      ## Config / overrides
+
+      All values are read from `.env` (loaded automatically) or passed as CLI flags:
+      - **`SNOWFLAKE_SILVER_DATABASE`**, **`SNOWFLAKE_SILVER_SCHEMA`** — silver data location
+      - **`SNOWFLAKE_WAREHOUSE`** — query warehouse
+      - **`SNOWFLAKE_APPS_SCHEMA`** — schema where the Streamlit object lives (default `apps`)
+      - **`SNOWFLAKE_ROLE`** — deploy role (default `ACCOUNTADMIN`)
+
+      Preview without deploying: `uv run sis-deploy show-config` or `uv run sis-deploy deploy --dry-run`
+
+      ## Extra snow flags
+
+      Forward extra flags after **`--`** (passed through to `snow streamlit deploy`):
       - **`task snowflake:sis-deploy -- --open`**
-      - **`task snowflake:sis-deploy -- --warehouse COMPUTE_WH -c myconnection`**
+      - **`task snowflake:sis-deploy -- --connection myconn`**
 
       See **[lab/snowflake-streamlit-sis.md](../../lab/snowflake-streamlit-sis.md)** and **[snowflake/sis/README.md](../../snowflake/sis/README.md)**.
     cmds:
-      - snow streamlit deploy balloon_game_dashboard --project snowflake/sis --replace{{.CLI_ARGS}}
+      - uv run sis-deploy deploy {{.CLI_ARGS}}

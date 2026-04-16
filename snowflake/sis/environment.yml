@@ -3,9 +3,9 @@
 name: balloon_sis
 channels:
   - snowflake
-  - conda-forge
+  - nodefaults
 dependencies:
-  - streamlit=1.39.*
+  - streamlit
   - snowflake-snowpark-python
-  - altair>=5.0,<6
-  - pandas>=2.0,<3
+  - altair
+  - pandas

@@ -28,6 +28,9 @@ __pycache__
 # Snowflake lab: generated SQL from bronze .aws-config (task snowflake:generate-lab-sql)
 snowflake/lab/generated/*.generated.sql
 
+# Snow CLI build artifacts
+snowflake/sis/output/
+
 # Bronze: local rendered IAM / snippets (real AWS via AWS_PROFILE); never commit secrets
 .aws-config/*
 !.aws-config/README.md

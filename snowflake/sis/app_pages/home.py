@@ -8,7 +8,7 @@ st.title("Game Analytics Dashboards")
 st.markdown("""
 Now that we've set up our data pipeline and loaded our game data, we can create interactive dashboards
 to visualize and analyze player performance. This **Streamlit in Snowflake** app reads **silver Dynamic
-Iceberg Tables** (`dt_*`) in the database/schema configured in **snowflake.yml** (`SILVER_DB`, `SILVER_SCHEMA`).
+Iceberg Tables** (`dt_*`) in the database/schema configured in **snowflake.yml** (`SNOWFLAKE_SILVER_DATABASE`, `SNOWFLAKE_SILVER_SCHEMA`).
 
 ## Purpose
 

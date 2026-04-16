@@ -25,14 +25,15 @@ data.ensure_loaded()
 
 pg = st.navigation(
     [
-        st.Page("pages/home.py", title="Home", icon=":material/home:", default=True),
-        st.Page("pages/leaderboard.py", title="Leaderboard", icon=":material/leaderboard:"),
-        st.Page("pages/color_analysis.py", title="Color Analysis", icon=":material/palette:"),
+        st.Page("app_pages/home.py", title="Home", icon=":material/home:", default=True),
+        st.Page("app_pages/leaderboard.py", title="Leaderboard", icon=":material/leaderboard:"),
+        st.Page("app_pages/color_analysis.py", title="Color Analysis", icon=":material/palette:"),
         st.Page(
-            "pages/performance_trends.py",
+            "app_pages/performance_trends.py",
             title="Performance Trends",
             icon=":material/trending_up:",
         ),
-    ]
+    ],
+    position="top",
 )
 pg.run()

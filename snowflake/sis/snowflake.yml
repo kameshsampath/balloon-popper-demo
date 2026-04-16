@@ -5,28 +5,42 @@
 #
 # The STREAMLIT object is created in the database and schema from your `snow` connection
 # (config.toml), unless you pass --database / --schema on the deploy command.
-# Recommended lab placement: database balloon_silver, schema sis.
+# Recommended lab placement: database balloon_silver, schema apps.
 # Override the warehouse with: snow streamlit deploy ... --warehouse YOUR_WH
 #
 # ``env`` (below) is read at **app runtime** from the staged copy of this file (see ``silver_config.py``).
-# Edit these values and redeploy to point the app at a different silver database/schema.
-# Optional: if the warehouse runtime sets OS env ``SILVER_DB`` / ``SILVER_SCHEMA``, those override the file.
+# Edit SNOWFLAKE_SILVER_DATABASE / SNOWFLAKE_SILVER_SCHEMA and redeploy to point the app at a different silver database/schema.
+# Runtime overrides (highest priority): ``SNOWFLAKE_SILVER_DATABASE`` / ``SNOWFLAKE_SILVER_SCHEMA`` OS env vars
+# (same names used by ``task dt:*`` and ``.env.example`` — set once in ``.env``, shared across all tasks).
+# ``LAB_USERNAME_PREFIX`` is a deploy-time Snow CLI template (``<% ctx.env.LAB_USERNAME_PREFIX %>``) — set via
+# ``--env LAB_USERNAME_PREFIX=<username>_``; it is NOT read by Python at runtime.
 # Snowflake CLI ``--env KEY=value`` applies to ``<% ctx.env.KEY %>`` **templates** in this YAML, not to Python;
 # see https://docs.snowflake.com/en/developer-guide/snowflake-cli/project-definitions/create-templates
 
 definition_version: 2
 env:
-  SILVER_DB: balloon_silver
-  SILVER_SCHEMA: silver
+  # Passed at deploy time via --env LAB_USERNAME_PREFIX=<username>_ (task snowflake:sis-deploy).
+  # Empty string → no prefix; set by task from LAB_USERNAME in .env.
+  LAB_USERNAME_PREFIX: ""
+  SNOWFLAKE_SILVER_DATABASE: balloon_silver
+  SNOWFLAKE_SILVER_SCHEMA: silver
+  # Override at deploy time via --env SNOWFLAKE_WAREHOUSE=MY_WH or SNOWFLAKE_WAREHOUSE in .env.
+  SNOWFLAKE_WAREHOUSE: COMPUTE_WH
+  # Schema where the Streamlit object lives (separate from silver data schema).
+  # Override via SNOWFLAKE_APPS_SCHEMA in .env.
+  SNOWFLAKE_APPS_SCHEMA: apps
 entities:
   balloon_game_dashboard:
     type: streamlit
-    identifier: balloon_game_dashboard
-    stage: balloon_sis_stage
-    query_warehouse: COMPUTE_WH
+    identifier:
+      name: "<% ctx.env.LAB_USERNAME_PREFIX %>balloon_game_dashboard"
+      database: "<% ctx.env.SNOWFLAKE_SILVER_DATABASE %>"
+      schema: "<% ctx.env.SNOWFLAKE_APPS_SCHEMA %>"
+    stage: dashboard_src
+    query_warehouse: "<% ctx.env.SNOWFLAKE_WAREHOUSE %>"
     title: "Balloon pops — silver"
     main_file: streamlit_app.py
-    pages_dir: pages/
+    pages_dir: app_pages/
     artifacts:
       - streamlit_app.py
       - environment.yml
@@ -34,7 +48,7 @@ entities:
       - silver_config.py
       - colors.py
       - data.py
-      - pages/home.py
-      - pages/leaderboard.py
-      - pages/color_analysis.py
-      - pages/performance_trends.py
+      - app_pages/home.py
+      - app_pages/leaderboard.py
+      - app_pages/color_analysis.py
+      - app_pages/performance_trends.py

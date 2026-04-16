@@ -34,6 +34,7 @@ load-bronze-sample = "tools.bronze_preload.load_sample:main"
 snowflake-catalog-trust = "tools.snowflake_lab.catalog_trust:cli"
 snowflake-catalog-iam = "tools.snowflake_lab.catalog_iam:cli"
 snowflake-lab-sql = "tools.snowflake_lab.sql_generate:cli"
+sis-deploy = "tools.sis_deploy.sis_deploy_cli:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["tools"]

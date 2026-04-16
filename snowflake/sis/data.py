@@ -15,25 +15,31 @@ def _session():
     return get_active_session()
 
 
+def _lower_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """Lowercase all column names (Snowpark returns uppercase by default)."""
+    df.columns = df.columns.str.lower()
+    return df
+
+
 @st.cache_data(ttl=45)
 def _load_leaderboard_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
-    fq = f'"{silver_db}"."{silver_schema}".dt_player_leaderboard'
+    fq = f"{silver_db}.{silver_schema}.dt_player_leaderboard"
     q = f"""
         SELECT player, total_score, bonus_pops, last_event_ts
         FROM {fq}
         ORDER BY total_score DESC NULLS LAST
     """
-    return _session().sql(q).to_pandas()
+    return _lower_cols(_session().sql(q).to_pandas())
 
 
 @st.cache_data(ttl=45)
 def _load_realtime_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
-    fq = f'"{silver_db}"."{silver_schema}".dt_realtime_scores'
+    fq = f"{silver_db}.{silver_schema}.dt_realtime_scores"
     q = f"""
         SELECT player, total_score, window_start, window_end
         FROM {fq}
     """
-    df = _session().sql(q).to_pandas()
+    df = _lower_cols(_session().sql(q).to_pandas())
     if not df.empty:
         df["window_start"] = pd.to_datetime(df["window_start"])
         df["window_end"] = pd.to_datetime(df["window_end"])
@@ -42,12 +48,12 @@ def _load_realtime_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
 
 @st.cache_data(ttl=45)
 def _load_color_stats_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
-    fq = f'"{silver_db}"."{silver_schema}".dt_balloon_color_stats'
+    fq = f"{silver_db}.{silver_schema}.dt_balloon_color_stats"
     q = f"""
         SELECT player, balloon_color, balloon_pops, points_by_color, bonus_hits, last_event_ts
         FROM {fq}
     """
-    df = _session().sql(q).to_pandas()
+    df = _lower_cols(_session().sql(q).to_pandas())
     if not df.empty:
         df = df.astype({"balloon_pops": "int64", "points_by_color": "int64", "bonus_hits": "int64"})
     return df
@@ -55,12 +61,12 @@ def _load_color_stats_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
 
 @st.cache_data(ttl=45)
 def _load_color_performance_raw(silver_db: str, silver_schema: str) -> pd.DataFrame:
-    fq = f'"{silver_db}"."{silver_schema}".dt_color_performance_trends'
+    fq = f"{silver_db}.{silver_schema}.dt_color_performance_trends"
     q = f"""
         SELECT balloon_color, avg_score_per_pop, total_pops, window_start, window_end
         FROM {fq}
     """
-    df = _session().sql(q).to_pandas()
+    df = _lower_cols(_session().sql(q).to_pandas())
     if not df.empty:
         df["window_start"] = pd.to_datetime(df["window_start"])
         df["avg_score_per_pop"] = pd.to_numeric(df["avg_score_per_pop"], errors="coerce")
