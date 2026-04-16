@@ -7,8 +7,17 @@
 # (config.toml), unless you pass --database / --schema on the deploy command.
 # Recommended lab placement: database balloon_silver, schema sis.
 # Override the warehouse with: snow streamlit deploy ... --warehouse YOUR_WH
+#
+# ``env`` (below) is read at **app runtime** from the staged copy of this file (see ``silver_config.py``).
+# Edit these values and redeploy to point the app at a different silver database/schema.
+# Optional: if the warehouse runtime sets OS env ``SILVER_DB`` / ``SILVER_SCHEMA``, those override the file.
+# Snowflake CLI ``--env KEY=value`` applies to ``<% ctx.env.KEY %>`` **templates** in this YAML, not to Python;
+# see https://docs.snowflake.com/en/developer-guide/snowflake-cli/project-definitions/create-templates
 
 definition_version: 2
+env:
+  SILVER_DB: balloon_silver
+  SILVER_SCHEMA: silver
 entities:
   balloon_game_dashboard:
     type: streamlit
@@ -17,6 +26,15 @@ entities:
     query_warehouse: COMPUTE_WH
     title: "Balloon pops — silver"
     main_file: streamlit_app.py
+    pages_dir: pages/
     artifacts:
       - streamlit_app.py
       - environment.yml
+      - snowflake.yml
+      - silver_config.py
+      - colors.py
+      - data.py
+      - pages/home.py
+      - pages/leaderboard.py
+      - pages/color_analysis.py
+      - pages/performance_trends.py

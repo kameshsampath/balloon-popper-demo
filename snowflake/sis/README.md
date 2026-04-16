@@ -4,9 +4,13 @@ Source for a **warehouse-runtime** [Streamlit in Snowflake](https://docs.snowfla
 
 | File | Purpose |
 |------|---------|
-| `snowflake.yml` | Snowflake CLI project for **`snow streamlit deploy`** ([deploy](https://docs.snowflake.com/en/developer-guide/snowflake-cli/command-reference/streamlit-commands/deploy), [getting started](https://docs.snowflake.com/en/developer-guide/streamlit/getting-started/create-streamlit-snowflake-cli)). |
-| `streamlit_app.py` | Entrypoint: `get_active_session()`, queries `balloon_silver.silver.dt_*`. |
-| `environment.yml` | Anaconda channel dependencies for warehouse runtime ([dependency management](https://docs.snowflake.com/en/developer-guide/streamlit/app-development/dependency-management)). |
+| `snowflake.yml` | Snowflake CLI project for **`snow streamlit deploy`**. Top-level **`env:`** holds **`SILVER_DB`** / **`SILVER_SCHEMA`** (read at runtime from the staged copy — see **`silver_config.py`**). |
+| `streamlit_app.py` | Entrypoint: **`st.navigation`**, loads **`data.ensure_loaded()`**, then multipage **`pages/`**. |
+| `silver_config.py` | Resolves silver database + schema from staged **`snowflake.yml`** `env` (optional **`SILVER_DB`** / **`SILVER_SCHEMA`** OS overrides). |
+| `data.py` | Snowpark **`get_active_session()`** loaders into **`st.session_state`** for the pages. |
+| `colors.py` | Altair color scale (same palette as **`packages/dashboard`**). |
+| `pages/*.py` | **Home**, **Leaderboard**, **Color Analysis**, **Performance Trends** (ported from the local dashboard). |
+| `environment.yml` | Conda deps: Streamlit, Snowpark, Altair, pandas ([dependency management](https://docs.snowflake.com/en/developer-guide/streamlit/app-development/dependency-management)). |
 | `deploy_streamlit_example.sql` | Optional manual path: commented `CREATE STAGE` / `CREATE STREAMLIT` / `ALTER … LIVE` / `GRANT` template. |
 
 ## Deploy (recommended): Snowflake CLI
@@ -36,7 +40,7 @@ Requires [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake
 ## Deploy (optional): manual stage + SQL
 
 1. In Snowflake, pick a schema (e.g. `balloon_silver.sis`) and create an **internal named stage** for app files.
-2. **Upload** `streamlit_app.py` and `environment.yml` (`snow stage copy …` or Snowsight).
+2. **Upload** the full app tree (match **`snowflake.yml`** **`artifacts`**: `streamlit_app.py`, `environment.yml`, `snowflake.yml`, `silver_config.py`, `colors.py`, `data.py`, **`pages/`** — or use **`snow streamlit deploy`**).
 3. Run **`CREATE STREAMLIT`** with `FROM @…`, `MAIN_FILE = 'streamlit_app.py'`, and **`QUERY_WAREHOUSE`** — see [`deploy_streamlit_example.sql`](deploy_streamlit_example.sql) and [CREATE STREAMLIT](https://docs.snowflake.com/en/sql-reference/sql/create-streamlit).
 4. **Activate** the live version (`ALTER STREAMLIT … ADD LIVE VERSION FROM LAST` or Snowsight).
 5. **Grant** `USAGE` on the Streamlit object (and ensure the role can `SELECT` the underlying `dt_*` tables).
