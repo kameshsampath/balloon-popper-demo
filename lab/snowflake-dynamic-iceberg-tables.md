@@ -105,6 +105,7 @@ Commented pointer: [snowflake/lab/03_dt_pipelines.sql](../snowflake/lab/03_dt_pi
 
 ## Related
 
+- [snowflake-streamlit-sis.md](snowflake-streamlit-sis.md) — **next:** Streamlit in Snowflake over **`dt_*`**
 - [snowflake-cld-MANUAL-TEST.md](snowflake-cld-MANUAL-TEST.md) — prerequisite QA before DT SQL
 - [snowflake-catalog-cld.md](snowflake-catalog-cld.md) — catalog integration and CLD
 - [snowflake/lab/README.md](../snowflake/lab/README.md) — `task snowflake:*` and `task dt:*`

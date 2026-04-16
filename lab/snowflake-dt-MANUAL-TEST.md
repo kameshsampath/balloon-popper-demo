@@ -178,6 +178,10 @@ snow sql --connection <your_connection> --filename snowflake/lab/04_dt_verify_sa
 
 Edit **`04_dt_verify_sample_queries.sql`** `USE DATABASE` / `USE SCHEMA` if you overrode defaults. Uncomment and fix the optional bronze block at the bottom for parity.
 
+## Next — Streamlit in Snowflake
+
+After DTs refresh and verify queries pass, see **[snowflake-streamlit-sis.md](snowflake-streamlit-sis.md)** to stage **`snowflake/sis/streamlit_app.py`**, create a **Streamlit in Snowflake** app over **`balloon_silver.silver.dt_*`**, and go **live**.
+
 ## Failure notes
 
 - **External volume / IAM:** **`task dt:extvol-update-trust`** if trust drifted; see [cld-with-extvol-setup-guide.md](cld-with-extvol-setup-guide.md) and Snowflake [CREATE EXTERNAL VOLUME](https://docs.snowflake.com/en/sql-reference/sql/create-external-volume).

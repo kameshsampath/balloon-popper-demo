@@ -32,7 +32,7 @@ tasks:
     aliases:
       - dashboard
       - streamlit
-    desc: run the streamlit dashboard locally
+    desc: (Optional dev) run local Streamlit — lab viz path is SiS; see lab/snowflake-streamlit-sis.md
     cmds:
       - uv run --package=dashboard dashboard
 
